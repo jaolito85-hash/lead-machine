@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Disparar WhatsApp — Clinicas Maringa</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a0a;color:#e0e0e0;padding:32px;max-width:900px;margin:0 auto}
+h1{font-size:22px;margin-bottom:8px;color:#00e676}
+p.sub{font-size:13px;color:#888;margin-bottom:32px}
+.card{background:#161616;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:16px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center}
+.card:hover{border-color:#333}
+.name{font-size:16px;font-weight:600;color:#fff;margin-bottom:4px}
+.info{font-size:12px;color:#888;line-height:1.8}
+.info strong{color:#bbb}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;transition:all .15s}
+.btn-wpp{background:#25d366;color:#fff}
+.btn-wpp:hover{background:#1ebe5a;transform:scale(1.03)}
+.btn-email{background:#448aff;color:#fff;margin-top:8px}
+.btn-email:hover{background:#2979ff}
+.btn-ig{background:#e91e63;color:#fff;margin-top:8px}
+.btn-ig:hover{background:#c2185b}
+.actions{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.tag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;background:#00e67622;color:#00e676;font-weight:600;margin-bottom:8px}
+.msg-box{margin-top:24px;background:#161616;border:1px solid #2a2a2a;border-radius:12px;padding:20px}
+.msg-box h3{font-size:14px;margin-bottom:12px;color:#00e676}
+.msg-box textarea{width:100%;height:120px;background:#0a0a0a;border:1px solid #333;border-radius:8px;color:#e0e0e0;padding:12px;font-family:inherit;font-size:13px;resize:vertical}
+.msg-box textarea:focus{outline:none;border-color:#00e676}
+.counter{text-align:center;margin-top:24px;font-size:13px;color:#666}
+</style>
+</head>
+<body>
+
+<h1>Disparar WhatsApp para Clinicas</h1>
+<p class="sub">Clique no botao verde para abrir o WhatsApp Web com a mensagem pronta. So apertar enviar.</p>
+
+<div class="msg-box">
+<h3>Mensagem (edite antes de enviar)</h3>
+<textarea id="msg-template">Ola! Tudo bem?
+
+Sou da Lead Machine, uma empresa de captacao de leads qualificados para clinicas de harmonizacao facial.
+
+Temos 13 pessoas da regiao de Maringa-PR que demonstraram interesse REAL em harmonizacao facial nos ultimos dias.
+
+Gostaria de apresentar como funciona. Posso mandar alguns exemplos?</textarea>
+</div>
+
+<br>
+
+<div id="cards"></div>
+
+<div class="counter" id="counter"></div>
+
+<script>
+const clinicas = [
+  {nome:'Dra. Suellen Rodrigues',tel:'5544991364900',email:'contato@suellenrodrigues.com',ig:'dra.surodrigues',end:'Av. Carneiro Leao 563 sala 905 — Le Monde — Maringa/PR',verificado:true},
+  {nome:'Dra. Flavia Tomaroli',tel:'5544999255110',email:'contato@flaviatomaroli.com.br',ig:'draflaviatomaroli',end:'Av. Dr. Luiz Teixeira Mendes 1805 — Zona 04 — Maringa/PR',verificado:true},
+  {nome:'Dra. Isabela Reder',tel:'554497759291',email:'contato@isabelareder.com.br',ig:'draisabelareder',end:'Av. Dr. Luiz Teixeira Mendes 996 — Maringa/PR',verificado:true},
+  {nome:'Clinica Sekai',tel:'5544991552266',email:'atendimento@clinicasekai.com.br',ig:'clinicasekai',end:'Av. Itororo 361 — Zona 02 — Maringa/PR',verificado:true},
+  {nome:'Facenova',tel:'5544999722691',email:null,ig:null,end:'Rua Neo Alves Martins 3415 Sala 601 — Maringa/PR',verificado:true},
+  {nome:'Hamonir',tel:'5544031220375',email:null,ig:null,end:'Av. Tamandare 331 — Centro — Maringa/PR',verificado:true},
+  {nome:'Ferracini Estetica',tel:'5544991593050',email:null,ig:null,end:'Av. Tiradentes 240 — Maringa/PR',verificado:true},
+];
+
+function render(){
+  const msg = document.getElementById('msg-template').value;
+  const encoded = encodeURIComponent(msg);
+
+  document.getElementById('cards').innerHTML = clinicas.map((c,i) => `
+    <div class="card">
+      <div>
+        <span class="tag">${c.verificado?'VERIFICADO — Maringa/PR':''}</span>
+        <div class="name">${c.nome}</div>
+        <div class="info">
+          <strong>Tel:</strong> ${c.tel ? '+'+c.tel : '—'}<br>
+          ${c.email ? '<strong>Email:</strong> '+c.email+'<br>' : ''}
+          ${c.ig ? '<strong>Instagram:</strong> @'+c.ig+'<br>' : ''}
+          <strong>End:</strong> ${c.end}
+        </div>
+      </div>
+      <div class="actions">
+        ${c.tel ? `<a class="btn btn-wpp" href="https://wa.me/${c.tel}?text=${encoded}" target="_blank">WhatsApp</a>` : ''}
+        ${c.email ? `<a class="btn btn-email" href="mailto:${c.email}?subject=${encodeURIComponent('Leads qualificados de harmonizacao facial - Maringa/PR')}&body=${encoded}" target="_blank">Email</a>` : ''}
+        ${c.ig ? `<a class="btn btn-ig" href="https://instagram.com/${c.ig}" target="_blank">Instagram</a>` : ''}
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('counter').textContent = clinicas.length + ' clinicas prontas para contato';
+}
+
+document.getElementById('msg-template').addEventListener('input', render);
+render();
+</script>
+</body>
+</html>

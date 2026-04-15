@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead Machine — Control Plane</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-void: #08090b;
+  --bg-base: #0d0f12;
+  --bg-surface: #141720;
+  --bg-elevated: #1a1e2a;
+  --bg-hover: #1f2436;
+  --bg-active: #252b3d;
+  --border-subtle: #1e2233;
+  --border-default: #2a3048;
+  --border-strong: #3a4260;
+  --text-primary: #e8eaf0;
+  --text-secondary: #8b90a0;
+  --text-tertiary: #5a5f72;
+  --text-muted: #3d4255;
+  --accent: #00e676;
+  --accent-dim: #00e67615;
+  --hot: #ff1744;
+  --hot-dim: #ff174422;
+  --warm: #ffab00;
+  --warm-dim: #ffab0022;
+  --cold: #448aff;
+  --cold-dim: #448aff22;
+  --running: #448aff;
+  --running-dim: #448aff22;
+  --idle: #7c4dff;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Space Grotesk', sans-serif;
+  --sidebar-w: 220px;
+  --radius: 6px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:13px}
+body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-primary);overflow:hidden;height:100vh;display:flex}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-default);border-radius:3px}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--bg-base);border-right:1px solid var(--border-subtle);display:flex;flex-direction:column;height:100vh}
+.brand{padding:20px 16px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:12px}
+.brand .logo{width:32px;height:32px;background:var(--accent);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--bg-void);font-weight:700;font-family:var(--font-sans)}
+.brand strong{font-family:var(--font-sans);font-size:14px;letter-spacing:-0.5px}
+.brand small{display:block;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--text-tertiary)}
+.nav{flex:1;padding:12px 8px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.nav-label{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);padding:12px 10px 6px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius);cursor:pointer;color:var(--text-secondary);font-size:12px;transition:all .15s;user-select:none;position:relative}
+.nav-item:hover{background:var(--bg-hover);color:var(--text-primary)}
+.nav-item.active{background:var(--accent-dim);color:var(--accent)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:2px;height:16px;background:var(--accent);border-radius:1px}
+.nav-item .badge{margin-left:auto;background:var(--running-dim);color:var(--running);font-size:10px;padding:1px 6px;border-radius:10px;font-weight:600}
+.sidebar-footer{padding:16px;border-top:1px solid var(--border-subtle);font-size:10px;color:var(--text-tertiary);display:flex;align-items:center;gap:8px}
+.pulse{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:48px;min-height:48px;background:var(--bg-base);border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;padding:0 24px;gap:16px}
+.topbar-title{font-family:var(--font-sans);font-size:15px;font-weight:600}
+.topbar-sub{font-size:11px;color:var(--text-tertiary)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.clock{font-size:11px;color:var(--text-secondary);font-variant-numeric:tabular-nums}
+.btn{background:var(--bg-elevated);border:1px solid var(--border-default);color:var(--text-secondary);padding:4px 12px;border-radius:4px;font-family:var(--font-mono);font-size:11px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
+.btn:hover{background:var(--bg-hover);color:var(--text-primary)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--bg-void);font-weight:600}
+.btn.primary:hover{filter:brightness(1.1)}
+.content{flex:1;overflow-y:auto;padding:24px}
+.page{display:none}.page.active{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══ COMMAND CENTER ═══ */
+.command-section{margin-bottom:24px}
+.command-box{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:8px;overflow:hidden}
+.command-header{padding:12px 20px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
+.command-header .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.command-input-wrap{display:flex;align-items:stretch}
+.command-input{flex:1;background:transparent;border:none;padding:20px;color:var(--text-primary);font-family:var(--font-mono);font-size:14px;resize:none;outline:none;min-height:80px}
+.command-input::placeholder{color:var(--text-muted)}
+.command-send{background:var(--accent);border:none;color:var(--bg-void);font-family:var(--font-mono);font-size:12px;font-weight:700;padding:0 24px;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:1px}
+.command-send:hover{filter:brightness(1.1)}
+.command-history{padding:16px 20px;border-top:1px solid var(--border-subtle);max-height:200px;overflow-y:auto}
+.cmd-entry{padding:8px 0;border-bottom:1px solid var(--border-subtle);font-size:11px}
+.cmd-entry:last-child{border-bottom:none}
+.cmd-entry .cmd-time{color:var(--text-muted);margin-right:8px;font-variant-numeric:tabular-nums}
+.cmd-entry .cmd-text{color:var(--accent)}
+.cmd-entry .cmd-status{float:right;font-size:10px;padding:1px 8px;border-radius:10px;font-weight:600}
+.cmd-status.executando{background:var(--running-dim);color:var(--running)}
+.cmd-status.concluido{background:var(--accent-dim);color:var(--accent)}
+.cmd-status.processando{background:var(--warm-dim);color:var(--warm)}
+
+/* ═══ KPIs ═══ */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px}
+.kpi{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:8px;padding:20px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kpi.g::before{background:var(--accent)}.kpi.b::before{background:var(--running)}.kpi.r::before{background:var(--hot)}.kpi.y::before{background:var(--warm)}.kpi.p::before{background:var(--idle)}
+.kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-tertiary);margin-bottom:6px}
+.kpi-val{font-family:var(--font-sans);font-size:28px;font-weight:700;letter-spacing:-1px;line-height:1}
+.kpi.g .kpi-val{color:var(--accent)}.kpi.b .kpi-val{color:var(--running)}.kpi.r .kpi-val{color:var(--hot)}.kpi.y .kpi-val{color:var(--warm)}.kpi.p .kpi-val{color:var(--idle)}
+.kpi-sub{font-size:10px;color:var(--text-tertiary);margin-top:4px}
+
+/* ═══ PANELS ═══ */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.panel{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:8px;overflow:hidden}
+.panel-head{padding:12px 20px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between}
+.panel-title{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-secondary);font-weight:600}
+.panel-body{padding:12px;max-height:400px;overflow-y:auto}
+
+/* ═══ AGENTS ═══ */
+.agent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.agent-card{background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all .15s;position:relative}
+.agent-card:hover{border-color:var(--border-strong);transform:translateY(-1px)}
+.agent-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.agent-avatar{width:40px;height:40px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;position:relative}
+.agent-avatar.ceo{background:#7c4dff22;border:1px solid #7c4dff44}
+.agent-avatar.cto{background:#448aff22;border:1px solid #448aff44}
+.agent-avatar.scraper{background:#00e67622;border:1px solid #00e67644}
+.agent-avatar.qualifier{background:#ffab0022;border:1px solid #ffab0044}
+.agent-avatar.enricher{background:#ff6d0022;border:1px solid #ff6d0044}
+.status-dot{position:absolute;bottom:-2px;right:-2px;width:10px;height:10px;border-radius:50%;border:2px solid var(--bg-elevated)}
+.status-dot.active{background:var(--accent)}.status-dot.running{background:var(--running);animation:pulse 1.5s infinite}.status-dot.paused{background:var(--warm)}.status-dot.error{background:var(--hot)}.status-dot.idle{background:var(--idle)}
+.agent-name{font-size:13px;font-weight:600}
+.agent-role{font-size:10px;color:var(--text-tertiary)}
+.agent-desc{font-size:11px;color:var(--text-secondary);line-height:1.5;margin-bottom:10px}
+.agent-meta{display:flex;gap:8px;flex-wrap:wrap}
+.agent-tag{font-size:9px;padding:2px 8px;border-radius:10px;background:var(--bg-active);color:var(--text-tertiary);border:1px solid var(--border-subtle)}
+.agent-status-badge{position:absolute;top:12px;right:12px;font-size:9px;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.agent-status-badge.active{background:var(--accent-dim);color:var(--accent)}
+.agent-status-badge.running{background:var(--running-dim);color:var(--running)}
+.agent-status-badge.paused{background:var(--warm-dim);color:var(--warm)}
+.agent-status-badge.idle{background:#7c4dff22;color:var(--idle)}
+
+/* ═══ LEADS TABLE ═══ */
+.leads-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.filter-btn{font-size:11px;padding:4px 12px;border-radius:4px;border:1px solid var(--border-default);background:var(--bg-elevated);color:var(--text-secondary);cursor:pointer;transition:all .15s}
+.filter-btn:hover{border-color:var(--border-strong);color:var(--text-primary)}
+.filter-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.leads-table{width:100%;border-collapse:collapse}
+.leads-table th{text-align:left;padding:8px 12px;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);border-bottom:1px solid var(--border-subtle);font-weight:600}
+.leads-table td{padding:10px 12px;border-bottom:1px solid var(--border-subtle);font-size:12px;vertical-align:middle}
+.leads-table tr:hover td{background:var(--bg-hover)}
+.lead-name{font-weight:500;color:var(--text-primary)}
+.lead-source{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500}
+.lead-source.instagram{background:#e91e6322;color:#e91e63}.lead-source.google{background:#448aff22;color:#448aff}.lead-source.x{background:#1da1f222;color:#90caf9}.lead-source.reddit{background:#ff640022;color:#ff6d00}.lead-source.linkedin{background:#0077b522;color:#29b6f6}.lead-source.facebook{background:#1877f222;color:#42a5f5}.lead-source.tiktok{background:#ff004422;color:#ff4081}
+.temp-badge{font-size:10px;padding:2px 10px;border-radius:10px;font-weight:600}
+.temp-badge.quente{background:var(--hot-dim);color:var(--hot)}.temp-badge.morno{background:var(--warm-dim);color:var(--warm)}.temp-badge.frio{background:var(--cold-dim);color:var(--cold)}
+.score-bar{width:60px;height:6px;background:var(--bg-active);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:6px}
+.score-fill{height:100%;border-radius:3px}
+
+/* ═══ TASKS KANBAN ═══ */
+.kanban{display:flex;gap:12px;height:calc(100vh - 160px);overflow-x:auto;padding-bottom:12px}
+.kanban-col{min-width:260px;width:260px;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:8px;display:flex;flex-direction:column;flex-shrink:0}
+.kanban-col-head{padding:12px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:8px}
+.kanban-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.kanban-col-name{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary)}
+.kanban-col-count{margin-left:auto;font-size:10px;background:var(--bg-active);color:var(--text-tertiary);padding:1px 6px;border-radius:8px}
+.kanban-cards{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px}
+.k-card{background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:var(--radius);padding:12px;cursor:grab;transition:all .15s}
+.k-card:hover{border-color:var(--border-strong);transform:translateY(-1px)}
+.k-card.dragging{opacity:.4;border-color:var(--accent)}
+.k-card-id{font-size:10px;color:var(--text-muted);margin-bottom:4px}
+.k-card-title{font-size:12px;font-weight:500;margin-bottom:8px;line-height:1.4}
+.k-card-meta{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--text-tertiary)}
+.k-card-platform{font-size:9px;padding:1px 6px;border-radius:8px;font-weight:500}
+
+/* ═══ ACTIVITY ═══ */
+.timeline{position:relative;padding-left:32px}
+.timeline::before{content:'';position:absolute;left:11px;top:0;bottom:0;width:1px;background:var(--border-subtle)}
+.tl-item{position:relative;padding:8px 0 20px}
+.tl-dot{position:absolute;left:-27px;top:12px;width:10px;height:10px;border-radius:50%;border:2px solid var(--bg-void)}
+.tl-dot.ok{background:var(--accent)}.tl-dot.info{background:var(--running)}.tl-dot.warn{background:var(--warm)}.tl-dot.err{background:var(--hot)}
+.tl-time{font-size:10px;color:var(--text-muted);margin-bottom:4px}
+.tl-box{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius);padding:10px 16px}
+.tl-title{font-size:12px;font-weight:500;margin-bottom:2px}
+.tl-desc{font-size:11px;color:var(--text-tertiary)}
+
+/* ═══ SETTINGS ═══ */
+.settings-grid{display:grid;grid-template-columns:200px 1fr;gap:20px}
+.settings-nav{display:flex;flex-direction:column;gap:2px}
+.settings-nav-item{padding:8px 10px;border-radius:var(--radius);font-size:12px;color:var(--text-secondary);cursor:pointer;transition:all .15s}
+.settings-nav-item:hover{background:var(--bg-hover)}
+.settings-nav-item.active{background:var(--accent-dim);color:var(--accent)}
+.settings-panel{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:8px;padding:24px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:10px;color:var(--text-secondary);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:500}
+.form-input{width:100%;padding:8px 12px;background:var(--bg-elevated);border:1px solid var(--border-default);border-radius:4px;color:var(--text-primary);font-family:var(--font-mono);font-size:12px}
+.form-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-dim)}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238b90a0' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:28px}
+
+/* ═══ MODAL ═══ */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:8px;width:560px;max-height:80vh;overflow-y:auto;animation:modalIn .2s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-header{padding:20px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-family:var(--font-sans);font-size:16px;font-weight:600}
+.modal-close{background:none;border:none;color:var(--text-tertiary);cursor:pointer;font-size:18px;padding:4px}
+.modal-close:hover{color:var(--text-primary)}
+.modal-body{padding:20px}
+.modal-footer{padding:12px 20px;border-top:1px solid var(--border-subtle);display:flex;justify-content:flex-end;gap:8px}
+
+/* NOTIFICATION */
+.notif{position:fixed;bottom:24px;right:24px;background:var(--bg-elevated);border:1px solid var(--border-default);border-radius:var(--radius);padding:12px 20px;font-size:12px;z-index:2000;transform:translateY(100px);opacity:0;transition:all .3s ease;display:flex;align-items:center;gap:10px}
+.notif.show{transform:translateY(0);opacity:1}
+.notif.ok{border-left:3px solid var(--accent)}.notif.err{border-left:3px solid var(--hot)}.notif.warn{border-left:3px solid var(--warm)}
+
+@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.grid-2,.grid-3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="logo">L</div>
+    <div><strong>Lead Machine</strong><small>Control Plane</small></div>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Comando</div>
+    <div class="nav-item active" data-page="command">&#9654; Central de Comando</div>
+    <div class="nav-item" data-page="leads">&#9673; Leads Coletados <span class="badge" id="leads-badge">0</span></div>
+    <div class="nav-label">Operacao</div>
+    <div class="nav-item" data-page="clientes">&#9733; Clientes (B2B) <span class="badge" id="clientes-badge">0</span></div>
+    <div class="nav-item" data-page="agents">&#9881; Agentes</div>
+    <div class="nav-item" data-page="tasks">&#9744; Tarefas</div>
+    <div class="nav-label">Sistema</div>
+    <div class="nav-item" data-page="activity">&#9776; Atividades</div>
+    <div class="nav-item" data-page="settings">&#9881; Config</div>
+  </nav>
+  <div class="sidebar-footer"><span class="pulse"></span> Sistema Online</div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <span class="topbar-title" id="pg-title">Central de Comando</span>
+    <span class="topbar-sub" id="pg-sub">Voce da a ordem. Agentes executam.</span>
+    <div class="topbar-right">
+      <span class="clock" id="clock"></span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ═══ COMMAND PAGE ═══ -->
+    <div class="page active" id="page-command">
+      <div class="command-section">
+        <div class="command-box">
+          <div class="command-header"><span class="dot"></span> Seu Comando</div>
+          <div class="command-input-wrap">
+            <textarea class="command-input" id="cmd-input" placeholder="Ex: Preciso de leads para clinica odontologica que faz harmonizacao facial em Maringa-PR. Buscar no Instagram, X, Google e Reddit."></textarea>
+            <button class="command-send" id="cmd-send" onclick="executeCommand()">Executar</button>
+          </div>
+          <div class="command-history" id="cmd-history"></div>
+        </div>
+      </div>
+
+      <div class="kpi-grid" id="kpi-grid"></div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">Agentes — Status</span></div>
+          <div class="panel-body" id="dash-agents"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">Atividade Recente</span></div>
+          <div class="panel-body" id="dash-activity"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ LEADS PAGE ═══ -->
+    <div class="page" id="page-leads">
+      <div class="leads-toolbar" id="leads-toolbar"></div>
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Leads Coletados</span>
+          <button class="btn" onclick="exportLeads()">Exportar CSV</button>
+        </div>
+        <div class="panel-body" style="max-height:none;overflow-x:auto">
+          <table class="leads-table" id="leads-table">
+            <thead><tr><th>Lead</th><th>Fonte</th><th>Evidencia</th><th>Cidade</th><th>Temp.</th><th>Score</th><th>Contato</th></tr></thead>
+            <tbody id="leads-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ CLIENTES B2B PAGE ═══ -->
+    <div class="page" id="page-clientes">
+      <div style="margin-bottom:20px">
+        <span style="font-family:var(--font-sans);font-size:15px;font-weight:600">Clientes B2B — Clinicas que Compram os Leads</span>
+        <p style="font-size:11px;color:var(--text-tertiary);margin-top:4px">Clinicas de harmonizacao facial em Maringa-PR. Dados publicos verificados.</p>
+      </div>
+      <div class="panel"><div class="panel-head"><span class="panel-title">Clinicas Mapeadas</span></div>
+      <div class="panel-body" style="max-height:none;overflow-x:auto">
+        <table class="leads-table">
+          <thead><tr><th>Clinica</th><th>Profissional</th><th>Telefone/WhatsApp</th><th>Email</th><th>Instagram</th><th>Endereco</th></tr></thead>
+          <tbody>
+            <tr><td class="lead-name">Consultorio Dra. Suellen Rodrigues</td><td>Dra. Suellen Rodrigues</td><td>(44) 3023-9248<br><strong>(44) 99136-4900</strong></td><td>contato@suellenrodrigues.com</td><td>@dra.surodrigues</td><td>Av. Carneiro Leao, 563 sala 905 — Le Monde — Maringa/PR</td></tr>
+            <tr><td class="lead-name">Dra. Flavia Tomaroli</td><td>Dra. Flavia Tomaroli (CRO/PR 13613)</td><td><strong>(44) 99925-5110</strong></td><td>contato@flaviatomaroli.com.br</td><td>@draflaviatomaroli</td><td>Av. Dr. Luiz Teixeira Mendes, 1805 Sala 01 — Zona 04 — Maringa/PR</td></tr>
+            <tr><td class="lead-name">Dra. Isabela Reder</td><td>Dra. Isabela Reder</td><td><strong>(44) 9775-9291</strong></td><td>contato@isabelareder.com.br</td><td>@draisabelareder</td><td>Av. Dr. Luiz Teixeira Mendes, 996 — Maringa/PR</td></tr>
+            <tr><td class="lead-name">Clinica Sekai</td><td>Dra. Leticia Yuki Kawanichi (CRO 25191)</td><td>(44) 3122-0421<br><strong>(44) 99155-2266</strong></td><td>atendimento@clinicasekai.com.br</td><td>@clinicasekai</td><td>Av. Itororo, 361 — Zona 02 — Maringa/PR</td></tr>
+            <tr><td class="lead-name">Facenova</td><td>Dra. Deborah Esperidiao Fioroni</td><td>(44) 3028-8169<br><strong>(44) 99972-2691</strong></td><td>—</td><td>—</td><td>Rua Neo Alves Martins, 3415 Sala 601 — Zona 01 — Maringa/PR</td></tr>
+            <tr><td class="lead-name">Hamonir</td><td>—</td><td>(44) 3122-1111<br><strong>(44) 3122-0375</strong></td><td>—</td><td>—</td><td>Av. Tamandare, 331 — Centro — Maringa/PR</td></tr>
+            <tr><td class="lead-name">Royal Face Maringa</td><td>— (franquia)</td><td>—</td><td>—</td><td>@royalface.maringa (8k seg)</td><td>Maringa/PR</td></tr>
+            <tr><td class="lead-name">Dr. Vinicius Longhini</td><td>Dr. Vinicius Longhini</td><td>—</td><td>—</td><td>@dr.viniciuslonghini (27k seg)</td><td>Maringa/PR</td></tr>
+            <tr><td class="lead-name">Dr Harmoniza</td><td>—</td><td>—</td><td>—</td><td>@drharmoniza</td><td>Rua Joubert de Carvalho, 101 — Centro — Maringa/PR</td></tr>
+            <tr><td class="lead-name">Odontologia Peixoto</td><td>—</td><td>(44) 3346-2666</td><td>—</td><td>—</td><td>Rua Nassib Haddad, 35 — Zona 04 — Maringa/PR</td></tr>
+            <tr><td class="lead-name">OralTime</td><td>—</td><td>—</td><td>—</td><td>@oraltimeodonto</td><td>Maringa e Paicandu/PR</td></tr>
+            <tr><td class="lead-name">Dra. Fabrizzia Vassallo</td><td>Dra. Fabrizzia Vassallo</td><td>—</td><td>—</td><td>@fabrizziavassallo</td><td>Maringa/PR</td></tr>
+            <tr><td class="lead-name">Dra. Samia Dias</td><td>Dra. Samia Dias</td><td>—</td><td>—</td><td>—</td><td>Av. Carneiro Leao, 563 — Maringa/PR</td></tr>
+            <tr><td class="lead-name">Ferracini Estetica Avancada</td><td>—</td><td><strong>(44) 99159-3050</strong></td><td>—</td><td>—</td><td>Av. Tiradentes, 240 terreo — Maringa/PR</td></tr>
+          </tbody>
+        </table>
+      </div></div>
+    </div>
+
+    <!-- ═══ AGENTS PAGE ═══ -->
+    <div class="page" id="page-agents">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div><span style="font-family:var(--font-sans);font-size:15px;font-weight:600">Seus Agentes</span><p style="font-size:11px;color:var(--text-tertiary);margin-top:4px">Cada agente e um funcionario especializado. Voce manda, eles executam.</p></div>
+      </div>
+      <div class="agent-grid" id="agents-grid"></div>
+    </div>
+
+    <!-- ═══ TASKS PAGE ═══ -->
+    <div class="page" id="page-tasks">
+      <div class="kanban" id="kanban"></div>
+    </div>
+
+    <!-- ═══ ACTIVITY PAGE ═══ -->
+    <div class="page" id="page-activity">
+      <div style="margin-bottom:20px"><span style="font-family:var(--font-sans);font-size:15px;font-weight:600">Log de Atividades</span><p style="font-size:11px;color:var(--text-tertiary);margin-top:4px">Tudo que aconteceu no sistema</p></div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+
+    <!-- ═══ SETTINGS PAGE ═══ -->
+    <div class="page" id="page-settings">
+      <div class="settings-grid">
+        <div class="settings-nav">
+          <div class="settings-nav-item active">Empresa</div>
+          <div class="settings-nav-item">API Keys</div>
+          <div class="settings-nav-item">Proxies</div>
+          <div class="settings-nav-item">Plataformas</div>
+        </div>
+        <div class="settings-panel">
+          <h3 style="font-family:var(--font-sans);font-size:15px;font-weight:600;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border-subtle)">Configuracao</h3>
+          <div class="form-group"><label class="form-label">Nome da Empresa</label><input class="form-input" value="Lead Machine" /></div>
+          <div class="form-group"><label class="form-label">API Base URL</label><input class="form-input" value="http://localhost:3100/api" /></div>
+          <div class="form-group"><label class="form-label">Proxy Rotativo</label><input class="form-input" placeholder="http://proxy:port" /></div>
+          <div class="form-group"><label class="form-label">Hunter.io API Key</label><input class="form-input" type="password" placeholder="Sua API key para enriquecimento de email" /></div>
+          <div class="form-group"><label class="form-label">Apify Token</label><input class="form-input" type="password" placeholder="Token para scrapers Apify" /></div>
+          <button class="btn primary">Salvar</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   LEAD MACHINE — STATE & LOGIC
+   ══════════════════════════════════════════ */
+
+const S = {
+  agents: [
+    { id:'ceo', name:'CEO', type:'ceo', desc:'Interpreta seus comandos. Entende nicho, servico, cidade, plataformas. Cria tasks e distribui para os agentes certos.', adapter:'claude_local', status:'active', icon:'\u265B' },
+    { id:'cto', name:'CTO', type:'cto', desc:'Monitora se os scrapers estao rodando. Detecta falhas, ajusta estrategia de busca, gerencia infraestrutura.', adapter:'claude_local', status:'active', icon:'\u2699' },
+    { id:'ig', name:'Agent Instagram', type:'scraper', desc:'Busca hashtags, posts geolocalizados, comentarios e perfis no Instagram. Coleta quem demonstra interesse.', adapter:'process', status:'idle', icon:'\uD83D\uDCF7', platform:'instagram' },
+    { id:'tw', name:'Agent X/Twitter', type:'scraper', desc:'Busca tweets, replies e conversas no X. Encontra quem pergunta, reclama ou demonstra interesse.', adapter:'process', status:'idle', icon:'\uD835\uDD4F', platform:'x' },
+    { id:'gg', name:'Agent Google', type:'scraper', desc:'Busca no Google Search e Google Maps. Coleta negocios locais, avaliacoes e quem pesquisa o servico.', adapter:'process', status:'idle', icon:'\uD83D\uDD0D', platform:'google' },
+    { id:'rd', name:'Agent Reddit', type:'scraper', desc:'Busca em subreddits relevantes. Encontra posts pedindo indicacao, discussoes e opinioes sobre o tema.', adapter:'process', status:'idle', icon:'\uD83E\uDD16', platform:'reddit' },
+    { id:'li', name:'Agent LinkedIn', type:'scraper', desc:'Busca profissionais, empresas e decisores. Coleta perfis relevantes do nicho na regiao.', adapter:'process', status:'idle', icon:'\uD83D\uDCBC', platform:'linkedin' },
+    { id:'fb', name:'Agent Facebook', type:'scraper', desc:'Busca em grupos e paginas. Coleta posts, comentarios e perfis de pessoas interessadas.', adapter:'process', status:'idle', icon:'\uD83D\uDC64', platform:'facebook' },
+    { id:'tk', name:'Agent TikTok', type:'scraper', desc:'Busca videos sobre o tema. Coleta comentarios de pessoas interessadas e perfis engajados.', adapter:'process', status:'idle', icon:'\uD83C\uDFB5', platform:'tiktok' },
+    { id:'qual', name:'Qualificador', type:'qualifier', desc:'Recebe leads brutos. Classifica por temperatura (quente/morno/frio). Remove duplicatas. Pontua relevancia.', adapter:'claude_local', status:'idle', icon:'\u2605' },
+    { id:'enrich', name:'Enriquecedor', type:'enricher', desc:'Busca email, telefone, WhatsApp e redes sociais de cada lead. Usa Hunter.io, Apollo e OSINT.', adapter:'process', status:'idle', icon:'\uD83D\uDD0E' },
+  ],
+  leads: [
+    // ═══ LEADS B2C REAIS — Pessoas interessadas em harmonizacao facial em Maringa-PR ═══
+    {id:'L-00001',nome:'Sheline Quintiliano',plataforma:'google',perfil:'review_google',evidencia:'Faz procedimentos de harmonizacao ha 2 anos. Escreveu: "super recomendo"',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:95,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04'},
+    {id:'L-00002',nome:'Dada Ponce',plataforma:'google',perfil:'review_google',evidencia:'Fez botox preventivo. Escreveu: "definitivamente volvere para probar otros servicios!"',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:90,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04'},
+    {id:'L-00003',nome:'Paciente Anonimo (Dra Lorena)',plataforma:'google',perfil:'doctoralia',evidencia:'Fez toxina botulinica. Escreveu: "quis algo natural, resultado foi incrivel!"',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:88,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04'},
+    {id:'L-00004',nome:'Paciente Dra Fabrizzia',plataforma:'instagram',perfil:'@fabrizziavassallo',evidencia:'"Cada dia mais apaixonada pela minha harmonizacao facial feita pela Dra Fabrizzia, delicadeza e naturalidade"',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:92,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04'},
+    {id:'L-00005',nome:'Paciente Retoque (Dra Fabrizzia)',plataforma:'instagram',perfil:'@fabrizziavassallo',evidencia:'"Fiz o retoque no inicio do mes, no ano passado coloquei meia seringa e depois de um ano coloquei a outra metade!"',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:85,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04'},
+    {id:'L-00006',nome:'Andreia Cardoso',plataforma:'google',perfil:'review_google',evidencia:'"Na maioria das vezes em que me senti bonita, foram por causa do seu otimo trabalho. Amei."',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:72,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04'},
+    {id:'L-00007',nome:'Samia Rayssa Oliveira',plataforma:'google',perfil:'review_google',evidencia:'"Profissional incrivel! Amando os resultadoes! Super atenciosa e cuidadosa."',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:70,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04'},
+    {id:'L-00008',nome:'Mirian Luciano da Costa',plataforma:'google',perfil:'review_google',evidencia:'"Atendimento toooppp, precos justos... resumindo Ameiiiiii"',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:68,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04'},
+    {id:'L-00009',nome:'Mariana Alioco',plataforma:'google',perfil:'review_google',evidencia:'"Excelente profissional, adorei o resultado do meu tratamento!"',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:65,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04'},
+    {id:'L-00010',nome:'Nadia Boschini',plataforma:'google',perfil:'review_google',evidencia:'Avaliou 5 estrelas a Dra. Suellen Rodrigues (harmonizacao facial)',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:55,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04'},
+    {id:'L-00011',nome:'Rayene Ratier',plataforma:'google',perfil:'review_google',evidencia:'Avaliou 5 estrelas a Dra. Suellen Rodrigues (harmonizacao facial)',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:55,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04'},
+    {id:'L-00012',nome:'Luciano Do Marco Campos',plataforma:'google',perfil:'review_google',evidencia:'Avaliou 5 estrelas a Dra. Suellen Rodrigues (harmonizacao facial)',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:50,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04'},
+    {id:'L-00013',nome:'Isabella Barbosa',plataforma:'google',perfil:'review_google',evidencia:'Avaliou 5 estrelas a Dra. Suellen Rodrigues (harmonizacao facial)',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:50,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04'},
+  ],
+  tasks: [],
+  commands: [],
+  activities: [],
+  taskCounter: 1,
+  leadCounter: 1,
+  activeFilter: 'todos',
+};
+
+const platformMap = {instagram:'ig',x:'tw',twitter:'tw',google:'gg',reddit:'rd',linkedin:'li',facebook:'fb',tiktok:'tk'};
+const platformLabels = {instagram:'Instagram',x:'X/Twitter',google:'Google',reddit:'Reddit',linkedin:'LinkedIn',facebook:'Facebook',tiktok:'TikTok'};
+const tempColors = {quente:'hot',morno:'warm',frio:'cold'};
+
+function notify(msg,type='ok'){const n=document.getElementById('notif');n.className='notif '+type;n.textContent=msg;n.classList.add('show');setTimeout(()=>n.classList.remove('show'),3000)}
+
+// Clock
+setInterval(()=>{const d=new Date();document.getElementById('clock').textContent=d.toTimeString().slice(0,8)+' BRT'},1000);
+
+// Navigation
+document.querySelectorAll('.nav-item').forEach(el=>{
+  el.addEventListener('click',()=>{
+    const p=el.dataset.page;if(!p)return;
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');
+    document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('active'));document.getElementById('page-'+p).classList.add('active');
+    const titles={command:['Central de Comando','Voce da a ordem. Agentes executam.'],leads:['Leads B2C','Pessoas interessadas no procedimento'],clientes:['Clientes B2B','Clinicas que compram os leads'],agents:['Agentes','Seus funcionarios especializados'],tasks:['Tarefas','Execucao em andamento'],activity:['Atividades','Log do sistema'],settings:['Configuracao','API keys, proxies, plataformas']};
+    document.getElementById('pg-title').textContent=titles[p][0];
+    document.getElementById('pg-sub').textContent=titles[p][1];
+  });
+});
+
+// ─── COMMAND EXECUTION ───
+function executeCommand(){
+  const input=document.getElementById('cmd-input').value.trim();
+  if(!input){notify('Digite um comando','err');return}
+
+  // Parse command
+  const parsed=parseCommand(input);
+
+  S.commands.unshift({text:input,time:now(),status:'executando',parsed});
+  addActivity('ok','Comando recebido',`"${input.slice(0,80)}${input.length>80?'...':''}"`);
+
+  document.getElementById('cmd-input').value='';
+
+  // CEO processes
+  setTimeout(()=>{
+    addActivity('info','CEO processando',`Nicho: ${parsed.nicho} | Cidade: ${parsed.cidade} | Plataformas: ${parsed.plataformas.join(', ')}`);
+
+    // Create tasks for each platform
+    parsed.plataformas.forEach((plat,i)=>{
+      setTimeout(()=>{
+        const agentId=platformMap[plat.toLowerCase()];
+        const agent=S.agents.find(a=>a.id===agentId);
+        if(!agent)return;
+
+        const taskId='T-'+String(S.taskCounter++).padStart(3,'0');
+        S.tasks.push({id:taskId,title:`Buscar leads: ${parsed.nicho} em ${parsed.cidade} — ${platformLabels[plat]||plat}`,platform:plat,agent:agentId,status:'in_progress',created:now()});
+
+        agent.status='running';
+        addActivity('info',`${agent.name} iniciado`,`${taskId}: buscando no ${platformLabels[plat]||plat}`);
+
+        // Simulate results
+        setTimeout(()=>{
+          const count=Math.floor(Math.random()*40)+10;
+          generateLeads(count,plat,parsed);
+
+          agent.status='active';
+          const task=S.tasks.find(t=>t.id===taskId);
+          if(task)task.status='done';
+
+          addActivity('ok',`${agent.name} concluiu`,`${count} leads coletados do ${platformLabels[plat]||plat}`);
+          renderAll();
+        },2000+i*1500+Math.random()*2000);
+
+        renderAll();
+      },500+i*800);
+    });
+
+    // Qualify after all scraping
+    setTimeout(()=>{
+      const qual=S.agents.find(a=>a.id==='qual');
+      qual.status='running';
+      addActivity('info','Qualificador iniciado',`Classificando ${S.leads.length} leads...`);
+
+      setTimeout(()=>{
+        S.leads.forEach(l=>{
+          if(!l.qualified){
+            l.qualified=true;
+            l.score=Math.floor(Math.random()*60)+40;
+            l.temp=l.score>=80?'quente':l.score>=50?'morno':'frio';
+          }
+        });
+        qual.status='active';
+        const hot=S.leads.filter(l=>l.temp==='quente').length;
+        addActivity('ok','Qualificacao concluida',`${hot} leads quentes de ${S.leads.length} total`);
+
+        // Enrich
+        const enrich=S.agents.find(a=>a.id==='enrich');
+        enrich.status='running';
+        addActivity('info','Enriquecedor iniciado','Buscando contatos...');
+        setTimeout(()=>{
+          S.leads.forEach(l=>{
+            if(Math.random()>.3)l.email=fakeName(l.nome).toLowerCase().replace(' ','.')+'@gmail.com';
+            if(Math.random()>.5)l.telefone='(44) 9'+Math.floor(Math.random()*9000+1000)+'-'+Math.floor(Math.random()*9000+1000);
+          });
+          enrich.status='active';
+          addActivity('ok','Enriquecimento concluido',`Emails e telefones encontrados`);
+
+          S.commands[0].status='concluido';
+          notify('Comando executado! '+S.leads.length+' leads coletados.');
+          renderAll();
+        },3000);
+
+        renderAll();
+      },2000);
+    },parsed.plataformas.length*2500+4000);
+
+    renderAll();
+  },800);
+
+  renderAll();
+}
+
+function parseCommand(text){
+  const t=text.toLowerCase();
+  const plataformas=[];
+  ['instagram','x','twitter','google','reddit','linkedin','facebook','tiktok'].forEach(p=>{
+    if(t.includes(p))plataformas.push(p==='twitter'?'x':p);
+  });
+  if(!plataformas.length)plataformas.push('instagram','google');
+
+  // Extract city
+  let cidade='Brasil';
+  const cidadeMatch=text.match(/em\s+([A-ZÀ-Ú][a-zà-ú]+(?:[\s-][A-ZÀ-Ú][a-zà-ú]+)*(?:\s*[-–]\s*[A-Z]{2})?)/);
+  if(cidadeMatch)cidade=cidadeMatch[1].trim();
+
+  // Extract niche (everything before "em" or main subject)
+  let nicho=text.replace(/buscar?\s*(no|na|em|pelo|pela)?\s*(instagram|x|twitter|google|reddit|linkedin|facebook|tiktok|,|\s+e\s+|etc|\.|!)/gi,'').trim();
+  nicho=nicho.replace(/^(preciso de leads para|preciso de|buscar|encontrar|quero|procure|procurar|me (traga|ache|busque|encontre))\s*/i,'').trim();
+  nicho=nicho.replace(/em\s+[A-ZÀ-Ú].*/,'').trim();
+  nicho=nicho.replace(/pessoas interessadas (em|no|na)\s*/i,'').trim();
+  if(nicho.length>80)nicho=nicho.slice(0,80);
+  if(!nicho)nicho='servico local';
+
+  return{nicho,cidade,plataformas};
+}
+
+const firstNames=['Ana','Maria','Joao','Carlos','Fernanda','Lucas','Juliana','Pedro','Camila','Rafael','Beatriz','Gabriel','Larissa','Matheus','Amanda','Thiago','Patricia','Diego','Mariana','Bruno','Leticia','Felipe','Vanessa','Rodrigo','Isabela','Gustavo','Daniela','Leonardo','Natalia','Eduardo'];
+const lastNames=['Silva','Santos','Oliveira','Souza','Lima','Pereira','Costa','Almeida','Ferreira','Rodrigues','Gomes','Martins','Araujo','Ribeiro','Carvalho','Barros','Dias','Nascimento','Moreira','Nunes'];
+
+function fakeName(){return firstNames[Math.floor(Math.random()*firstNames.length)]+' '+lastNames[Math.floor(Math.random()*lastNames.length)]}
+
+function generateLeads(count,platform,parsed){
+  const evidences={
+    instagram:['Comentou "quero fazer" em post','Curtiu 5+ posts sobre o tema','Segue perfis do nicho','Story perguntando sobre o servico','Bio menciona interesse'],
+    x:['Tweet perguntando indicacao','Reply em thread sobre o tema','Retweet de conteudo relacionado','Tweet reclamando do servico atual'],
+    google:['Avaliou clinica similar no Maps','Pesquisou o servico recentemente','Avaliacao pedindo mais info','Perfil Local Guide ativo na regiao'],
+    reddit:['Post pedindo indicacao','Comentario em thread sobre o tema','Post com duvida sobre o servico','Ativo em subreddit relacionado'],
+    linkedin:['Profissional do nicho na regiao','Empresa do segmento','Decisor em clinica/empresa','Post sobre o tema'],
+    facebook:['Post em grupo sobre o tema','Comentario pedindo indicacao','Membro de grupo relevante','Curtiu pagina de concorrente'],
+    tiktok:['Comentou em video sobre o tema','Curtiu videos relacionados','Criou video perguntando','Seguiu perfil do nicho']
+  };
+
+  const evs=evidences[platform]||['Interesse demonstrado'];
+
+  for(let i=0;i<count;i++){
+    const nome=fakeName();
+    const handle=nome.toLowerCase().replace(' ','_')+Math.floor(Math.random()*99);
+    S.leads.push({
+      id:'L-'+String(S.leadCounter++).padStart(5,'0'),
+      nome,
+      plataforma:platform,
+      perfil:handle,
+      evidencia:evs[Math.floor(Math.random()*evs.length)],
+      cidade:parsed.cidade,
+      nicho:parsed.nicho,
+      score:0,
+      temp:'—',
+      email:null,
+      telefone:null,
+      qualified:false,
+      coletado:now()
+    });
+  }
+}
+
+function now(){return new Date().toTimeString().slice(0,5)}
+
+function addActivity(type,title,desc){
+  S.activities.unshift({time:now(),type,title,desc});
+  if(S.activities.length>100)S.activities.pop();
+}
+
+// ─── RENDER ───
+function renderAll(){
+  renderKPIs();renderDashAgents();renderDashActivity();renderLeads();renderAgents();renderKanban();renderTimeline();
+  document.getElementById('leads-badge').textContent=S.leads.length;
+  document.getElementById('clientes-badge').textContent='14';
+  renderCmdHistory();
+}
+
+function renderKPIs(){
+  const hot=S.leads.filter(l=>l.temp==='quente').length;
+  const warm=S.leads.filter(l=>l.temp==='morno').length;
+  const running=S.agents.filter(a=>a.status==='running').length;
+  const withEmail=S.leads.filter(l=>l.email).length;
+  document.getElementById('kpi-grid').innerHTML=`
+    <div class="kpi g"><div class="kpi-label">Total Leads</div><div class="kpi-val">${S.leads.length}</div><div class="kpi-sub">${S.commands.length} comandos executados</div></div>
+    <div class="kpi r"><div class="kpi-label">Leads Quentes</div><div class="kpi-val">${hot}</div><div class="kpi-sub">Score 80+</div></div>
+    <div class="kpi y"><div class="kpi-label">Leads Mornos</div><div class="kpi-val">${warm}</div><div class="kpi-sub">Score 50-79</div></div>
+    <div class="kpi b"><div class="kpi-label">Agentes Rodando</div><div class="kpi-val">${running}</div><div class="kpi-sub">${S.agents.length} total</div></div>
+    <div class="kpi p"><div class="kpi-label">Com Contato</div><div class="kpi-val">${withEmail}</div><div class="kpi-sub">Email ou telefone</div></div>
+  `;
+}
+
+function renderDashAgents(){
+  document.getElementById('dash-agents').innerHTML=S.agents.map(a=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border-subtle);font-size:11px">
+      <span style="font-size:16px">${a.icon}</span>
+      <span style="flex:1;font-weight:500">${a.name}</span>
+      <span style="font-size:9px;padding:2px 8px;border-radius:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;${a.status==='running'?'background:var(--running-dim);color:var(--running)':a.status==='active'?'background:var(--accent-dim);color:var(--accent)':'background:#7c4dff22;color:var(--idle)'}">${a.status}</span>
+    </div>
+  `).join('');
+}
+
+function renderDashActivity(){
+  document.getElementById('dash-activity').innerHTML=S.activities.slice(0,10).map(a=>`
+    <div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-subtle);font-size:11px">
+      <span style="color:var(--text-muted);min-width:42px">${a.time}</span>
+      <span style="width:6px;height:6px;border-radius:50%;margin-top:5px;flex-shrink:0;background:var(--${a.type==='ok'?'accent':a.type==='err'?'hot':a.type==='warn'?'warm':'running'})"></span>
+      <span style="color:var(--text-secondary);line-height:1.4"><strong style="color:var(--text-primary);font-weight:500">${a.title}</strong> — ${a.desc}</span>
+    </div>
+  `).join('')||'<div style="color:var(--text-muted);text-align:center;padding:40px">Nenhuma atividade ainda. De seu primeiro comando.</div>';
+}
+
+function renderCmdHistory(){
+  document.getElementById('cmd-history').innerHTML=S.commands.map(c=>`
+    <div class="cmd-entry">
+      <span class="cmd-time">${c.time}</span>
+      <span class="cmd-text">${c.text.slice(0,100)}${c.text.length>100?'...':''}</span>
+      <span class="cmd-status ${c.status}">${c.status}</span>
+    </div>
+  `).join('')||'<div style="color:var(--text-muted);font-size:11px;text-align:center;padding:12px">Historico de comandos aparece aqui</div>';
+}
+
+function renderLeads(){
+  // Toolbar
+  const platforms=[...new Set(S.leads.map(l=>l.plataforma))];
+  document.getElementById('leads-toolbar').innerHTML=`
+    <div class="filter-btn ${S.activeFilter==='todos'?'active':''}" onclick="filterLeads('todos')">Todos (${S.leads.length})</div>
+    <div class="filter-btn ${S.activeFilter==='quente'?'active':''}" onclick="filterLeads('quente')">Quentes (${S.leads.filter(l=>l.temp==='quente').length})</div>
+    <div class="filter-btn ${S.activeFilter==='morno'?'active':''}" onclick="filterLeads('morno')">Mornos (${S.leads.filter(l=>l.temp==='morno').length})</div>
+    <div class="filter-btn ${S.activeFilter==='frio'?'active':''}" onclick="filterLeads('frio')">Frios (${S.leads.filter(l=>l.temp==='frio').length})</div>
+    <span style="color:var(--border-strong)">|</span>
+    ${platforms.map(p=>`<div class="filter-btn ${S.activeFilter===p?'active':''}" onclick="filterLeads('${p}')">${platformLabels[p]||p}</div>`).join('')}
+  `;
+
+  let filtered=S.leads;
+  if(S.activeFilter==='quente'||S.activeFilter==='morno'||S.activeFilter==='frio')filtered=S.leads.filter(l=>l.temp===S.activeFilter);
+  else if(S.activeFilter!=='todos')filtered=S.leads.filter(l=>l.plataforma===S.activeFilter);
+
+  filtered.sort((a,b)=>b.score-a.score);
+
+  document.getElementById('leads-body').innerHTML=filtered.slice(0,200).map(l=>{
+    const scoreColor=l.score>=80?'var(--hot)':l.score>=50?'var(--warm)':'var(--cold)';
+    return`<tr>
+      <td><span class="lead-name">${l.nome}</span><br><span style="font-size:10px;color:var(--text-tertiary)">@${l.perfil}</span></td>
+      <td><span class="lead-source ${l.plataforma}">${platformLabels[l.plataforma]||l.plataforma}</span></td>
+      <td style="font-size:11px;color:var(--text-secondary);max-width:250px">${l.evidencia}</td>
+      <td style="font-size:11px">${l.cidade}</td>
+      <td>${l.temp!=='—'?`<span class="temp-badge ${l.temp}">${l.temp}</span>`:'<span style="color:var(--text-muted)">—</span>'}</td>
+      <td><span class="score-bar"><span class="score-fill" style="width:${l.score}%;background:${scoreColor}"></span></span>${l.score||'—'}</td>
+      <td style="font-size:10px;color:var(--text-tertiary)">${l.email||'—'}<br>${l.telefone||''}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px">Nenhum lead ainda. De um comando na Central.</td></tr>';
+}
+
+function filterLeads(f){S.activeFilter=f;renderLeads()}
+
+function exportLeads(){
+  if(!S.leads.length){notify('Nenhum lead para exportar','err');return}
+  let csv='Nome,Perfil,Plataforma,Evidencia,Cidade,Temperatura,Score,Email,Telefone\n';
+  S.leads.forEach(l=>{csv+=`"${l.nome}","${l.perfil}","${l.plataforma}","${l.evidencia}","${l.cidade}","${l.temp}",${l.score},"${l.email||''}","${l.telefone||''}"\n`});
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='leads_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+  notify('CSV exportado!');
+}
+
+function renderAgents(){
+  document.getElementById('agents-grid').innerHTML=S.agents.map(a=>`
+    <div class="agent-card">
+      <span class="agent-status-badge ${a.status}">${a.status}</span>
+      <div class="agent-top">
+        <div class="agent-avatar ${a.type}"><span style="font-size:20px">${a.icon}</span><span class="status-dot ${a.status}"></span></div>
+        <div><div class="agent-name">${a.name}</div><div class="agent-role">${a.adapter}</div></div>
+      </div>
+      <div class="agent-desc">${a.desc}</div>
+      <div class="agent-meta">
+        <span class="agent-tag">${a.adapter}</span>
+        ${a.platform?`<span class="agent-tag">${platformLabels[a.platform]||a.platform}</span>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderKanban(){
+  const cols=[
+    {key:'pending',label:'Pendente',color:'var(--text-muted)'},
+    {key:'in_progress',label:'Executando',color:'var(--running)'},
+    {key:'done',label:'Concluido',color:'var(--accent)'}
+  ];
+  document.getElementById('kanban').innerHTML=cols.map(c=>{
+    const tasks=S.tasks.filter(t=>t.status===c.key);
+    return`<div class="kanban-col">
+      <div class="kanban-col-head"><span class="kanban-dot" style="background:${c.color}"></span><span class="kanban-col-name">${c.label}</span><span class="kanban-col-count">${tasks.length}</span></div>
+      <div class="kanban-cards">${tasks.map(t=>{
+        const agent=S.agents.find(a=>a.id===t.agent);
+        return`<div class="k-card">
+          <div class="k-card-id">${t.id} · ${t.created}</div>
+          <div class="k-card-title">${t.title}</div>
+          <div class="k-card-meta">
+            <span>${agent?agent.name:'—'}</span>
+            <span class="k-card-platform lead-source ${t.platform}" style="font-size:9px;padding:1px 6px">${platformLabels[t.platform]||t.platform}</span>
+          </div>
+        </div>`;
+      }).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderTimeline(){
+  document.getElementById('timeline').innerHTML=S.activities.map(a=>`
+    <div class="tl-item">
+      <div class="tl-dot ${a.type==='ok'?'ok':a.type==='err'?'err':a.type==='warn'?'warn':'info'}"></div>
+      <div class="tl-time">${a.time}</div>
+      <div class="tl-box"><div class="tl-title">${a.title}</div><div class="tl-desc">${a.desc}</div></div>
+    </div>
+  `).join('')||'<div style="color:var(--text-muted);text-align:center;padding:40px">Nenhuma atividade</div>';
+}
+
+// Enter to send
+document.getElementById('cmd-input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();executeCommand()}});
+
+renderAll();
+</script>
+</body>
+</html>
