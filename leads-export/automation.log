@@ -16,3 +16,27 @@
 [2026-04-15 02:43:56] [INFO] Leads qualificados: 13 (de 321 comentarios)
 [2026-04-15 02:43:56] [INFO] Leads NOVOS (nao duplicados): 13
 [2026-04-15 02:43:56] [INFO] Total no banco: 13 leads
+[2026-04-15 02:55:59] [INFO] Lead Machine v1.0 — Automacao de Leads
+[2026-04-15 02:55:59] [INFO] Apify Token: OK
+[2026-04-15 02:55:59] [INFO] Instagram: @shortcuts.ai.tools
+[2026-04-15 02:55:59] [INFO] Total: 13 | Quentes: 13 | Enviados: 0 | Pendentes: 13
+[2026-04-15 02:56:16] [INFO] Lead Machine v1.0 — Automacao de Leads
+[2026-04-15 02:56:16] [INFO] Apify Token: OK
+[2026-04-15 02:56:16] [INFO] Instagram: @shortcuts.ai.tools
+[2026-04-15 02:56:17] [INFO] Iniciando envio de DMs via @shortcuts.ai.tools...
+[2026-04-15 02:56:17] [INFO] Fazendo login no Instagram...
+[2026-04-15 02:56:43] [INFO] Login OK!
+[2026-04-15 02:56:43] [INFO] Leads pendentes de envio: 13
+[2026-04-15 02:56:43] [INFO] Enviando DM para @roberta_andreia_silva...
+[2026-04-15 02:57:04] [INFO] DM enviada para @roberta_andreia_silva! (1/3)
+[2026-04-15 02:57:04] [INFO] Aguardando 39s antes do proximo envio...
+[2026-04-15 02:57:43] [INFO] Enviando DM para @ariadnferre...
+[2026-04-15 02:58:02] [INFO] DM enviada para @ariadnferre! (2/3)
+[2026-04-15 02:58:02] [INFO] Aguardando 36s antes do proximo envio...
+[2026-04-15 02:58:38] [INFO] Enviando DM para @corretoradianasilva...
+[2026-04-15 02:58:53] [INFO] DM enviada para @corretoradianasilva! (3/3)
+[2026-04-15 02:58:53] [INFO] Envio concluido! 3 DMs enviadas.
+[2026-04-15 03:29:50] [INFO] Lead Machine v1.0 — Automacao de Leads
+[2026-04-15 03:29:50] [INFO] Apify Token: OK
+[2026-04-15 03:29:50] [INFO] Instagram: @shortcuts.ai.tools
+[2026-04-15 03:29:50] [INFO] Total: 13 | Quentes: 13 | Enviados: 3 | Pendentes: 10

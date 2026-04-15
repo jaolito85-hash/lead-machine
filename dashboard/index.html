@@ -393,21 +393,21 @@ const S = {
     { id:'enrich', name:'Enriquecedor', type:'enricher', desc:'Busca email, telefone, WhatsApp e redes sociais de cada lead. Usa Hunter.io, Apollo e OSINT.', adapter:'process', status:'idle', icon:'\uD83D\uDD0E' },
   ],
   leads: [
-    // ═══ LEADS REAIS — Apify Instagram — Pessoas que QUEREM harmonizacao em Maringa ═══
-    // Coletados via Apify instagram-scraper em 15/04/2026
-    // 100 posts analisados, 263 comentarios, 12 leads filtrados (bots removidos)
-    {id:'L-00001',nome:'Camilla Becker',plataforma:'instagram',perfil:'@_camillabecker._',evidencia:'Perguntou: "Ola qual valor do procedimento" em post de Lip Lift da @draflaviatomaroli',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:85,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'qualificado',clienteDestino:null,url:'https://www.instagram.com/p/DFlumZ0vgy2/'},
-    {id:'L-00002',nome:'Souza',plataforma:'instagram',perfil:'@sssouza0803',evidencia:'Perguntou: "Qual o valor?" em post de Lip Lift da @draflaviatomaroli',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:85,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'qualificado',clienteDestino:null,url:'https://www.instagram.com/p/DFlumZ0vgy2/'},
-    {id:'L-00003',nome:'Diana Silva',plataforma:'instagram',perfil:'@corretoradianasilva',evidencia:'Comentou: "Eu quero!" em post do @dr.viniciuslonghini sobre botox',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:90,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'disponivel',clienteDestino:null,url:'https://www.instagram.com/p/DRb_xAMjvS4/'},
-    {id:'L-00004',nome:'Ariadne Ferreira',plataforma:'instagram',perfil:'@ariadnferre',evidencia:'Comentou: "Ja quero ver esse resultado!" em post de bigode chines da @draisabelareder',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:90,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'disponivel',clienteDestino:null,url:'https://www.instagram.com/p/DW7Up2ziXGj/'},
-    {id:'L-00005',nome:'Marisa',plataforma:'instagram',perfil:'@marisa18tb',evidencia:'Perguntou: "Qual valor em media?" em post de cirurgia labial da @draflaviatomaroli',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:85,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'qualificado',clienteDestino:null,url:'https://www.instagram.com/p/C38GcU8gqwy/'},
-    {id:'L-00006',nome:'Shirley Longhini',plataforma:'instagram',perfil:'@shirley_longhini',evidencia:'Comentou: "Ja vou agendar!" em post de avaliacao do @dr.viniciuslonghini',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:92,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'disponivel',clienteDestino:null,url:'https://www.instagram.com/p/DRUTtbMjrnl/'},
-    {id:'L-00007',nome:'Neyde Jamilly',plataforma:'instagram',perfil:'@neydejamilly',evidencia:'Perguntou: "Qual valor do botox" em post antes/depois da @royalface.maringa',cidade:'Maringa-PR',nicho:'botox',score:85,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'qualificado',clienteDestino:null,url:'https://www.instagram.com/p/DFdcSgUPyv3/'},
-    {id:'L-00008',nome:'Katia Isabel',plataforma:'instagram',perfil:'@katiaisabell_',evidencia:'Perguntou: "Valor?" em post de botox da @royalface.maringa',cidade:'Maringa-PR',nicho:'botox',score:85,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'descoberto',clienteDestino:null,url:'https://www.instagram.com/p/DFdcSgUPyv3/'},
-    {id:'L-00009',nome:'Bia Gabi',plataforma:'instagram',perfil:'@bia.gabi0',evidencia:'Perguntou: "Valor?" em post de botox da @royalface.maringa',cidade:'Maringa-PR',nicho:'botox',score:85,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'descoberto',clienteDestino:null,url:'https://www.instagram.com/p/DFdcSgUPyv3/'},
-    {id:'L-00010',nome:'Rose Bergamo',plataforma:'instagram',perfil:'@rosebergamoo',evidencia:'Perguntou: "Qual o valor do Botox?" em post da @royalface.maringa',cidade:'Maringa-PR',nicho:'botox',score:85,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'descoberto',clienteDestino:null,url:'https://www.instagram.com/p/DFdcSgUPyv3/'},
-    {id:'L-00011',nome:'Andrea Gomes de Paula',plataforma:'instagram',perfil:'@andrea.gomesdepaula',evidencia:'Perguntou: "Valor" em post de botox da @royalface.maringa',cidade:'Maringa-PR',nicho:'botox',score:85,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'descoberto',clienteDestino:null,url:'https://www.instagram.com/p/DFdcSgUPyv3/'},
-    {id:'L-00012',nome:'Bianca Pinheiro',plataforma:'instagram',perfil:'@biancapinheiro729',evidencia:'Comentou: "Ai que sonho!" em post sobre botox com @dr.viniciuslonghini',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:90,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'qualificado',clienteDestino:null,url:'https://www.instagram.com/p/DHv3w_NsIT3/'},
+    // ═══ LEADS REAIS — Apify + DM Automatico — 15/04/2026 ═══
+    // Scraping: 8 perfis, 106 posts, 321 comentarios, 13 leads
+    // Envio: 3 DMs enviadas via @shortcuts.ai.tools
+    {id:'L-00001',nome:'Roberta Andreia Silva',plataforma:'instagram',perfil:'@roberta_andreia_silva',evidencia:'"Ual amiga perfeito, tbm quero kkkkk" — quer fazer harmonizacao',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:90,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'contactado',clienteDestino:null,url:'https://www.instagram.com/p/DWkJwF-DpPq/',dmEnviada:'15/04 02:57'},
+    {id:'L-00002',nome:'Ariadne Ferreira',plataforma:'instagram',perfil:'@ariadnferre',evidencia:'"Ja quero ver esse resultado!" — interessada em preenchimento',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:90,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'contactado',clienteDestino:null,url:'https://www.instagram.com/p/DW7Up2ziXGj/',dmEnviada:'15/04 02:58'},
+    {id:'L-00003',nome:'Diana Silva',plataforma:'instagram',perfil:'@corretoradianasilva',evidencia:'"Eu quero!" — interesse direto em harmonizacao',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:90,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'contactado',clienteDestino:null,url:'https://www.instagram.com/p/DRb_xAMjvS4/',dmEnviada:'15/04 02:58'},
+    {id:'L-00004',nome:'Neyde Jamilly',plataforma:'instagram',perfil:'@neydejamilly',evidencia:'"Qual valor do botox" — perguntando preco',cidade:'Maringa-PR',nicho:'botox',score:85,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'disponivel',clienteDestino:null,url:'https://www.instagram.com/p/DFdcSgUPyv3/',dmEnviada:null},
+    {id:'L-00005',nome:'Katia Isabel',plataforma:'instagram',perfil:'@katiaisabell_',evidencia:'"Valor?" — perguntando preco de botox',cidade:'Maringa-PR',nicho:'botox',score:85,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'disponivel',clienteDestino:null,url:'https://www.instagram.com/p/DFdcSgUPyv3/',dmEnviada:null},
+    {id:'L-00006',nome:'Bia Gabi',plataforma:'instagram',perfil:'@bia.gabi0',evidencia:'"Valor?" — perguntando preco de botox',cidade:'Maringa-PR',nicho:'botox',score:85,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'disponivel',clienteDestino:null,url:'https://www.instagram.com/p/DFdcSgUPyv3/',dmEnviada:null},
+    {id:'L-00007',nome:'Rose Bergamo',plataforma:'instagram',perfil:'@rosebergamoo',evidencia:'"Qual o valor do Botox?" — perguntando preco',cidade:'Maringa-PR',nicho:'botox',score:85,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'disponivel',clienteDestino:null,url:'https://www.instagram.com/p/DFdcSgUPyv3/',dmEnviada:null},
+    {id:'L-00008',nome:'Andrea Gomes de Paula',plataforma:'instagram',perfil:'@andrea.gomesdepaula',evidencia:'"Valor" — perguntando preco de botox',cidade:'Maringa-PR',nicho:'botox',score:85,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'disponivel',clienteDestino:null,url:'https://www.instagram.com/p/DFdcSgUPyv3/',dmEnviada:null},
+    {id:'L-00009',nome:'Bianca Pinheiro',plataforma:'instagram',perfil:'@biancapinheiro729',evidencia:'"Ai que sonho!" — demonstrou desejo por harmonizacao',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:90,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'qualificado',clienteDestino:null,url:'https://www.instagram.com/p/DHv3w_NsIT3/',dmEnviada:null},
+    {id:'L-00010',nome:'Camilla Becker',plataforma:'instagram',perfil:'@_camillabecker._',evidencia:'"Ola qual valor do procedimento" — perguntando preco de Lip Lift',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:85,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'qualificado',clienteDestino:null,url:'https://www.instagram.com/p/DFlumZ0vgy2/',dmEnviada:null},
+    {id:'L-00011',nome:'Souza',plataforma:'instagram',perfil:'@sssouza0803',evidencia:'"Qual o valor?" — perguntando preco de Lip Lift',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:85,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'qualificado',clienteDestino:null,url:'https://www.instagram.com/p/DFlumZ0vgy2/',dmEnviada:null},
+    {id:'L-00012',nome:'Shirley Longhini',plataforma:'instagram',perfil:'@shirley_longhini',evidencia:'"Ja vou agendar!" — pronta pra marcar consulta',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:92,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'qualificado',clienteDestino:null,url:'https://www.instagram.com/p/DRUTtbMjrnl/',dmEnviada:null},
   ],
   tasks: [],
   commands: [],
@@ -720,8 +720,10 @@ function renderKanban(){
     {key:'descoberto',label:'Descoberto',color:'var(--text-muted)',desc:'Encontrado nas plataformas'},
     {key:'qualificado',label:'Qualificado',color:'var(--warm)',desc:'Interesse confirmado'},
     {key:'enriquecido',label:'Enriquecido',color:'var(--running)',desc:'Contato encontrado'},
-    {key:'disponivel',label:'Disponivel',color:'var(--accent)',desc:'Pronto pra vender'},
-    {key:'vendido',label:'Vendido',color:'#7c4dff',desc:'Entregue ao cliente'},
+    {key:'disponivel',label:'Disponivel',color:'var(--accent)',desc:'Pronto pra contato'},
+    {key:'contactado',label:'DM Enviada',color:'#e91e63',desc:'Mensagem automatica enviada'},
+    {key:'respondeu',label:'Respondeu',color:'#7c4dff',desc:'Lead respondeu a DM'},
+    {key:'vendido',label:'Vendido',color:'#00e5ff',desc:'Entregue ao cliente'},
     {key:'convertido',label:'Convertido',color:'#00e5ff',desc:'Virou paciente'},
   ];
   document.getElementById('kanban-leads').innerHTML=cols.map(c=>{
@@ -745,7 +747,8 @@ function renderKanban(){
             <span class="lead-source ${l.plataforma}" style="font-size:9px;padding:1px 6px">${platformLabels[l.plataforma]||l.plataforma}</span>
             <span style="font-size:9px;opacity:.6">&#128279; fonte</span>
           </div>
-          ${l.clienteDestino?`<div style="margin-top:6px;font-size:9px;padding:2px 6px;background:#7c4dff22;color:#7c4dff;border-radius:4px;display:inline-block">→ ${l.clienteDestino}</div>`:''}
+          ${l.dmEnviada?`<div style="margin-top:6px;font-size:9px;padding:3px 8px;background:#e91e6322;color:#e91e63;border-radius:4px;display:inline-flex;align-items:center;gap:4px">&#10003; DM enviada ${l.dmEnviada}</div>`:''}
+          ${l.clienteDestino?`<div style="margin-top:4px;font-size:9px;padding:2px 6px;background:#00e5ff22;color:#00e5ff;border-radius:4px;display:inline-block">→ ${l.clienteDestino}</div>`:''}
         </div>`;
       }).join('')}</div>
     </div>`;
