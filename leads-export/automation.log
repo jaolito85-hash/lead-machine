@@ -1,0 +1,18 @@
+[2026-04-15 02:38:53] [INFO] Lead Machine v1.0 — Automacao de Leads
+[2026-04-15 02:38:53] [INFO] Apify Token: OK
+[2026-04-15 02:38:53] [INFO] Instagram: NAO CONFIGURADO
+[2026-04-15 02:39:37] [INFO] Lead Machine v1.0 — Automacao de Leads
+[2026-04-15 02:39:37] [INFO] Apify Token: OK
+[2026-04-15 02:39:37] [INFO] Instagram: NAO CONFIGURADO
+[2026-04-15 02:42:23] [INFO] Lead Machine v1.0 — Automacao de Leads
+[2026-04-15 02:42:23] [INFO] Apify Token: OK
+[2026-04-15 02:42:23] [INFO] Instagram: NAO CONFIGURADO
+[2026-04-15 02:42:24] [INFO] Iniciando scraping de 8 perfis...
+[2026-04-15 02:42:24] [INFO] Limite: 15 posts por perfil
+[2026-04-15 02:42:24] [INFO] Chamando Apify instagram-scraper...
+[2026-04-15 02:43:54] [INFO] Scraping concluido! Dataset: r35u8y7ho94rmIxlb
+[2026-04-15 02:43:56] [INFO] Posts baixados: 106
+[2026-04-15 02:43:56] [INFO] Comentarios extraidos: 321
+[2026-04-15 02:43:56] [INFO] Leads qualificados: 13 (de 321 comentarios)
+[2026-04-15 02:43:56] [INFO] Leads NOVOS (nao duplicados): 13
+[2026-04-15 02:43:56] [INFO] Total no banco: 13 leads
