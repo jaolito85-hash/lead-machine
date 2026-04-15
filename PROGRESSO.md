@@ -279,4 +279,90 @@ Ver detalhes completos em `FERRAMENTAS.md`
 
 ---
 
-*Ultima atualizacao: 15/04/2026 — Dia 2 (Fase 5 concluida — primeiro comando real executado)*
+#### Fase 5b: Criar Contas e Configurar APIs — CONCLUIDO
+
+- [x] Apify (ja tinha token configurado)
+- [x] Apollo.io — 10.000 emails/mes gratis (key via header, NAO URL)
+- [x] Google Places API (New) — $200/mes gratis ativado no Google Cloud
+- [x] SerpAPI — 100 buscas/mes gratis
+- [x] Hunter.io — 25 buscas + 50 verificacoes/mes gratis
+- [x] Firecrawl — 500 paginas/mes gratis
+- [ ] Reddit — ADIADO (exige formulario de aprovacao, demora dias)
+- [x] Instagram (ja tinha login configurado)
+- [x] `.env` preenchido com todas as keys
+
+**Decisoes:**
+- Reddit API adiada — usaremos Apify como fallback
+- Apollo.io exige key no HEADER (descontinuando via URL)
+- Google Places API (New) ativada (versao antiga sendo descontinuada)
+
+---
+
+#### Fase 6: Scripts dos Agentes Python — CONCLUIDO
+
+- [x] `agents/base.py` — modulo compartilhado (env, logging, DB com file locking, scoring, formato unificado, dedup, migracao)
+- [x] `agents/agent_instagram.py` — Apify instagram-scraper (profiles + hashtags)
+- [x] `agents/agent_google_maps.py` — Google Places API (New) + SerpAPI + Apify fallback
+- [x] `agents/agent_facebook.py` — Apify facebook-pages-scraper (paginas + comentarios)
+- [x] `agents/agent_tiktok.py` — Apify clockworks/free-tiktok-scraper
+- [x] `agents/agent_twitter.py` — Apify twitter-scraper (fragil, error handling reforçado)
+- [x] `agents/agent_enricher.py` — Apollo.io (header) + Hunter.io + Firecrawl + Apify contact-scraper
+- [x] `agents/agent_qualifier.py` — Re-scoring multi-fator + cross-platform
+- [x] `agents/requirements.txt` — apify-client, requests, python-dotenv, portalocker
+- [x] Todos os imports testados e funcionando
+- [x] Qualifier testado com leads reais — scores coerentes
+
+**Arquitetura:**
+- Formato unificado de lead (superset dashboard + leads-db.json)
+- Migracao automatica de leads antigos
+- IDs globais unicos (corrigido bug de IDs duplicados)
+- Dedup por plataforma:user:url
+- Parametros via CLI (--query, --city) OU env vars (SEARCH_QUERY, CITY) para Paperclip
+- Saida JSON no stdout (Paperclip captura), logs no stderr + arquivo
+- File locking com portalocker (execucao paralela segura)
+- Cascata de fallback (Google Places → SerpAPI → Apify)
+
+**Decisoes:**
+- lead_machine.py mantido como esta (backward compat, DMs)
+- Cada agente foca em descoberta, DMs separado
+- Qualifier com peso dominante no texto (85pts intencao direta) — contato e bonus
+- Twitter marcado como fragil — nao falha fatal se sem resultado
+
+---
+
+#### Fase 7: Conectar ao Backend Paperclip — CONCLUIDO
+
+- [x] Paperclip server rodando em `http://localhost:3100` (embedded PostgreSQL)
+- [x] Company "Lead Machine" criada via API (ID: `cdca3499-facb-45f8-84de-ae3814ba19cb`)
+- [x] 9 agentes registrados via API:
+  - CEO (claude_local) + CTO (claude_local)
+  - Agent-Instagram, Agent-Google, Agent-Facebook, Agent-TikTok, Agent-Twitter (process)
+  - Qualificador + Enriquecedor (process)
+- [x] Teste end-to-end: wakeup do Agent-Google → 19 negocios encontrados via Google Places API → leads-db.json atualizado
+- [x] `serve.py` — server local que serve dashboard + leads-db.json com CORS
+- [x] Dashboard conectado ao Paperclip API:
+  - Sync automatico de status dos agentes a cada 10s
+  - Sync automatico de leads do leads-db.json
+  - Comandos executam wakeups REAIS via API
+  - Fallback para modo simulado quando Paperclip offline
+  - Indicador visual "Paperclip Online" / "Modo Offline"
+
+**Como rodar:**
+```bash
+# Terminal 1: Paperclip server
+cd paperclip && pnpm dev
+
+# Terminal 2: Dashboard + Leads API
+python serve.py
+
+# Abrir: http://localhost:8080
+```
+
+**Decisoes:**
+- Dashboard roda em porta separada (8080) com CORS para buscar leads do filesystem
+- Modo dual: online (Paperclip real) e offline (simulado) — sem breaking change
+- Agent-Google testado end-to-end com sucesso (19 leads B2B em 1.6s)
+
+---
+
+*Ultima atualizacao: 15/04/2026 — Dia 2 (Fase 7 concluida — backend Paperclip conectado)*

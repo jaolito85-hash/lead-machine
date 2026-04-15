@@ -53,17 +53,17 @@ VOCE (Board — da os comandos)
   |
   |--- CTO — Garante que os scrapers funcionam
   |     |
-  |     |--- Agent Instagram    (busca no Instagram)
-  |     |--- Agent X/Twitter    (busca no X)
-  |     |--- Agent Google       (busca no Google + Maps)
-  |     |--- Agent Reddit       (busca no Reddit)
-  |     |--- Agent LinkedIn     (busca no LinkedIn)
-  |     |--- Agent Facebook     (busca no Facebook)
-  |     |--- Agent TikTok       (busca no TikTok)
+  |     |--- Agent Instagram    (busca no Instagram)           ✅ agent_instagram.py
+  |     |--- Agent Google       (busca no Google + Maps)       ✅ agent_google_maps.py
+  |     |--- Agent Facebook     (busca no Facebook)            ✅ agent_facebook.py
+  |     |--- Agent TikTok       (busca no TikTok)              ✅ agent_tiktok.py
+  |     |--- Agent X/Twitter    (busca no X — fragil)          ✅ agent_twitter.py
+  |     |--- Agent Reddit       (busca no Reddit — via Apify)  ⏸ API adiada
+  |     |--- Agent LinkedIn     (busca no LinkedIn — risco)    ⏸ Risco legal
   |
-  |--- Qualificador — Filtra e pontua os leads
+  |--- Qualificador — Filtra e pontua os leads               ✅ agent_qualifier.py
   |
-  |--- Enriquecedor — Encontra email, telefone, redes sociais
+  |--- Enriquecedor — Encontra email, telefone, redes sociais ✅ agent_enricher.py
 ```
 
 ### O que cada agente faz
@@ -114,9 +114,8 @@ VOCE (Board — da os comandos)
 ### Instalacao das ferramentas Python
 
 ```bash
-pip install instaloader tweepy praw playwright googlesearch-python
-pip install apollo-sdk hunter beautifulsoup4 requests
-playwright install chromium
+pip install -r agents/requirements.txt
+# Instala: apify-client, requests, python-dotenv, portalocker
 ```
 
 ---
@@ -226,25 +225,31 @@ Cada lead coletado segue esta estrutura:
 {
   "id": "L-00001",
   "nome": "Maria Silva",
-  "plataforma_origem": "instagram",
-  "url_perfil": "https://instagram.com/mariasilva_",
+  "user": "mariasilva_",
+  "plataforma": "instagram",
+  "perfil": "@mariasilva_",
   "evidencia": "Comentou 'quero muito fazer' em post de harmonizacao",
-  "cidade": "Maringa",
-  "estado": "PR",
+  "texto_original": "quero muito fazer!",
+  "url": "https://www.instagram.com/p/DWkJwF-DpPq/",
+  "post_owner": "dracamilaguerreiro",
+  "cidade": "Maringa-PR",
+  "nicho": "harmonizacao facial",
+  "score": 92,
+  "temp": "quente",
+  "qualified": true,
+  "etapa": "enriquecido",
   "email": "maria@gmail.com",
   "telefone": "(44) 99999-0000",
-  "whatsapp": true,
-  "instagram": "@mariasilva_",
-  "facebook": null,
-  "linkedin": null,
-  "nicho_interesse": "harmonizacao facial",
-  "score": 92,
-  "temperatura": "quente",
-  "coletado_em": "2026-04-14T18:30:00Z",
-  "enriquecido": true,
-  "notas": "Bio menciona Maringa, engajou com 3 posts sobre o tema"
+  "coletado": "14/04",
+  "scraped_at": "2026-04-14T18:30:00Z",
+  "sent": false,
+  "sent_at": null,
+  "dmEnviada": null,
+  "clienteDestino": null
 }
 ```
+
+**Pipeline de etapas:** `descoberto` → `qualificado` → `enriquecido` → `disponivel` → `contactado` → `respondeu` → `vendido` → `convertido`
 
 ---
 
@@ -291,15 +296,32 @@ POST /api/companies/{cid}/agents
   "role": "engineer",
   "adapterType": "process",
   "adapterConfig": {
-    "command": "python3 /agents/instagram_scraper.py",
+    "command": "python3 agents/agent_instagram.py",
+    "cwd": "C:/projetos/paperclip",
     "env": {
-      "PLATFORM": "instagram",
-      "OUTPUT_DIR": "/data/leads/raw"
-    }
+      "SEARCH_QUERY": "harmonizacao facial",
+      "CITY": "Maringa-PR",
+      "LIMIT": "30"
+    },
+    "timeoutSec": 300
   },
   "reportsTo": "{ctoId}"
 }
 ```
+
+### Scripts disponiveis
+
+| Script | Comando | Plataforma |
+|--------|---------|------------|
+| `agents/agent_instagram.py` | `python3 agents/agent_instagram.py --query "..." --city "..."` | Instagram |
+| `agents/agent_google_maps.py` | `python3 agents/agent_google_maps.py --query "..." --city "..."` | Google Maps |
+| `agents/agent_facebook.py` | `python3 agents/agent_facebook.py --query "..." --city "..."` | Facebook |
+| `agents/agent_tiktok.py` | `python3 agents/agent_tiktok.py --query "..." --city "..."` | TikTok |
+| `agents/agent_twitter.py` | `python3 agents/agent_twitter.py --query "..." --city "..."` | X/Twitter (fragil) |
+| `agents/agent_enricher.py` | `python3 agents/agent_enricher.py --limit 20` | Apollo + Hunter + Firecrawl |
+| `agents/agent_qualifier.py` | `python3 agents/agent_qualifier.py --requalify` | Re-scoring multi-fator |
+
+**Parametros:** Todos aceitam `--query`, `--city`, `--limit`, `--dry-run`, `--verbose`. Tambem leem env vars: `SEARCH_QUERY`, `CITY`, `LIMIT` (para integracao com Paperclip).
 
 ### Dar um comando (criar issue)
 
@@ -321,11 +343,13 @@ O CEO recebe via heartbeat, interpreta, e cria sub-tasks para cada agente.
 
 | Fase | O que | Status |
 |------|-------|--------|
-| 1 | Estudar arquitetura Paperclip | Concluido |
-| 2 | Documentacao de orquestracao | Concluido |
-| 3 | Dashboard frontend | Concluido |
-| 4 | Refazer dashboard para lead generation | Proximo |
-| 5 | Conectar ao backend Paperclip | Pendente |
-| 6 | Criar scripts dos agentes (Python) | Pendente |
-| 7 | Primeiro comando real end-to-end | Pendente |
-| 8 | Escalar para multi-nicho | Pendente |
+| 1 | Estudar arquitetura Paperclip (65 services, 30+ rotas, heartbeat loop) | Concluido |
+| 2 | Documentacao de orquestracao (este guia) | Concluido |
+| 3 | Dashboard frontend (7 paginas: comando, kanban, leads, clientes, agentes, atividade, config) | Concluido |
+| 4 | Pesquisa de ferramentas e APIs (55+ Apify actors, comparativo de 20+ ferramentas) | Concluido |
+| 5a | Primeiro comando real — 21 leads B2B + 12 B2C harmonizacao facial Maringa | Concluido |
+| 5b | Criar contas e configurar APIs (Apify, Apollo, Google Places, SerpAPI, Hunter, Firecrawl) | Concluido |
+| 6 | Scripts dos agentes Python (base.py + 7 agentes: IG, Google, FB, TikTok, X, Enricher, Qualifier) | Concluido |
+| 7 | Conectar ao backend Paperclip (subir server, criar company/agentes via API, dashboard consome API real) | Proximo |
+| 8 | Primeiro comando real end-to-end (comando → CEO → agentes → leads → enriquecimento → dashboard) | Pendente |
+| 9 | Escalar (multi-nicho, cron, alertas email/Telegram, deploy Docker, plugin CRM) | Pendente |

@@ -2,3 +2,6 @@
 node_modules/
 paperclip/
 .claude/
+__pycache__/
+*.pyc
+leads-export/*.log

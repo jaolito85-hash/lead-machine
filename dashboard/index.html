@@ -148,7 +148,7 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
 .leads-table tr:hover td{background:var(--bg-hover)}
 .lead-name{font-weight:500;color:var(--text-primary)}
 .lead-source{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500}
-.lead-source.instagram{background:#e91e6322;color:#e91e63}.lead-source.google{background:#448aff22;color:#448aff}.lead-source.x{background:#1da1f222;color:#90caf9}.lead-source.reddit{background:#ff640022;color:#ff6d00}.lead-source.linkedin{background:#0077b522;color:#29b6f6}.lead-source.facebook{background:#1877f222;color:#42a5f5}.lead-source.tiktok{background:#ff004422;color:#ff4081}
+.lead-source.instagram{background:#c837ab22;color:#c837ab}.lead-source.google{background:#4285f422;color:#6ea8fe}.lead-source.x{background:#1da1f222;color:#90caf9}.lead-source.reddit{background:#ff640022;color:#ff9100}.lead-source.linkedin{background:#0077b522;color:#29b6f6}.lead-source.facebook{background:#1877f222;color:#42a5f5}.lead-source.tiktok{background:#00f2ea22;color:#00f2ea}
 .temp-badge{font-size:10px;padding:2px 10px;border-radius:10px;font-weight:600}
 .temp-badge.quente{background:var(--hot-dim);color:var(--hot)}.temp-badge.morno{background:var(--warm-dim);color:var(--warm)}.temp-badge.frio{background:var(--cold-dim);color:var(--cold)}
 .score-bar{width:60px;height:6px;background:var(--bg-active);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:6px}
@@ -162,13 +162,17 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
 .kanban-col-name{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary)}
 .kanban-col-count{margin-left:auto;font-size:10px;background:var(--bg-active);color:var(--text-tertiary);padding:1px 6px;border-radius:8px}
 .kanban-cards{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px}
+.cmd-tipo-btn{transition:all .15s}.cmd-tipo-btn.active{background:var(--accent);border-color:var(--accent);color:var(--bg-void);font-weight:600}
 .k-card{background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:var(--radius);padding:12px;cursor:grab;transition:all .15s}
-.k-card:hover{border-color:var(--border-strong);transform:translateY(-1px)}
+.k-card:hover{border-color:var(--border-strong);transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .k-card.dragging{opacity:.4;border-color:var(--accent)}
-.k-card-id{font-size:10px;color:var(--text-muted);margin-bottom:4px}
-.k-card-title{font-size:12px;font-weight:500;margin-bottom:8px;line-height:1.4}
-.k-card-meta{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--text-tertiary)}
+.k-card-id{font-size:10px;color:var(--text-secondary);margin-bottom:4px}
+.k-card-title{font-size:13px;font-weight:600;margin-bottom:8px;line-height:1.4;color:#fff;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.k-card-evidence{font-size:11px;color:#c8cad0;margin-bottom:8px;line-height:1.5;font-style:italic;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.k-card-meta{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--text-secondary)}
 .k-card-platform{font-size:9px;padding:1px 6px;border-radius:8px;font-weight:500}
+.k-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border-default);background:var(--bg-active)}
+.k-avatar-fallback{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;background:var(--bg-active);border:2px solid var(--border-default);color:var(--text-secondary)}
 
 /* ═══ ACTIVITY ═══ */
 .timeline{position:relative;padding-left:32px}
@@ -224,17 +228,17 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
   <nav class="nav">
     <div class="nav-label">Comando</div>
     <div class="nav-item active" data-page="command">&#9654; Central de Comando</div>
-    <div class="nav-label">Pipeline de Leads</div>
-    <div class="nav-item" data-page="kanban">&#9744; Kanban de Leads <span class="badge" id="leads-badge">0</span></div>
-    <div class="nav-item" data-page="leads">&#9673; Todos os Leads</div>
-    <div class="nav-item" data-page="clientes">&#9733; Nossos Clientes <span class="badge" id="clientes-badge">0</span></div>
+    <div class="nav-label">Pipeline</div>
+    <div class="nav-item" data-page="kanban">&#9744; Kanban <span class="badge" id="leads-badge">0</span></div>
+    <div class="nav-item" data-page="leads">&#9823; Pessoas <span class="badge" id="pessoas-badge">0</span></div>
+    <div class="nav-item" data-page="empresas">&#9878; Empresas <span class="badge" id="empresas-badge">0</span></div>
     <div class="nav-label">Operacao</div>
     <div class="nav-item" data-page="agents">&#9881; Agentes</div>
     <div class="nav-label">Sistema</div>
     <div class="nav-item" data-page="activity">&#9776; Atividades</div>
     <div class="nav-item" data-page="settings">&#9881; Config</div>
   </nav>
-  <div class="sidebar-footer"><span class="pulse"></span> Sistema Online</div>
+  <div class="sidebar-footer" id="api-status"><span class="pulse"></span> Sistema Online</div>
 </aside>
 
 <div class="main">
@@ -253,8 +257,14 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
       <div class="command-section">
         <div class="command-box">
           <div class="command-header"><span class="dot"></span> Seu Comando</div>
+          <div style="display:flex;gap:8px;padding:10px 14px 0;align-items:center">
+            <span style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px">Buscar:</span>
+            <button class="btn cmd-tipo-btn active" id="cmd-tipo-pessoas" onclick="setCmdTipo('pessoa')" style="font-size:11px;padding:4px 14px">&#9823; Pessoas</button>
+            <button class="btn cmd-tipo-btn" id="cmd-tipo-empresas" onclick="setCmdTipo('empresa')" style="font-size:11px;padding:4px 14px">&#9878; Empresas</button>
+            <button class="btn cmd-tipo-btn" id="cmd-tipo-ambos" onclick="setCmdTipo('ambos')" style="font-size:11px;padding:4px 14px">&#9776; Ambos</button>
+          </div>
           <div class="command-input-wrap">
-            <textarea class="command-input" id="cmd-input" placeholder="Ex: Preciso de leads para clinica odontologica que faz harmonizacao facial em Maringa-PR. Buscar no Instagram, X, Google e Reddit."></textarea>
+            <textarea class="command-input" id="cmd-input" placeholder="Ex: Preciso de leads para advogado criminalista em Maringa-PR. Buscar no Instagram e Google."></textarea>
             <button class="command-send" id="cmd-send" onclick="executeCommand()">Executar</button>
           </div>
           <div class="command-history" id="cmd-history"></div>
@@ -280,8 +290,8 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
       <div class="leads-toolbar" id="leads-toolbar"></div>
       <div class="panel">
         <div class="panel-head">
-          <span class="panel-title">Leads Coletados</span>
-          <button class="btn" onclick="exportLeads()">Exportar CSV</button>
+          <span class="panel-title">Pessoas Interessadas</span>
+          <button class="btn" onclick="exportLeads('pessoa')">Exportar CSV</button>
         </div>
         <div class="panel-body" style="max-height:none;overflow-x:auto">
           <table class="leads-table" id="leads-table">
@@ -292,34 +302,21 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
       </div>
     </div>
 
-    <!-- ═══ CLIENTES B2B PAGE ═══ -->
-    <div class="page" id="page-clientes">
-      <div style="margin-bottom:20px">
-        <span style="font-family:var(--font-sans);font-size:15px;font-weight:600">Nossos Clientes — Quem Compra os Leads</span>
-        <p style="font-size:11px;color:var(--text-tertiary);margin-top:4px">Clinicas de Maringa-PR que PAGAM pelos leads de pacientes interessados em harmonizacao facial.</p>
+    <!-- ═══ EMPRESAS PAGE ═══ -->
+    <div class="page" id="page-empresas">
+      <div class="leads-toolbar" id="empresas-toolbar"></div>
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Empresas Encontradas</span>
+          <button class="btn" onclick="exportEmpresas()">Exportar CSV</button>
+        </div>
+        <div class="panel-body" style="max-height:none;overflow-x:auto">
+          <table class="leads-table" id="empresas-table">
+            <thead><tr><th>Empresa</th><th>Telefone</th><th>Website</th><th>Endereco</th><th>Rating</th><th>Score</th><th>Cidade</th></tr></thead>
+            <tbody id="empresas-body"></tbody>
+          </table>
+        </div>
       </div>
-      <div class="panel"><div class="panel-head"><span class="panel-title">Clinicas Mapeadas</span></div>
-      <div class="panel-body" style="max-height:none;overflow-x:auto">
-        <table class="leads-table">
-          <thead><tr><th>Clinica</th><th>Profissional</th><th>Telefone/WhatsApp</th><th>Email</th><th>Instagram</th><th>Endereco</th></tr></thead>
-          <tbody>
-            <tr><td class="lead-name">Consultorio Dra. Suellen Rodrigues</td><td>Dra. Suellen Rodrigues</td><td>(44) 3023-9248<br><strong>(44) 99136-4900</strong></td><td>contato@suellenrodrigues.com</td><td>@dra.surodrigues</td><td>Av. Carneiro Leao, 563 sala 905 — Le Monde — Maringa/PR</td></tr>
-            <tr><td class="lead-name">Dra. Flavia Tomaroli</td><td>Dra. Flavia Tomaroli (CRO/PR 13613)</td><td><strong>(44) 99925-5110</strong></td><td>contato@flaviatomaroli.com.br</td><td>@draflaviatomaroli</td><td>Av. Dr. Luiz Teixeira Mendes, 1805 Sala 01 — Zona 04 — Maringa/PR</td></tr>
-            <tr><td class="lead-name">Dra. Isabela Reder</td><td>Dra. Isabela Reder</td><td><strong>(44) 9775-9291</strong></td><td>contato@isabelareder.com.br</td><td>@draisabelareder</td><td>Av. Dr. Luiz Teixeira Mendes, 996 — Maringa/PR</td></tr>
-            <tr><td class="lead-name">Clinica Sekai</td><td>Dra. Leticia Yuki Kawanichi (CRO 25191)</td><td>(44) 3122-0421<br><strong>(44) 99155-2266</strong></td><td>atendimento@clinicasekai.com.br</td><td>@clinicasekai</td><td>Av. Itororo, 361 — Zona 02 — Maringa/PR</td></tr>
-            <tr><td class="lead-name">Facenova</td><td>Dra. Deborah Esperidiao Fioroni</td><td>(44) 3028-8169<br><strong>(44) 99972-2691</strong></td><td>—</td><td>—</td><td>Rua Neo Alves Martins, 3415 Sala 601 — Zona 01 — Maringa/PR</td></tr>
-            <tr><td class="lead-name">Hamonir</td><td>—</td><td>(44) 3122-1111<br><strong>(44) 3122-0375</strong></td><td>—</td><td>—</td><td>Av. Tamandare, 331 — Centro — Maringa/PR</td></tr>
-            <tr><td class="lead-name">Royal Face Maringa</td><td>— (franquia)</td><td>—</td><td>—</td><td>@royalface.maringa (8k seg)</td><td>Maringa/PR</td></tr>
-            <tr><td class="lead-name">Dr. Vinicius Longhini</td><td>Dr. Vinicius Longhini</td><td>—</td><td>—</td><td>@dr.viniciuslonghini (27k seg)</td><td>Maringa/PR</td></tr>
-            <tr><td class="lead-name">Dr Harmoniza</td><td>—</td><td>—</td><td>—</td><td>@drharmoniza</td><td>Rua Joubert de Carvalho, 101 — Centro — Maringa/PR</td></tr>
-            <tr><td class="lead-name">Odontologia Peixoto</td><td>—</td><td>(44) 3346-2666</td><td>—</td><td>—</td><td>Rua Nassib Haddad, 35 — Zona 04 — Maringa/PR</td></tr>
-            <tr><td class="lead-name">OralTime</td><td>—</td><td>—</td><td>—</td><td>@oraltimeodonto</td><td>Maringa e Paicandu/PR</td></tr>
-            <tr><td class="lead-name">Dra. Fabrizzia Vassallo</td><td>Dra. Fabrizzia Vassallo</td><td>—</td><td>—</td><td>@fabrizziavassallo</td><td>Maringa/PR</td></tr>
-            <tr><td class="lead-name">Dra. Samia Dias</td><td>Dra. Samia Dias</td><td>—</td><td>—</td><td>—</td><td>Av. Carneiro Leao, 563 — Maringa/PR</td></tr>
-            <tr><td class="lead-name">Ferracini Estetica Avancada</td><td>—</td><td><strong>(44) 99159-3050</strong></td><td>—</td><td>—</td><td>Av. Tiradentes, 240 terreo — Maringa/PR</td></tr>
-          </tbody>
-        </table>
-      </div></div>
     </div>
 
     <!-- ═══ AGENTS PAGE ═══ -->
@@ -421,6 +418,138 @@ const platformMap = {instagram:'ig',x:'tw',twitter:'tw',google:'gg',reddit:'rd',
 const platformLabels = {instagram:'Instagram',x:'X/Twitter',google:'Google',reddit:'Reddit',linkedin:'LinkedIn',facebook:'Facebook',tiktok:'TikTok'};
 const tempColors = {quente:'hot',morno:'warm',frio:'cold'};
 
+// ─── PAPERCLIP API CONFIG ───
+// Tudo passa pelo serve.py (proxy) — mesma origem, sem CORS
+const PAPERCLIP_API = '/api';
+const LEADS_API = '';
+const COMPANY_ID = 'cdca3499-facb-45f8-84de-ae3814ba19cb';
+const AGENT_IDS = {
+  ceo:'ac264098-744b-4cad-87fd-0b6378a079fe',
+  cto:'d2b4a628-891a-41cb-bba2-dd9ad1d0f1d9',
+  ig:'394c02c8-e89c-4fc7-81ba-0bec324c3861',
+  gg:'70a6f714-b0d7-46fe-8f7d-60aa6c95a669',
+  fb:'22185f27-ca46-4673-9f37-905c68452854',
+  tk:'7f537fd8-a494-4e3b-bd57-8150e91af582',
+  tw:'5bcbe652-7b99-406c-871d-a5828cce85eb',
+  enrich:'28935c77-2906-4288-bc3d-87dd6feb30c4',
+  qual:'e2c97974-08e0-439a-9f9f-e8d19051f31b'
+};
+let paperclipOnline = false;
+let cmdTipo = 'pessoa'; // pessoa | empresa | ambos
+
+function setCmdTipo(tipo){
+  cmdTipo=tipo;
+  document.querySelectorAll('.cmd-tipo-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('cmd-tipo-'+tipo+'s').classList.add('active');
+  // Atualizar placeholder
+  const input=document.getElementById('cmd-input');
+  if(tipo==='pessoa') input.placeholder='Ex: Pessoas que precisam de advogado criminalista em Maringa-PR. Buscar no Instagram e Facebook.';
+  else if(tipo==='empresa') input.placeholder='Ex: Escritorios de advocacia criminal em Maringa-PR.';
+  else input.placeholder='Ex: Buscar advogados criminalistas em Maringa-PR. Instagram e Google.';
+}
+
+// ─── SYNC COM PAPERCLIP ───
+async function syncAgentsFromAPI(){
+  try{
+    const r=await fetch(`${PAPERCLIP_API}/companies/${COMPANY_ID}/agents`);
+    const agents=await r.json();
+    agents.forEach(a=>{
+      const local=S.agents.find(la=>AGENT_IDS[la.id]===a.id);
+      if(local) local.status = a.status==='idle'?'active':a.status;
+    });
+    paperclipOnline=true;
+    renderAll(true);
+  }catch(e){paperclipOnline=false}
+}
+
+async function syncLeadsFromAPI(){
+  try{
+    const r=await fetch(`${LEADS_API}/leads.json`);
+    const leads=await r.json();
+    if(Array.isArray(leads)&&leads.length>0){
+      // Merge: manter leads do dashboard que nao existem no DB
+      const dbIds=new Set(leads.map(l=>l.id));
+      const extraLeads=S.leads.filter(l=>!dbIds.has(l.id)&&!l._fromApi);
+      leads.forEach(l=>{l._fromApi=true; if(!l.etapa)l.etapa='descoberto'; if(!l.coletado)l.coletado=new Date().toLocaleDateString('pt-BR').slice(0,5)});
+      S.leads=[...leads,...extraLeads];
+      S.leadCounter=Math.max(...S.leads.map(l=>parseInt((l.id||'L-0').replace('L-',''))||0))+1;
+      renderAll(true);
+    }
+  }catch(e){}
+}
+
+async function triggerAgent(agentId, query, city){
+  const uuid=AGENT_IDS[agentId];
+  if(!uuid)return null;
+  try{
+    // 1. Buscar config atual do agente
+    const agentResp=await fetch(`${PAPERCLIP_API}/agents/${uuid}`);
+    const agentData=await agentResp.json();
+    const currentConfig=agentData.adapterConfig||{};
+
+    // 2. Atualizar apenas o env com parametros de busca (manter command/args/cwd)
+    const newConfig={...currentConfig, env:{
+      ...(currentConfig.env||{}),
+      SEARCH_QUERY: query,
+      CITY: city,
+      NICHO: query,
+      LIMIT: '30'
+    }};
+
+    await fetch(`${PAPERCLIP_API}/agents/${uuid}`,{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({adapterConfig:newConfig})
+    });
+
+    // 3. Disparar wakeup
+    const r=await fetch(`${PAPERCLIP_API}/agents/${uuid}/wakeup`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({source:'on_demand',triggerDetail:'manual',reason:`Buscar: ${query} em ${city}`})
+    });
+    const run=await r.json();
+    return run.id;
+  }catch(e){console.error('Wakeup failed:',e);return null}
+}
+
+async function pollRunStatus(runId, agentId, callback){
+  const uuid=AGENT_IDS[agentId];
+  let attempts=0;
+  const check=async()=>{
+    attempts++;
+    try{
+      const r=await fetch(`${PAPERCLIP_API}/companies/${COMPANY_ID}/heartbeat-runs?agentId=${uuid}&limit=1`);
+      const runs=await r.json();
+      const run=runs.find(r=>r.id===runId);
+      if(run && (run.status==='succeeded'||run.status==='failed')){
+        callback(run);
+        return;
+      }
+    }catch(e){}
+    if(attempts<60) setTimeout(check,2000); // Poll a cada 2s, max 2 min
+    else callback({status:'failed',exitCode:-1}); // Timeout
+  };
+  setTimeout(check,2000);
+}
+
+// Atualizar indicador de status
+function updateStatusIndicator(){
+  const el=document.getElementById('api-status');
+  if(paperclipOnline){
+    el.innerHTML='<span class="pulse"></span> Paperclip Online';
+    el.style.color='var(--accent)';
+  } else {
+    el.innerHTML='<span class="pulse" style="background:var(--warm)"></span> Modo Offline';
+    el.style.color='var(--warm)';
+  }
+}
+
+// Auto-sync a cada 10 segundos
+setInterval(()=>{syncAgentsFromAPI();syncLeadsFromAPI();updateStatusIndicator()},10000);
+// Sync inicial
+setTimeout(()=>{syncAgentsFromAPI();syncLeadsFromAPI();updateStatusIndicator()},1000);
+
 function notify(msg,type='ok'){const n=document.getElementById('notif');n.className='notif '+type;n.textContent=msg;n.classList.add('show');setTimeout(()=>n.classList.remove('show'),3000)}
 
 // Clock
@@ -432,7 +561,7 @@ document.querySelectorAll('.nav-item').forEach(el=>{
     const p=el.dataset.page;if(!p)return;
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');
     document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('active'));document.getElementById('page-'+p).classList.add('active');
-    const titles={command:['Central de Comando','Voce da a ordem. Agentes executam.'],kanban:['Pipeline de Leads','Arraste os cards entre as etapas do funil'],leads:['Todos os Leads','Lista completa com filtros'],clientes:['Nossos Clientes','Clinicas que COMPRAM os leads — quem nos paga'],agents:['Agentes','Seus funcionarios especializados'],activity:['Atividades','Log do sistema'],settings:['Configuracao','API keys, proxies, plataformas']};
+    const titles={command:['Central de Comando','Voce da a ordem. Agentes executam.'],kanban:['Pipeline','Arraste os cards entre as etapas do funil'],leads:['Pessoas','Pessoas que demonstraram interesse no servico'],empresas:['Empresas','Negocios encontrados no Google Maps'],agents:['Agentes','Seus funcionarios especializados'],activity:['Atividades','Log do sistema'],settings:['Configuracao','API keys, proxies, plataformas']};
     document.getElementById('pg-title').textContent=titles[p][0];
     document.getElementById('pg-sub').textContent=titles[p][1];
   });
@@ -443,89 +572,149 @@ function executeCommand(){
   const input=document.getElementById('cmd-input').value.trim();
   if(!input){notify('Digite um comando','err');return}
 
-  // Parse command
   const parsed=parseCommand(input);
-
   S.commands.unshift({text:input,time:now(),status:'executando',parsed});
   addActivity('ok','Comando recebido',`"${input.slice(0,80)}${input.length>80?'...':''}"`);
-
   document.getElementById('cmd-input').value='';
 
-  // CEO processes
-  setTimeout(()=>{
-    addActivity('info','CEO processando',`Nicho: ${parsed.nicho} | Cidade: ${parsed.cidade} | Plataformas: ${parsed.plataformas.join(', ')}`);
+  // Se Paperclip online → execucao REAL
+  if(paperclipOnline){
+    executeCommandReal(parsed);
+  } else {
+    executeCommandSimulated(parsed);
+  }
+  renderAll();
+}
 
-    // Create tasks for each platform
-    parsed.plataformas.forEach((plat,i)=>{
-      setTimeout(()=>{
-        const agentId=platformMap[plat.toLowerCase()];
-        const agent=S.agents.find(a=>a.id===agentId);
-        if(!agent)return;
+// ─── EXECUCAO REAL (Paperclip API) ───
+async function executeCommandReal(parsed){
+  addActivity('info','CEO processando',`Nicho: ${parsed.nicho} | Cidade: ${parsed.cidade} | Plataformas: ${parsed.plataformas.join(', ')}`);
+  notify(`Executando: ${parsed.plataformas.length} agentes em paralelo...`,'info');
 
-        const taskId='T-'+String(S.taskCounter++).padStart(3,'0');
-        S.tasks.push({id:taskId,title:`Buscar leads: ${parsed.nicho} em ${parsed.cidade} — ${platformLabels[plat]||plat}`,platform:plat,agent:agentId,status:'in_progress',created:now()});
+  let completedCount = 0;
+  let totalNewLeads = 0;
+  const totalAgents = parsed.plataformas.length;
+  const leadsBefore = S.leads.length;
 
-        agent.status='running';
-        addActivity('info',`${agent.name} iniciado`,`${taskId}: buscando no ${platformLabels[plat]||plat}`);
+  // Disparar todos os scrapers em paralelo
+  for(const plat of parsed.plataformas){
+    const agentId=platformMap[plat.toLowerCase()];
+    const agent=S.agents.find(a=>a.id===agentId);
+    if(!agent)continue;
 
-        // Simulate results
-        setTimeout(()=>{
-          const count=Math.floor(Math.random()*40)+10;
-          generateLeads(count,plat,parsed);
-
-          agent.status='active';
-          const task=S.tasks.find(t=>t.id===taskId);
-          if(task)task.status='done';
-
-          addActivity('ok',`${agent.name} concluiu`,`${count} leads coletados do ${platformLabels[plat]||plat}`);
-          renderAll();
-        },2000+i*1500+Math.random()*2000);
-
-        renderAll();
-      },500+i*800);
-    });
-
-    // Qualify after all scraping
-    setTimeout(()=>{
-      const qual=S.agents.find(a=>a.id==='qual');
-      qual.status='running';
-      addActivity('info','Qualificador iniciado',`Classificando ${S.leads.length} leads...`);
-
-      setTimeout(()=>{
-        S.leads.forEach(l=>{
-          if(!l.qualified){
-            l.qualified=true;
-            l.score=Math.floor(Math.random()*60)+40;
-            l.temp=l.score>=80?'quente':l.score>=50?'morno':'frio';
-          }
-        });
-        qual.status='active';
-        const hot=S.leads.filter(l=>l.temp==='quente').length;
-        addActivity('ok','Qualificacao concluida',`${hot} leads quentes de ${S.leads.length} total`);
-
-        // Enrich
-        const enrich=S.agents.find(a=>a.id==='enrich');
-        enrich.status='running';
-        addActivity('info','Enriquecedor iniciado','Buscando contatos...');
-        setTimeout(()=>{
-          S.leads.forEach(l=>{
-            if(Math.random()>.3)l.email=fakeName(l.nome).toLowerCase().replace(' ','.')+'@gmail.com';
-            if(Math.random()>.5)l.telefone='(44) 9'+Math.floor(Math.random()*9000+1000)+'-'+Math.floor(Math.random()*9000+1000);
-          });
-          enrich.status='active';
-          addActivity('ok','Enriquecimento concluido',`Emails e telefones encontrados`);
-
-          S.commands[0].status='concluido';
-          notify('Comando executado! '+S.leads.length+' leads coletados.');
-          renderAll();
-        },3000);
-
-        renderAll();
-      },2000);
-    },parsed.plataformas.length*2500+4000);
-
+    const taskId='T-'+String(S.taskCounter++).padStart(3,'0');
+    S.tasks.push({id:taskId,title:`${parsed.nicho} em ${parsed.cidade} — ${platformLabels[plat]||plat}`,platform:plat,agent:agentId,status:'in_progress',created:now()});
+    agent.status='running';
+    addActivity('info',`${agent.name} iniciado`,`${taskId}: buscando no ${platformLabels[plat]||plat}`);
     renderAll();
-  },800);
+
+    const runId = await triggerAgent(agentId, parsed.nicho, parsed.cidade);
+
+    if(runId){
+      pollRunStatus(runId, agentId, async (run)=>{
+        agent.status='active';
+        const task=S.tasks.find(t=>t.id===taskId);
+        if(task)task.status='done';
+
+        if(run.exitCode===0){
+          addActivity('ok',`${agent.name} concluiu`,`Scraping ${platformLabels[plat]||plat} finalizado`);
+        } else {
+          addActivity('err',`${agent.name} falhou`,`Exit code ${run.exitCode}`);
+        }
+
+        completedCount++;
+        renderAll();
+
+        // Quando todos scrapers terminarem → qualificar + enriquecer + sync
+        if(completedCount>=totalAgents){
+          // Sync leads imediato
+          await syncLeadsFromAPI();
+          const newCount = S.leads.length - leadsBefore;
+          addActivity('ok','Scraping concluido',`${newCount} novos leads coletados de ${totalAgents} plataformas`);
+
+          // Qualificador automatico
+          const qual=S.agents.find(a=>a.id==='qual');
+          qual.status='running';
+          addActivity('info','Qualificador iniciado','Classificando leads...');
+          renderAll();
+
+          const qualRunId = await triggerAgent('qual', '', '');
+          if(qualRunId){
+            pollRunStatus(qualRunId, 'qual', async (qRun)=>{
+              qual.status='active';
+              if(qRun.exitCode===0){
+                addActivity('ok','Qualificacao concluida','Leads classificados: quente/morno/frio');
+              }
+
+              // Enriquecedor automatico (top leads)
+              const enrich=S.agents.find(a=>a.id==='enrich');
+              enrich.status='running';
+              addActivity('info','Enriquecedor iniciado','Buscando emails e telefones...');
+              renderAll();
+
+              const enrichRunId = await triggerAgent('enrich', '', '');
+              if(enrichRunId){
+                pollRunStatus(enrichRunId, 'enrich', async (eRun)=>{
+                  enrich.status='active';
+                  if(eRun.exitCode===0){
+                    addActivity('ok','Enriquecimento concluido','Contatos encontrados');
+                  }
+
+                  // Sync final
+                  await syncLeadsFromAPI();
+                  S.commands[0].status='concluido';
+                  const hot=S.leads.filter(l=>l.temp==='quente').length;
+                  notify(`Concluido! ${S.leads.length} leads total, ${hot} quentes`);
+                  renderAll();
+                });
+              }
+              renderAll();
+            });
+          }
+          renderAll();
+        }
+      });
+    } else {
+      agent.status='active';
+      addActivity('err',`${agent.name} falhou`,`Nao conseguiu iniciar`);
+      completedCount++;
+    }
+  }
+}
+
+// ─── EXECUCAO SIMULADA (fallback offline) ───
+function executeCommandSimulated(parsed){
+  addActivity('info','CEO processando [SIMULADO]',`Nicho: ${parsed.nicho} | Cidade: ${parsed.cidade} | Plataformas: ${parsed.plataformas.join(', ')}`);
+
+  parsed.plataformas.forEach((plat,i)=>{
+    setTimeout(()=>{
+      const agentId=platformMap[plat.toLowerCase()];
+      const agent=S.agents.find(a=>a.id===agentId);
+      if(!agent)return;
+
+      const taskId='T-'+String(S.taskCounter++).padStart(3,'0');
+      S.tasks.push({id:taskId,title:`Buscar leads: ${parsed.nicho} em ${parsed.cidade} — ${platformLabels[plat]||plat}`,platform:plat,agent:agentId,status:'in_progress',created:now()});
+      agent.status='running';
+      addActivity('info',`${agent.name} iniciado`,`${taskId}: buscando no ${platformLabels[plat]||plat}`);
+
+      setTimeout(()=>{
+        const count=Math.floor(Math.random()*40)+10;
+        generateLeads(count,plat,parsed);
+        agent.status='active';
+        const task=S.tasks.find(t=>t.id===taskId);
+        if(task)task.status='done';
+        addActivity('ok',`${agent.name} concluiu`,`${count} leads coletados do ${platformLabels[plat]||plat}`);
+        renderAll();
+      },2000+i*1500+Math.random()*2000);
+      renderAll();
+    },500+i*800);
+  });
+
+  setTimeout(()=>{
+    S.commands[0].status='concluido';
+    notify('Comando simulado concluido! '+S.leads.length+' leads.');
+    renderAll();
+  },parsed.plataformas.length*3000+5000);
 
   renderAll();
 }
@@ -536,7 +725,12 @@ function parseCommand(text){
   ['instagram','x','twitter','google','reddit','linkedin','facebook','tiktok'].forEach(p=>{
     if(t.includes(p))plataformas.push(p==='twitter'?'x':p);
   });
-  if(!plataformas.length)plataformas.push('instagram','google');
+  // Auto-selecionar plataformas baseado no tipo se nenhuma foi mencionada
+  if(!plataformas.length){
+    if(cmdTipo==='pessoa') plataformas.push('instagram','facebook');
+    else if(cmdTipo==='empresa') plataformas.push('google');
+    else plataformas.push('instagram','google');
+  }
 
   // Extract city
   let cidade='Brasil';
@@ -601,24 +795,28 @@ function addActivity(type,title,desc){
 }
 
 // ─── RENDER ───
-function renderAll(){
-  renderKPIs();renderDashAgents();renderDashActivity();renderLeads();renderAgents();renderKanban();renderTimeline();
+function renderAll(preserve){
+  renderKPIs();renderDashAgents();renderDashActivity();renderLeads();renderEmpresas();renderAgents();renderKanban(preserve);renderTimeline();
   document.getElementById('leads-badge').textContent=S.leads.length;
-  document.getElementById('clientes-badge').textContent='14';
+  const pessoas=S.leads.filter(l=>(l.tipo||'pessoa')!=='empresa');
+  const empresas=S.leads.filter(l=>(l.tipo)==='empresa');
+  document.getElementById('pessoas-badge').textContent=pessoas.length;
+  document.getElementById('empresas-badge').textContent=empresas.length;
   renderCmdHistory();
 }
 
 function renderKPIs(){
-  const hot=S.leads.filter(l=>l.temp==='quente').length;
-  const warm=S.leads.filter(l=>l.temp==='morno').length;
+  const pessoas=S.leads.filter(l=>(l.tipo||'pessoa')!=='empresa');
+  const empresas=S.leads.filter(l=>(l.tipo)==='empresa');
+  const hot=pessoas.filter(l=>l.temp==='quente').length;
   const running=S.agents.filter(a=>a.status==='running').length;
-  const withEmail=S.leads.filter(l=>l.email).length;
+  const withContact=S.leads.filter(l=>l.email||l.telefone).length;
   document.getElementById('kpi-grid').innerHTML=`
-    <div class="kpi g"><div class="kpi-label">Total Leads</div><div class="kpi-val">${S.leads.length}</div><div class="kpi-sub">${S.commands.length} comandos executados</div></div>
-    <div class="kpi r"><div class="kpi-label">Leads Quentes</div><div class="kpi-val">${hot}</div><div class="kpi-sub">Score 80+</div></div>
-    <div class="kpi y"><div class="kpi-label">Leads Mornos</div><div class="kpi-val">${warm}</div><div class="kpi-sub">Score 50-79</div></div>
-    <div class="kpi b"><div class="kpi-label">Agentes Rodando</div><div class="kpi-val">${running}</div><div class="kpi-sub">${S.agents.length} total</div></div>
-    <div class="kpi p"><div class="kpi-label">Com Contato</div><div class="kpi-val">${withEmail}</div><div class="kpi-sub">Email ou telefone</div></div>
+    <div class="kpi g"><div class="kpi-label">Pessoas</div><div class="kpi-val">${pessoas.length}</div><div class="kpi-sub">${hot} quentes</div></div>
+    <div class="kpi b"><div class="kpi-label">Empresas</div><div class="kpi-val">${empresas.length}</div><div class="kpi-sub">${empresas.filter(l=>l.telefone).length} com telefone</div></div>
+    <div class="kpi r"><div class="kpi-label">Leads Quentes</div><div class="kpi-val">${S.leads.filter(l=>l.temp==='quente').length}</div><div class="kpi-sub">Score 80+</div></div>
+    <div class="kpi b"><div class="kpi-label">Agentes</div><div class="kpi-val">${running>0?running+' rodando':S.agents.length+' prontos'}</div><div class="kpi-sub">${S.agents.length} total</div></div>
+    <div class="kpi p"><div class="kpi-label">Com Contato</div><div class="kpi-val">${withContact}</div><div class="kpi-sub">Email ou telefone</div></div>
   `;
 }
 
@@ -653,27 +851,28 @@ function renderCmdHistory(){
 }
 
 function renderLeads(){
-  // Toolbar
-  const platforms=[...new Set(S.leads.map(l=>l.plataforma))];
+  // Filtrar APENAS pessoas (tipo != empresa)
+  const pessoas=S.leads.filter(l=>(l.tipo||'pessoa')!=='empresa');
+  const platforms=[...new Set(pessoas.map(l=>l.plataforma))];
   document.getElementById('leads-toolbar').innerHTML=`
-    <div class="filter-btn ${S.activeFilter==='todos'?'active':''}" onclick="filterLeads('todos')">Todos (${S.leads.length})</div>
-    <div class="filter-btn ${S.activeFilter==='quente'?'active':''}" onclick="filterLeads('quente')">Quentes (${S.leads.filter(l=>l.temp==='quente').length})</div>
-    <div class="filter-btn ${S.activeFilter==='morno'?'active':''}" onclick="filterLeads('morno')">Mornos (${S.leads.filter(l=>l.temp==='morno').length})</div>
-    <div class="filter-btn ${S.activeFilter==='frio'?'active':''}" onclick="filterLeads('frio')">Frios (${S.leads.filter(l=>l.temp==='frio').length})</div>
+    <div class="filter-btn ${S.activeFilter==='todos'?'active':''}" onclick="filterLeads('todos')">Todos (${pessoas.length})</div>
+    <div class="filter-btn ${S.activeFilter==='quente'?'active':''}" onclick="filterLeads('quente')">Quentes (${pessoas.filter(l=>l.temp==='quente').length})</div>
+    <div class="filter-btn ${S.activeFilter==='morno'?'active':''}" onclick="filterLeads('morno')">Mornos (${pessoas.filter(l=>l.temp==='morno').length})</div>
+    <div class="filter-btn ${S.activeFilter==='frio'?'active':''}" onclick="filterLeads('frio')">Frios (${pessoas.filter(l=>l.temp==='frio').length})</div>
     <span style="color:var(--border-strong)">|</span>
     ${platforms.map(p=>`<div class="filter-btn ${S.activeFilter===p?'active':''}" onclick="filterLeads('${p}')">${platformLabels[p]||p}</div>`).join('')}
   `;
 
-  let filtered=S.leads;
-  if(S.activeFilter==='quente'||S.activeFilter==='morno'||S.activeFilter==='frio')filtered=S.leads.filter(l=>l.temp===S.activeFilter);
-  else if(S.activeFilter!=='todos')filtered=S.leads.filter(l=>l.plataforma===S.activeFilter);
+  let filtered=pessoas;
+  if(S.activeFilter==='quente'||S.activeFilter==='morno'||S.activeFilter==='frio')filtered=pessoas.filter(l=>l.temp===S.activeFilter);
+  else if(S.activeFilter!=='todos')filtered=pessoas.filter(l=>l.plataforma===S.activeFilter);
 
   filtered.sort((a,b)=>b.score-a.score);
 
   document.getElementById('leads-body').innerHTML=filtered.slice(0,200).map(l=>{
     const scoreColor=l.score>=80?'var(--hot)':l.score>=50?'var(--warm)':'var(--cold)';
     return`<tr>
-      <td><span class="lead-name">${l.nome}</span><br><span style="font-size:10px;color:var(--text-tertiary)">@${l.perfil}</span></td>
+      <td><span class="lead-name">${l.nome}</span><br><a href="${l.url||'#'}" target="_blank" style="font-size:10px;color:var(--running);text-decoration:none">${l.perfil||''}</a></td>
       <td><span class="lead-source ${l.plataforma}">${platformLabels[l.plataforma]||l.plataforma}</span></td>
       <td style="font-size:11px;color:var(--text-secondary);max-width:250px">${l.evidencia}</td>
       <td style="font-size:11px">${l.cidade}</td>
@@ -686,14 +885,16 @@ function renderLeads(){
 
 function filterLeads(f){S.activeFilter=f;renderLeads()}
 
-function exportLeads(){
-  if(!S.leads.length){notify('Nenhum lead para exportar','err');return}
+function exportLeads(tipo){
+  const data=tipo?S.leads.filter(l=>(l.tipo||'pessoa')===tipo):S.leads;
+  if(!data.length){notify('Nenhum lead para exportar','err');return}
   let csv='Nome,Perfil,Plataforma,Evidencia,Cidade,Temperatura,Score,Email,Telefone\n';
-  S.leads.forEach(l=>{csv+=`"${l.nome}","${l.perfil}","${l.plataforma}","${l.evidencia}","${l.cidade}","${l.temp}",${l.score},"${l.email||''}","${l.telefone||''}"\n`});
+  data.forEach(l=>{csv+=`"${l.nome||''}","${l.perfil||''}","${l.plataforma||''}","${(l.evidencia||'').replace(/"/g,"'")}","${l.cidade||''}","${l.temp||''}",${l.score||0},"${l.email||''}","${l.telefone||''}"\n`});
   const blob=new Blob([csv],{type:'text/csv'});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download='leads_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
-  notify('CSV exportado!');
+  const label=tipo==='empresa'?'empresas':'pessoas';
+  const a=document.createElement('a');a.href=url;a.download=`${label}_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  notify(`CSV de ${label} exportado!`);
 }
 
 function renderAgents(){
@@ -713,7 +914,49 @@ function renderAgents(){
   `).join('');
 }
 
-function renderKanban(){
+function renderEmpresas(){
+  const empresas=S.leads.filter(l=>(l.tipo)==='empresa');
+  empresas.sort((a,b)=>b.score-a.score);
+
+  document.getElementById('empresas-toolbar').innerHTML=`
+    <div style="font-size:11px;color:var(--text-secondary)">${empresas.length} empresas encontradas</div>
+  `;
+
+  document.getElementById('empresas-body').innerHTML=empresas.slice(0,200).map(l=>{
+    const rating=l.rating||0;
+    const stars=rating?'&#9733;'.repeat(Math.round(rating))+'&#9734;'.repeat(5-Math.round(rating)):'—';
+    const website=l.website?`<a href="${l.website}" target="_blank" style="color:var(--running);text-decoration:none;font-size:10px">${l.website.replace(/https?:\/\/(www\.)?/,'').slice(0,30)}</a>`:'—';
+    return`<tr>
+      <td class="lead-name">${l.nome||'—'}</td>
+      <td style="white-space:nowrap">${l.telefone?`<span style="color:var(--accent)">${l.telefone}</span>`:'—'}</td>
+      <td>${website}</td>
+      <td style="font-size:11px;color:var(--text-secondary);max-width:200px;overflow:hidden;text-overflow:ellipsis">${l.endereco||l.cidade||'—'}</td>
+      <td style="color:#ffab00;white-space:nowrap">${stars} ${rating||''}</td>
+      <td><div class="score-bar"><div class="score-fill" style="width:${l.score}%;background:${l.temp==='quente'?'var(--hot)':l.temp==='morno'?'var(--warm)':'var(--cold)'}"></div></div>${l.score}</td>
+      <td style="font-size:11px">${l.cidade||'—'}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px">Nenhuma empresa encontrada. Use o modo "Empresas" na Central de Comando.</td></tr>';
+}
+
+function exportEmpresas(){
+  const empresas=S.leads.filter(l=>(l.tipo)==='empresa');
+  const csv=['Empresa,Telefone,Website,Endereco,Rating,Score,Cidade'].concat(
+    empresas.map(l=>[l.nome,l.telefone||'',l.website||'',l.endereco||'',l.rating||'',l.score,l.cidade||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','))
+  ).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`empresas_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  notify('Empresas exportadas!');
+}
+
+function renderKanban(preserveScroll){
+  // Salvar posicoes de scroll de cada coluna antes de re-renderizar
+  const scrollPositions={};
+  if(preserveScroll){
+    document.querySelectorAll('#kanban-leads .kanban-cards').forEach((col,i)=>{
+      if(col.scrollTop>0) scrollPositions[i]=col.scrollTop;
+    });
+  }
   // Funil REAL de lead generation:
   // Descoberto → Qualificado → Enriquecido → Disponivel → Vendido → Convertido
   const cols=[
@@ -732,27 +975,41 @@ function renderKanban(){
       <div class="kanban-col-head"><span class="kanban-dot" style="background:${c.color}"></span><span class="kanban-col-name">${c.label}</span><span class="kanban-col-count">${leads.length}</span></div>
       <div style="padding:2px 8px 6px;font-size:9px;color:var(--text-muted);border-bottom:1px solid var(--border-subtle)">${c.desc}</div>
       <div class="kanban-cards">${leads.map(l=>{
-        const initials=l.nome.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-        const avatarBg=l.temp==='quente'?'var(--hot)':l.temp==='morno'?'var(--warm)':'var(--cold)';
+        const initials=(l.nome||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+        const user=(l.user||l.perfil||'').replace('@','');
+        const isIG=l.plataforma==='instagram'||l.plataforma==='tiktok';
+        const avatarUrl=isIG&&user?`https://unavatar.io/${l.plataforma}/${user}`:'';
+        const avatarEl=avatarUrl
+          ?`<img class="k-avatar" src="${avatarUrl}" onerror="this.outerHTML='<div class=\\'k-avatar-fallback\\'>${initials}</div>'" alt="${l.nome}">`
+          :`<div class="k-avatar-fallback">${initials}</div>`;
+        const tempDot=l.temp==='quente'?'var(--hot)':l.temp==='morno'?'var(--warm)':'var(--cold)';
+        const scoreBar=`<span style="display:inline-block;width:40px;height:4px;background:var(--bg-active);border-radius:2px;vertical-align:middle;margin-left:4px;overflow:hidden"><span style="display:block;height:100%;width:${l.score}%;border-radius:2px;background:${tempDot}"></span></span>`;
         return`<div class="k-card" draggable="true" ondragstart="dragLead(event,'${l.id}')" data-lead-id="${l.id}" onclick="window.open('${l.url}','_blank')" style="cursor:pointer" title="Clique para ver a fonte original">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-            <div style="width:36px;height:36px;border-radius:50%;background:${avatarBg}22;border:2px solid ${avatarBg};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${avatarBg};flex-shrink:0">${initials}</div>
+            ${avatarEl}
             <div style="min-width:0;flex:1">
-              <div class="k-card-title" style="margin:0">${l.nome}</div>
-              <div class="k-card-id" style="margin:0">${l.id} · ${l.score}pts · <span class="temp-badge ${l.temp}" style="font-size:8px;padding:1px 5px">${l.temp}</span></div>
+              <div class="k-card-title" style="margin:0">${l.plataforma==='google'&&l.nome.includes('|')?l.nome.split('|')[0].trim():l.nome}</div>
+              <div class="k-card-id" style="margin:0">${l.id} · ${l.score}pts ${scoreBar} <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${tempDot};vertical-align:middle;margin-left:4px"></span></div>
             </div>
           </div>
-          <div style="font-size:10px;color:var(--text-tertiary);margin-bottom:8px;line-height:1.4">${l.evidencia.slice(0,90)}${l.evidencia.length>90?'...':''}</div>
+          <div class="k-card-evidence">${l.plataforma==='google'?formatGoogleEvidence(l):(l.evidencia||'').slice(0,100)}</div>
           <div class="k-card-meta">
-            <span class="lead-source ${l.plataforma}" style="font-size:9px;padding:1px 6px">${platformLabels[l.plataforma]||l.plataforma}</span>
-            <span style="font-size:9px;opacity:.6">&#128279; fonte</span>
+            <span class="lead-source ${l.plataforma}" style="font-size:9px;padding:2px 8px">${platformLabels[l.plataforma]||l.plataforma}</span>
+            ${l.telefone?`<span style="font-size:9px;color:var(--accent)">&#9742; ${l.telefone}</span>`:`<span style="font-size:9px;color:var(--text-secondary)">&#128279; ver fonte</span>`}
           </div>
           ${l.dmEnviada?`<div style="margin-top:6px;font-size:9px;padding:3px 8px;background:#e91e6322;color:#e91e63;border-radius:4px;display:inline-flex;align-items:center;gap:4px">&#10003; DM enviada ${l.dmEnviada}</div>`:''}
-          ${l.clienteDestino?`<div style="margin-top:4px;font-size:9px;padding:2px 6px;background:#00e5ff22;color:#00e5ff;border-radius:4px;display:inline-block">→ ${l.clienteDestino}</div>`:''}
+          ${l.clienteDestino?`<div style="margin-top:4px;font-size:9px;padding:2px 6px;background:#00e5ff22;color:#00e5ff;border-radius:4px;display:inline-block">${l.clienteDestino}</div>`:''}
         </div>`;
       }).join('')}</div>
     </div>`;
   }).join('');
+
+  // Restaurar posicoes de scroll
+  if(preserveScroll && Object.keys(scrollPositions).length>0){
+    document.querySelectorAll('#kanban-leads .kanban-cards').forEach((col,i)=>{
+      if(scrollPositions[i]) col.scrollTop=scrollPositions[i];
+    });
+  }
 
   // Enable drop on all columns
   document.querySelectorAll('#kanban-leads .kanban-col').forEach(col=>{
@@ -773,6 +1030,22 @@ function renderKanban(){
       }
     });
   });
+}
+
+function formatGoogleEvidence(l){
+  const parts=[];
+  const rating=l.rating||0;
+  if(rating){
+    const stars='&#9733;'.repeat(Math.round(rating))+'&#9734;'.repeat(5-Math.round(rating));
+    parts.push(`<span style="color:#ffab00;font-style:normal;letter-spacing:1px">${stars}</span> ${rating}`);
+  }
+  const reviews=l.reviews_count||0;
+  if(reviews) parts.push(`${reviews} avalia\u00e7\u00f5es`);
+  if(l.endereco){
+    const addr=(l.endereco||'').split(',')[0].trim();
+    if(addr) parts.push(addr);
+  }
+  return parts.join(' · ')||l.evidencia||'';
 }
 
 let draggedLeadId=null;
