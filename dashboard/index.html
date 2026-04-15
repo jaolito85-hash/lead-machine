@@ -224,11 +224,12 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
   <nav class="nav">
     <div class="nav-label">Comando</div>
     <div class="nav-item active" data-page="command">&#9654; Central de Comando</div>
-    <div class="nav-item" data-page="leads">&#9673; Leads Coletados <span class="badge" id="leads-badge">0</span></div>
+    <div class="nav-label">Pipeline de Leads</div>
+    <div class="nav-item" data-page="kanban">&#9744; Kanban de Leads <span class="badge" id="leads-badge">0</span></div>
+    <div class="nav-item" data-page="leads">&#9673; Todos os Leads</div>
+    <div class="nav-item" data-page="clientes">&#9733; Nossos Clientes <span class="badge" id="clientes-badge">0</span></div>
     <div class="nav-label">Operacao</div>
-    <div class="nav-item" data-page="clientes">&#9733; Clientes (B2B) <span class="badge" id="clientes-badge">0</span></div>
     <div class="nav-item" data-page="agents">&#9881; Agentes</div>
-    <div class="nav-item" data-page="tasks">&#9744; Tarefas</div>
     <div class="nav-label">Sistema</div>
     <div class="nav-item" data-page="activity">&#9776; Atividades</div>
     <div class="nav-item" data-page="settings">&#9881; Config</div>
@@ -294,8 +295,8 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
     <!-- ═══ CLIENTES B2B PAGE ═══ -->
     <div class="page" id="page-clientes">
       <div style="margin-bottom:20px">
-        <span style="font-family:var(--font-sans);font-size:15px;font-weight:600">Clientes B2B — Clinicas que Compram os Leads</span>
-        <p style="font-size:11px;color:var(--text-tertiary);margin-top:4px">Clinicas de harmonizacao facial em Maringa-PR. Dados publicos verificados.</p>
+        <span style="font-family:var(--font-sans);font-size:15px;font-weight:600">Nossos Clientes — Quem Compra os Leads</span>
+        <p style="font-size:11px;color:var(--text-tertiary);margin-top:4px">Clinicas de Maringa-PR que PAGAM pelos leads de pacientes interessados em harmonizacao facial.</p>
       </div>
       <div class="panel"><div class="panel-head"><span class="panel-title">Clinicas Mapeadas</span></div>
       <div class="panel-body" style="max-height:none;overflow-x:auto">
@@ -329,9 +330,15 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
       <div class="agent-grid" id="agents-grid"></div>
     </div>
 
-    <!-- ═══ TASKS PAGE ═══ -->
-    <div class="page" id="page-tasks">
-      <div class="kanban" id="kanban"></div>
+    <!-- ═══ KANBAN DE LEADS ═══ -->
+    <div class="page" id="page-kanban">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div>
+          <span style="font-family:var(--font-sans);font-size:15px;font-weight:600">Pipeline de Leads</span>
+          <p style="font-size:11px;color:var(--text-tertiary);margin-top:4px">Funil: Descoberto → Qualificado → Enriquecido → Disponivel → Vendido → Convertido</p>
+        </div>
+      </div>
+      <div class="kanban" id="kanban-leads"></div>
     </div>
 
     <!-- ═══ ACTIVITY PAGE ═══ -->
@@ -386,20 +393,21 @@ const S = {
     { id:'enrich', name:'Enriquecedor', type:'enricher', desc:'Busca email, telefone, WhatsApp e redes sociais de cada lead. Usa Hunter.io, Apollo e OSINT.', adapter:'process', status:'idle', icon:'\uD83D\uDD0E' },
   ],
   leads: [
-    // ═══ LEADS B2C REAIS — Pessoas interessadas em harmonizacao facial em Maringa-PR ═══
-    {id:'L-00001',nome:'Sheline Quintiliano',plataforma:'google',perfil:'review_google',evidencia:'Faz procedimentos de harmonizacao ha 2 anos. Escreveu: "super recomendo"',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:95,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04'},
-    {id:'L-00002',nome:'Dada Ponce',plataforma:'google',perfil:'review_google',evidencia:'Fez botox preventivo. Escreveu: "definitivamente volvere para probar otros servicios!"',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:90,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04'},
-    {id:'L-00003',nome:'Paciente Anonimo (Dra Lorena)',plataforma:'google',perfil:'doctoralia',evidencia:'Fez toxina botulinica. Escreveu: "quis algo natural, resultado foi incrivel!"',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:88,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04'},
-    {id:'L-00004',nome:'Paciente Dra Fabrizzia',plataforma:'instagram',perfil:'@fabrizziavassallo',evidencia:'"Cada dia mais apaixonada pela minha harmonizacao facial feita pela Dra Fabrizzia, delicadeza e naturalidade"',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:92,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04'},
-    {id:'L-00005',nome:'Paciente Retoque (Dra Fabrizzia)',plataforma:'instagram',perfil:'@fabrizziavassallo',evidencia:'"Fiz o retoque no inicio do mes, no ano passado coloquei meia seringa e depois de um ano coloquei a outra metade!"',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:85,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04'},
-    {id:'L-00006',nome:'Andreia Cardoso',plataforma:'google',perfil:'review_google',evidencia:'"Na maioria das vezes em que me senti bonita, foram por causa do seu otimo trabalho. Amei."',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:72,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04'},
-    {id:'L-00007',nome:'Samia Rayssa Oliveira',plataforma:'google',perfil:'review_google',evidencia:'"Profissional incrivel! Amando os resultadoes! Super atenciosa e cuidadosa."',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:70,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04'},
-    {id:'L-00008',nome:'Mirian Luciano da Costa',plataforma:'google',perfil:'review_google',evidencia:'"Atendimento toooppp, precos justos... resumindo Ameiiiiii"',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:68,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04'},
-    {id:'L-00009',nome:'Mariana Alioco',plataforma:'google',perfil:'review_google',evidencia:'"Excelente profissional, adorei o resultado do meu tratamento!"',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:65,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04'},
-    {id:'L-00010',nome:'Nadia Boschini',plataforma:'google',perfil:'review_google',evidencia:'Avaliou 5 estrelas a Dra. Suellen Rodrigues (harmonizacao facial)',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:55,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04'},
-    {id:'L-00011',nome:'Rayene Ratier',plataforma:'google',perfil:'review_google',evidencia:'Avaliou 5 estrelas a Dra. Suellen Rodrigues (harmonizacao facial)',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:55,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04'},
-    {id:'L-00012',nome:'Luciano Do Marco Campos',plataforma:'google',perfil:'review_google',evidencia:'Avaliou 5 estrelas a Dra. Suellen Rodrigues (harmonizacao facial)',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:50,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04'},
-    {id:'L-00013',nome:'Isabella Barbosa',plataforma:'google',perfil:'review_google',evidencia:'Avaliou 5 estrelas a Dra. Suellen Rodrigues (harmonizacao facial)',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:50,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04'},
+    // ═══ LEADS B2C REAIS — Pessoas que QUEREM harmonizacao facial em Maringa-PR ═══
+    // ETAPAS: descoberto → qualificado → enriquecido → disponivel → vendido → convertido
+    {id:'L-00001',nome:'Sheline Quintiliano',plataforma:'google',perfil:'review_google',evidencia:'Faz harmonizacao ha 2 anos. "Super recomendo". Cliente recorrente — pode indicar amigas.',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:95,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'disponivel',clienteDestino:null},
+    {id:'L-00002',nome:'Dada Ponce',plataforma:'google',perfil:'review_google',evidencia:'Fez botox. "Volvere para probar otros servicios!" — quer MAIS procedimentos.',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:90,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'disponivel',clienteDestino:null},
+    {id:'L-00003',nome:'Paciente Anonimo (Dra Lorena)',plataforma:'google',perfil:'doctoralia',evidencia:'Fez toxina botulinica. "Resultado incrivel!" — aberta a harmonizacao completa.',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:88,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'qualificado',clienteDestino:null},
+    {id:'L-00004',nome:'Paciente Dra Fabrizzia #1',plataforma:'instagram',perfil:'@fabrizziavassallo',evidencia:'"Cada dia mais apaixonada pela minha harmonizacao facial. Delicadeza e naturalidade."',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:92,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'enriquecido',clienteDestino:null},
+    {id:'L-00005',nome:'Paciente Dra Fabrizzia #2',plataforma:'instagram',perfil:'@fabrizziavassallo',evidencia:'"Fiz retoque apos 1 ano. Meia seringa + outra metade." — cliente ativa.',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:85,temp:'quente',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'enriquecido',clienteDestino:null},
+    {id:'L-00006',nome:'Andreia Cardoso',plataforma:'google',perfil:'review_google',evidencia:'"Me senti bonita por causa do seu trabalho. Amei." — quer manter resultados.',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:72,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'qualificado',clienteDestino:null},
+    {id:'L-00007',nome:'Samia Rayssa Oliveira',plataforma:'google',perfil:'review_google',evidencia:'"Amando os resultadoes!" — potencial para novos procedimentos.',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:70,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'qualificado',clienteDestino:null},
+    {id:'L-00008',nome:'Mirian Luciano da Costa',plataforma:'google',perfil:'review_google',evidencia:'"Atendimento toppp, precos justos, ameiiiiii"',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:68,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'qualificado',clienteDestino:null},
+    {id:'L-00009',nome:'Mariana Alioco',plataforma:'google',perfil:'review_google',evidencia:'"Adorei o resultado do meu tratamento!"',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:65,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'descoberto',clienteDestino:null},
+    {id:'L-00010',nome:'Nadia Boschini',plataforma:'google',perfil:'review_google',evidencia:'Avaliou 5 estrelas clinica de harmonizacao em Maringa',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:55,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'descoberto',clienteDestino:null},
+    {id:'L-00011',nome:'Rayene Ratier',plataforma:'google',perfil:'review_google',evidencia:'Avaliou 5 estrelas clinica de harmonizacao em Maringa',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:55,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'descoberto',clienteDestino:null},
+    {id:'L-00012',nome:'Luciano Do Marco Campos',plataforma:'google',perfil:'review_google',evidencia:'Avaliou 5 estrelas clinica de harmonizacao em Maringa',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:50,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'descoberto',clienteDestino:null},
+    {id:'L-00013',nome:'Isabella Barbosa',plataforma:'google',perfil:'review_google',evidencia:'Avaliou 5 estrelas clinica de harmonizacao em Maringa',cidade:'Maringa-PR',nicho:'harmonizacao facial',score:50,temp:'morno',email:null,telefone:null,qualified:true,coletado:'15/04',etapa:'descoberto',clienteDestino:null},
   ],
   tasks: [],
   commands: [],
@@ -424,7 +432,7 @@ document.querySelectorAll('.nav-item').forEach(el=>{
     const p=el.dataset.page;if(!p)return;
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');
     document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('active'));document.getElementById('page-'+p).classList.add('active');
-    const titles={command:['Central de Comando','Voce da a ordem. Agentes executam.'],leads:['Leads B2C','Pessoas interessadas no procedimento'],clientes:['Clientes B2B','Clinicas que compram os leads'],agents:['Agentes','Seus funcionarios especializados'],tasks:['Tarefas','Execucao em andamento'],activity:['Atividades','Log do sistema'],settings:['Configuracao','API keys, proxies, plataformas']};
+    const titles={command:['Central de Comando','Voce da a ordem. Agentes executam.'],kanban:['Pipeline de Leads','Arraste os cards entre as etapas do funil'],leads:['Todos os Leads','Lista completa com filtros'],clientes:['Nossos Clientes','Clinicas que COMPRAM os leads — quem nos paga'],agents:['Agentes','Seus funcionarios especializados'],activity:['Atividades','Log do sistema'],settings:['Configuracao','API keys, proxies, plataformas']};
     document.getElementById('pg-title').textContent=titles[p][0];
     document.getElementById('pg-sub').textContent=titles[p][1];
   });
@@ -706,29 +714,63 @@ function renderAgents(){
 }
 
 function renderKanban(){
+  // Funil REAL de lead generation:
+  // Descoberto → Qualificado → Enriquecido → Disponivel → Vendido → Convertido
   const cols=[
-    {key:'pending',label:'Pendente',color:'var(--text-muted)'},
-    {key:'in_progress',label:'Executando',color:'var(--running)'},
-    {key:'done',label:'Concluido',color:'var(--accent)'}
+    {key:'descoberto',label:'Descoberto',color:'var(--text-muted)',desc:'Encontrado nas plataformas'},
+    {key:'qualificado',label:'Qualificado',color:'var(--warm)',desc:'Interesse confirmado'},
+    {key:'enriquecido',label:'Enriquecido',color:'var(--running)',desc:'Contato encontrado'},
+    {key:'disponivel',label:'Disponivel',color:'var(--accent)',desc:'Pronto pra vender'},
+    {key:'vendido',label:'Vendido',color:'#7c4dff',desc:'Entregue ao cliente'},
+    {key:'convertido',label:'Convertido',color:'#00e5ff',desc:'Virou paciente'},
   ];
-  document.getElementById('kanban').innerHTML=cols.map(c=>{
-    const tasks=S.tasks.filter(t=>t.status===c.key);
+  document.getElementById('kanban-leads').innerHTML=cols.map(c=>{
+    const leads=S.leads.filter(l=>l.etapa===c.key);
     return`<div class="kanban-col">
-      <div class="kanban-col-head"><span class="kanban-dot" style="background:${c.color}"></span><span class="kanban-col-name">${c.label}</span><span class="kanban-col-count">${tasks.length}</span></div>
-      <div class="kanban-cards">${tasks.map(t=>{
-        const agent=S.agents.find(a=>a.id===t.agent);
-        return`<div class="k-card">
-          <div class="k-card-id">${t.id} · ${t.created}</div>
-          <div class="k-card-title">${t.title}</div>
-          <div class="k-card-meta">
-            <span>${agent?agent.name:'—'}</span>
-            <span class="k-card-platform lead-source ${t.platform}" style="font-size:9px;padding:1px 6px">${platformLabels[t.platform]||t.platform}</span>
+      <div class="kanban-col-head"><span class="kanban-dot" style="background:${c.color}"></span><span class="kanban-col-name">${c.label}</span><span class="kanban-col-count">${leads.length}</span></div>
+      <div style="padding:2px 8px 6px;font-size:9px;color:var(--text-muted);border-bottom:1px solid var(--border-subtle)">${c.desc}</div>
+      <div class="kanban-cards">${leads.map(l=>{
+        const scoreColor=l.score>=80?'var(--hot)':l.score>=50?'var(--warm)':'var(--cold)';
+        return`<div class="k-card" draggable="true" ondragstart="dragLead(event,'${l.id}')" data-lead-id="${l.id}">
+          <div class="k-card-id">
+            <span class="temp-badge ${l.temp}" style="font-size:8px;padding:1px 5px">${l.temp}</span>
+            ${l.id} · ${l.score}pts
           </div>
+          <div class="k-card-title">${l.nome}</div>
+          <div style="font-size:10px;color:var(--text-tertiary);margin-bottom:6px;line-height:1.4">${l.evidencia.slice(0,80)}${l.evidencia.length>80?'...':''}</div>
+          <div class="k-card-meta">
+            <span class="lead-source ${l.plataforma}" style="font-size:9px;padding:1px 6px">${platformLabels[l.plataforma]||l.plataforma}</span>
+            <span>${l.cidade}</span>
+          </div>
+          ${l.clienteDestino?`<div style="margin-top:6px;font-size:9px;padding:2px 6px;background:#7c4dff22;color:#7c4dff;border-radius:4px;display:inline-block">→ ${l.clienteDestino}</div>`:''}
         </div>`;
       }).join('')}</div>
     </div>`;
   }).join('');
+
+  // Enable drop on all columns
+  document.querySelectorAll('#kanban-leads .kanban-col').forEach(col=>{
+    col.addEventListener('dragover',e=>e.preventDefault());
+    col.addEventListener('drop',e=>{
+      e.preventDefault();
+      const etapa=cols[Array.from(col.parentNode.children).indexOf(col)].key;
+      if(draggedLeadId){
+        const lead=S.leads.find(l=>l.id===draggedLeadId);
+        if(lead){
+          const old=lead.etapa;
+          lead.etapa=etapa;
+          addActivity('info','Lead movido',`${lead.nome}: ${old} → ${etapa}`);
+          notify(`${lead.nome} movido para ${etapa}`);
+          renderAll();
+        }
+        draggedLeadId=null;
+      }
+    });
+  });
 }
+
+let draggedLeadId=null;
+function dragLead(e,id){draggedLeadId=id;e.dataTransfer.effectAllowed='move'}
 
 function renderTimeline(){
   document.getElementById('timeline').innerHTML=S.activities.map(a=>`
