@@ -365,4 +365,56 @@ python serve.py
 
 ---
 
-*Ultima atualizacao: 15/04/2026 — Dia 2 (Fase 7 concluida — backend Paperclip conectado)*
+#### Fase 8: Teste Completo End-to-End — CONCLUIDO
+
+- [x] Todos os 5 scrapers disparados via Paperclip API com parametros reais
+- [x] Resultados:
+  - Google Maps: 34 leads B2B com telefone, rating, website
+  - TikTok: 15 leads (perfis de profissionais)
+  - Instagram: 13 leads (comentarios com intencao)
+  - Facebook: actor rodou mas query retornou pouco
+  - Twitter: actor corrigido (apidojo/tweet-scraper), tweets sem intencao de compra
+- [x] Qualificador rodou nos 76 leads — scoring B2B corrigido (negocios Google = minimo morno)
+- [x] Enriquecedor rodou nos top leads quentes (Apollo + Hunter + Firecrawl)
+- [x] Correcao: "valor/preco" = lead quente (score 85+)
+- [x] CORS resolvido: serve.py agora faz proxy para Paperclip API (mesma origem)
+- [x] Comando real pelo dashboard: digita → agentes executam → leads aparecem
+- [x] Bug fix: scroll do kanban nao reseta mais (preserva posicao no auto-sync)
+
+**Dashboard — Melhorias Visuais:**
+- [x] Kanban: foto real via unavatar.io, texto de evidencia em branco, cores por plataforma
+- [x] Google Maps: estrelas visuais, nome truncado, telefone em verde
+- [x] Separacao Pessoas vs Empresas:
+  - Seletor [Pessoas] [Empresas] [Ambos] na Central de Comando
+  - Abas dedicadas no menu lateral com badges
+  - Tabelas filtradas por tipo, exportacao CSV independente
+  - KPIs separados: Pessoas | Empresas | Quentes | Agentes | Com Contato
+- [x] Links clicaveis nos perfis das pessoas
+- [x] Campo `tipo` (pessoa/empresa) adicionado ao formato de lead
+
+**Resultado final Dia 2:**
+- 76 leads reais (28 pessoas + 48 empresas) de 3 plataformas
+- 7 agentes testados end-to-end via Paperclip
+- Dashboard profissional conectado ao backend real
+- Sistema funcional para qualquer nicho/cidade
+
+**Decisoes:**
+- serve.py na porta 8081 (proxy resolve CORS sem mexer no Paperclip)
+- Pessoas = redes sociais (Instagram, Facebook, TikTok) / Empresas = Google Maps
+- Score de preco igualado ao de intencao direta (ambos quentes)
+- Twitter usa actor `apidojo/tweet-scraper` (o oficial nao existe)
+
+---
+
+## Proximos Passos — Fase 9: Escalar
+
+- [ ] Criar `start.bat` para subir tudo com um clique
+- [ ] Rotinas automaticas (cron) — scraping a cada X horas
+- [ ] Alertas Telegram — notificar lead quente novo
+- [ ] Multi-nicho — salvar buscas e rodar em paralelo
+- [ ] Envio de DM automatico — lead quente → DM sai
+- [ ] Deploy Docker — rodar 24/7 em servidor
+
+---
+
+*Ultima atualizacao: 15/04/2026 — Dia 2 (Fase 8 concluida — sistema funcional end-to-end)*
