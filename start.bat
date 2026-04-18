@@ -22,10 +22,32 @@ call :check_dep pnpm "npm install -g pnpm"
 if errorlevel 1 goto fatal
 call :check_dep node "baixe em https://nodejs.org"
 if errorlevel 1 goto fatal
-call :check_dep python "baixe em https://python.org"
-if errorlevel 1 goto fatal
 call :check_dep curl "normalmente vem com Windows 10+"
 if errorlevel 1 goto fatal
+
+REM -- Resolver Python correto (evita o python quebrado do hermes-agent no PATH) --
+REM Prioridade: py -3.12 > py -3 > Python312 direto > python do PATH
+set PYTHON_EXE=
+py -3.12 --version >nul 2>&1 && set "PYTHON_EXE=py -3.12"
+if not defined PYTHON_EXE py -3 --version >nul 2>&1 && set "PYTHON_EXE=py -3"
+if not defined PYTHON_EXE if exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" set "PYTHON_EXE=%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
+if not defined PYTHON_EXE if exist "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" set "PYTHON_EXE=%LOCALAPPDATA%\Programs\Python\Python311\python.exe"
+if not defined PYTHON_EXE where python >nul 2>&1 && set "PYTHON_EXE=python"
+if not defined PYTHON_EXE (
+    call :log [ERRO] Nenhum Python encontrado. Instale em https://python.org
+    goto fatal
+)
+REM Validar que esse python tem portalocker
+%PYTHON_EXE% -c "import portalocker" >nul 2>&1
+if errorlevel 1 (
+    call :log [AVISO] Python encontrado nao tem portalocker. Instalando...
+    %PYTHON_EXE% -m pip install portalocker requests apify-client python-dotenv
+    if errorlevel 1 (
+        call :log [ERRO] pip install falhou. Verifique se o Python tem pip: %PYTHON_EXE% -m pip --version
+        goto fatal
+    )
+)
+call :log       OK python = %PYTHON_EXE%
 
 REM -- Checar se porta 3100 ja esta ocupada --
 netstat -ano | findstr :3100 | findstr LISTENING >nul 2>&1
@@ -56,14 +78,14 @@ call :log       OK - Paperclip online em !TRIES!s.
 
 REM 3) Dashboard + proxy
 call :log [3/4] Subindo dashboard em %DASHBOARD_URL% ...
-start "Lead Machine Dashboard" cmd /k "cd /d %ROOT% && python serve.py"
+start "Lead Machine Dashboard" cmd /k "cd /d %ROOT% && %PYTHON_EXE% serve.py"
 
 REM Pequena espera para o serve.py abrir a porta
 ping -n 3 127.0.0.1 >nul
 
 REM 4) Runner automatico (cron das buscas salvas)
 call :log [4/4] Subindo Runner automatico (schedule das buscas salvas)...
-start "Lead Machine Runner" cmd /k "cd /d %ROOT% && python agents/runner.py"
+start "Lead Machine Runner" cmd /k "cd /d %ROOT% && %PYTHON_EXE% agents/runner.py"
 
 REM Abre browser
 start "" %DASHBOARD_URL%
