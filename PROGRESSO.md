@@ -408,13 +408,79 @@ python serve.py
 
 ## Proximos Passos — Fase 9: Escalar
 
-- [ ] Criar `start.bat` para subir tudo com um clique
+- [x] Criar `start.bat` para subir tudo com um clique
+- [x] Alertas Telegram — notificar lead quente novo
 - [ ] Rotinas automaticas (cron) — scraping a cada X horas
-- [ ] Alertas Telegram — notificar lead quente novo
 - [ ] Multi-nicho — salvar buscas e rodar em paralelo
 - [ ] Envio de DM automatico — lead quente → DM sai
 - [ ] Deploy Docker — rodar 24/7 em servidor
 
 ---
 
-*Ultima atualizacao: 15/04/2026 — Dia 2 (Fase 8 concluida — sistema funcional end-to-end)*
+### DIA 3 — 18/04/2026
+
+#### Fase 9a: start.bat + stop.bat — CONCLUIDO E TESTADO
+
+- [x] `start.bat` — sobe Paperclip em janela separada, aguarda API ficar UP (curl/poll
+      a cada 1s, ate 120s), sobe `serve.py` em outra janela, abre dashboard no browser.
+- [x] `stop.bat` — fecha as 2 janelas por titulo e libera portas 3100/8081.
+- [x] Checagem de deps no start (pnpm/node/python/curl) com mensagem clara se faltar.
+- [x] Log completo em `start.log` (ignorado no git) + `pause` no final para nao fechar
+      janela antes do usuario ler o output.
+- [x] Testado end-to-end: Paperclip 3100 UP + dashboard 8081 UP + proxy funcionando.
+
+**Como usar:**
+
+No PowerShell:
+```
+cd C:\projetos\paperclip
+.\start.bat
+```
+(PowerShell exige o prefixo `.\` — se digitar so `start.bat` nao acha.)
+
+No cmd normal ou duplo-clique no explorer: apenas `start.bat`.
+
+**Bugs corrigidos durante o teste:**
+- `timeout /t` do Windows conflita com `timeout` do Git Bash no PATH — trocado por
+  `ping -n 2 127.0.0.1 >nul` (trick classico sleep em batch).
+- Janela fechava antes do `pause` em alguns caminhos — adicionado `pause` no fim do
+  sucesso tambem e delayed expansion (`!VAR!`) para loops de espera.
+
+#### Fase 9b: Alertas Telegram — CONCLUIDO
+
+- [x] `agents/telegram_notifier.py` — modulo standalone (so urllib, sem dependencia nova).
+  - `send_message(text)` - POST pro Bot API
+  - `notify_hot_lead(lead)` - formata lead quente em HTML
+  - `notify_batch_summary(stats)` - resumo pos-qualificacao
+  - `is_configured()` - checa se TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID estao no .env
+  - `--test` - CLI pra enviar mensagem de teste
+- [x] Integracao no `agent_qualifier.py`:
+  - Ao qualificar, detecta leads que ficaram quentes (score >=80) e ainda nao foram
+    notificados (flag `notified_at`).
+  - Dispara notificacao individual por lead + resumo do batch.
+  - Marca `notified_at` no lead pra nao duplicar em runs futuras.
+- [x] `.env.example` + `.env` atualizados com `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID`.
+- [x] Testado: qualifier roda sem erro mesmo sem bot configurado (skip gracioso).
+
+**Como configurar (2 minutos):**
+1. No Telegram, procure `@BotFather` e rode `/newbot`. Escolha nome e username. Ele
+   retorna um token tipo `123456789:ABCdef...`.
+2. Procure seu bot no Telegram e mande `/start`.
+3. Abra `https://api.telegram.org/bot<TOKEN>/getUpdates` no browser e copie o numero
+   em `"chat":{"id": ...}`.
+4. Cole no `.env`:
+   ```
+   TELEGRAM_BOT_TOKEN=123456789:ABCdef...
+   TELEGRAM_CHAT_ID=123456789
+   ```
+5. Teste: `python agents/telegram_notifier.py --test`
+
+**Decisoes:**
+- Zero dependencia nova (urllib nativo) pra nao poluir requirements.
+- Notificacao so no qualifier (1 ponto central) em vez de cada scraper — evita
+  duplicatas e so alerta DEPOIS do scoring real.
+- Flag `notified_at` idempotente: rodar qualifier 10x nao manda 10 notificacoes.
+
+---
+
+*Ultima atualizacao: 18/04/2026 — Dia 3 (Fase 9a+9b: start.bat + Telegram)*

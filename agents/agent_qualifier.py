@@ -19,6 +19,8 @@ from base import (
     INTEREST_KEYWORDS, build_arg_parser, classify_temp, load_env, load_leads,
     make_result, output_result, resolve_param, save_leads, setup_logger,
 )
+import telegram_notifier
+from datetime import datetime
 
 
 def qualify_lead(lead: dict, cross_platform: dict) -> dict:
@@ -176,6 +178,7 @@ def main():
     stats = {"quente": 0, "morno": 0, "frio": 0}
     upgraded = 0
     downgraded = 0
+    new_hot_leads = []  # leads que ficaram quentes agora e ainda nao foram notificados
 
     for i, lead in enumerate(to_qualify):
         old_temp = lead.get("temp", "")
@@ -198,12 +201,35 @@ def main():
         elif result["score"] < old_score:
             downgraded += 1
 
+        # Detecta leads que viraram quentes e ainda nao foram notificados
+        if result["temp"] == "quente" and not lead.get("notified_at"):
+            new_hot_leads.append(lead)
+
         if args.verbose:
             logger.debug(
                 f"  [{i+1}] {lead.get('nome', '?')}: "
                 f"{old_score}→{result['score']} ({old_temp}→{result['temp']}) "
                 f"[{', '.join(result['reasons'])}]"
             )
+
+    # ── Notificacoes Telegram ──
+    notified = 0
+    if new_hot_leads and telegram_notifier.is_configured():
+        logger.info(f"Notificando {len(new_hot_leads)} novos leads quentes no Telegram...")
+        for lead in new_hot_leads:
+            if telegram_notifier.notify_hot_lead(lead):
+                lead["notified_at"] = datetime.now().isoformat()
+                notified += 1
+        if notified > 0:
+            telegram_notifier.notify_batch_summary({
+                "novos_quentes": notified,
+                "quentes": stats["quente"],
+                "mornos": stats["morno"],
+                "frios": stats["frio"],
+                "duration_sec": round(time.time() - start, 1),
+            })
+    elif new_hot_leads and not telegram_notifier.is_configured():
+        logger.info(f"{len(new_hot_leads)} leads quentes novos - Telegram nao configurado (skip).")
 
     # Salvar
     if not args.dry_run:
@@ -228,6 +254,7 @@ def main():
             "frios": stats["frio"],
             "upgraded": upgraded,
             "downgraded": downgraded,
+            "notified_telegram": notified,
         },
     ))
 

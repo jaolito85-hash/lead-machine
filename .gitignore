@@ -5,3 +5,4 @@ paperclip/
 __pycache__/
 *.pyc
 leads-export/*.log
+start.log
