@@ -216,6 +216,23 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
 .notif.ok{border-left:3px solid var(--accent)}.notif.err{border-left:3px solid var(--hot)}.notif.warn{border-left:3px solid var(--warm)}
 
 @media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.grid-2,.grid-3{grid-template-columns:1fr}}
+
+/* BUSCAS SALVAS */
+.busca-card{background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.busca-card.off{opacity:.5}
+.busca-card .b-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.busca-card .b-name{font-weight:600;font-size:13px;color:var(--text-primary)}
+.busca-card .b-meta{font-size:11px;color:var(--text-tertiary);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap}
+.busca-card .b-meta span{background:var(--bg-void);padding:2px 8px;border-radius:10px;border:1px solid var(--border-subtle)}
+.busca-card .b-actions{display:flex;gap:6px;align-items:center}
+.busca-card .b-status{font-size:10px;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.busca-card .b-status.on{background:var(--running-dim);color:var(--running)}
+.busca-card .b-status.off{background:var(--bg-void);color:var(--text-tertiary)}
+.busca-card .b-status.running{background:var(--warm-dim);color:var(--warm)}
+.plat-pill{display:inline-block;padding:2px 8px;font-size:10px;border-radius:10px;background:var(--bg-void);border:1px solid var(--border-subtle);color:var(--text-secondary);margin-right:4px}
+.plat-check{display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 10px;background:var(--bg-void);border:1px solid var(--border-subtle);border-radius:4px;font-size:12px;user-select:none}
+.plat-check input{margin:0}
+.plat-check.checked{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -234,6 +251,7 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
     <div class="nav-item" data-page="empresas">&#9878; Empresas <span class="badge" id="empresas-badge">0</span></div>
     <div class="nav-label">Operacao</div>
     <div class="nav-item" data-page="agents">&#9881; Agentes</div>
+    <div class="nav-item" data-page="buscas">&#9202; Buscas Salvas <span class="badge" id="buscas-badge">0</span></div>
     <div class="nav-label">Sistema</div>
     <div class="nav-item" data-page="activity">&#9776; Atividades</div>
     <div class="nav-item" data-page="settings">&#9881; Config</div>
@@ -338,6 +356,19 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
       <div class="kanban" id="kanban-leads"></div>
     </div>
 
+    <!-- ═══ BUSCAS SALVAS PAGE ═══ -->
+    <div class="page" id="page-buscas">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div>
+          <span style="font-family:var(--font-sans);font-size:15px;font-weight:600">Buscas Salvas</span>
+          <p style="font-size:11px;color:var(--text-tertiary);margin-top:4px">O runner automatico executa essas buscas no intervalo definido. Leads quentes → Telegram.</p>
+        </div>
+        <button class="btn primary" onclick="openBuscaModal()">+ Nova Busca</button>
+      </div>
+      <div id="buscas-status" style="margin-bottom:12px;font-size:11px;color:var(--text-tertiary)"></div>
+      <div id="buscas-list"></div>
+    </div>
+
     <!-- ═══ ACTIVITY PAGE ═══ -->
     <div class="page" id="page-activity">
       <div style="margin-bottom:20px"><span style="font-family:var(--font-sans);font-size:15px;font-weight:600">Log de Atividades</span><p style="font-size:11px;color:var(--text-tertiary);margin-top:4px">Tudo que aconteceu no sistema</p></div>
@@ -369,6 +400,64 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
 </div>
 
 <div class="notif" id="notif"></div>
+
+<!-- MODAL NOVA BUSCA -->
+<div class="modal-overlay" id="busca-modal" style="display:none">
+  <div class="modal" style="width:520px">
+    <div class="modal-header">
+      <span id="busca-modal-title">Nova Busca</span>
+      <span style="cursor:pointer;color:var(--text-tertiary)" onclick="closeBuscaModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="busca-id" />
+      <div class="form-group">
+        <label class="form-label">Nome (apelido pra identificar)</label>
+        <input class="form-input" id="busca-nome" placeholder="Ex: Dentistas Maringa" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Query (o que buscar)</label>
+        <input class="form-input" id="busca-query" placeholder="Ex: dentista implante, harmonizacao facial" />
+      </div>
+      <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label class="form-label">Cidade</label>
+          <input class="form-input" id="busca-cidade" placeholder="Ex: Maringa-PR" />
+        </div>
+        <div>
+          <label class="form-label">Nicho</label>
+          <input class="form-input" id="busca-nicho" placeholder="Ex: odontologia" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Plataformas</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="busca-platforms">
+          <label class="plat-check"><input type="checkbox" value="google" /> Google Maps</label>
+          <label class="plat-check"><input type="checkbox" value="instagram" /> Instagram</label>
+          <label class="plat-check"><input type="checkbox" value="facebook" /> Facebook</label>
+          <label class="plat-check"><input type="checkbox" value="tiktok" /> TikTok</label>
+          <label class="plat-check"><input type="checkbox" value="twitter" /> X/Twitter</label>
+        </div>
+      </div>
+      <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label class="form-label">Intervalo (horas)</label>
+          <input class="form-input" id="busca-intervalo" type="number" min="1" max="168" value="6" />
+        </div>
+        <div>
+          <label class="form-label">Status</label>
+          <select class="form-input" id="busca-ativa">
+            <option value="true">Ativa</option>
+            <option value="false">Pausada</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeBuscaModal()">Cancelar</button>
+      <button class="btn primary" onclick="saveBusca()">Salvar</button>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ══════════════════════════════════════════
@@ -546,9 +635,139 @@ function updateStatusIndicator(){
 }
 
 // Auto-sync a cada 10 segundos
-setInterval(()=>{syncAgentsFromAPI();syncLeadsFromAPI();updateStatusIndicator()},10000);
+setInterval(()=>{syncAgentsFromAPI();syncLeadsFromAPI();syncBuscasFromAPI();updateStatusIndicator()},10000);
 // Sync inicial
-setTimeout(()=>{syncAgentsFromAPI();syncLeadsFromAPI();updateStatusIndicator()},1000);
+setTimeout(()=>{syncAgentsFromAPI();syncLeadsFromAPI();syncBuscasFromAPI();updateStatusIndicator()},1000);
+
+// ════════════════════════════════════════
+// BUSCAS SALVAS (CRUD + RENDER)
+// ════════════════════════════════════════
+let BUSCAS=[];
+
+async function syncBuscasFromAPI(){
+  try{
+    const r=await fetch('/api/local/searches');
+    if(!r.ok) return;
+    BUSCAS=await r.json();
+    renderBuscas();
+  }catch(e){/* silent */}
+}
+
+function renderBuscas(){
+  const el=document.getElementById('buscas-list');
+  if(!el) return;
+  const badge=document.getElementById('buscas-badge');
+  if(badge) badge.textContent=BUSCAS.filter(b=>b.ativa).length;
+
+  if(BUSCAS.length===0){
+    el.innerHTML='<div style="padding:40px;text-align:center;color:var(--text-tertiary);font-size:12px">Nenhuma busca salva. Clique em <b>+ Nova Busca</b> para criar a primeira.</div>';
+    return;
+  }
+
+  el.innerHTML=BUSCAS.map(b=>{
+    const plat=(b.plataformas||[]).map(p=>`<span class="plat-pill">${p}</span>`).join('');
+    const statusCls=b.ativa?'on':'off';
+    const statusTxt=b.ativa?'ATIVA':'PAUSADA';
+    const lastRun=b.last_run?new Date(b.last_run).toLocaleString('pt-BR'):'nunca';
+    const nextRun=b.next_run?new Date(b.next_run).toLocaleString('pt-BR'):'-';
+    const stats=b.last_stats||{};
+    const statsStr=b.last_run?`last: ${stats.agentes_ok||0} OK / ${stats.agentes_fail||0} fail`:'';
+    return `
+      <div class="busca-card ${b.ativa?'':'off'}">
+        <div>
+          <div class="b-top">
+            <span class="b-name">${escapeHtml(b.nome)}</span>
+            <span class="b-status ${statusCls}">${statusTxt}</span>
+            ${plat}
+          </div>
+          <div class="b-meta">
+            <span>query: ${escapeHtml(b.query)}</span>
+            ${b.cidade?`<span>cidade: ${escapeHtml(b.cidade)}</span>`:''}
+            ${b.nicho?`<span>nicho: ${escapeHtml(b.nicho)}</span>`:''}
+            <span>a cada ${b.intervalo_horas}h</span>
+            <span>ultima: ${lastRun}</span>
+            <span>proxima: ${nextRun}</span>
+            ${statsStr?`<span>${statsStr}</span>`:''}
+          </div>
+        </div>
+        <div class="b-actions">
+          <button class="btn" onclick="triggerBusca('${b.id}')" title="Rodar agora">&#9658; Rodar</button>
+          <button class="btn" onclick="toggleBusca('${b.id}',${!b.ativa})">${b.ativa?'Pausar':'Ativar'}</button>
+          <button class="btn" onclick="editBusca('${b.id}')">Editar</button>
+          <button class="btn" style="color:var(--hot)" onclick="deleteBusca('${b.id}')">Remover</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function escapeHtml(s){return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c])}
+
+function openBuscaModal(busca){
+  document.getElementById('busca-modal-title').textContent=busca?'Editar Busca':'Nova Busca';
+  document.getElementById('busca-id').value=busca?busca.id:'';
+  document.getElementById('busca-nome').value=busca?busca.nome:'';
+  document.getElementById('busca-query').value=busca?busca.query:'';
+  document.getElementById('busca-cidade').value=busca?(busca.cidade||''):'';
+  document.getElementById('busca-nicho').value=busca?(busca.nicho||''):'';
+  document.getElementById('busca-intervalo').value=busca?busca.intervalo_horas:6;
+  document.getElementById('busca-ativa').value=busca?String(busca.ativa):'true';
+  const plats=busca?(busca.plataformas||[]):['google','instagram'];
+  document.querySelectorAll('#busca-platforms input').forEach(inp=>{
+    inp.checked=plats.includes(inp.value);
+    inp.parentElement.classList.toggle('checked',inp.checked);
+  });
+  document.querySelectorAll('#busca-platforms input').forEach(inp=>{
+    inp.onchange=()=>inp.parentElement.classList.toggle('checked',inp.checked);
+  });
+  document.getElementById('busca-modal').style.display='flex';
+}
+
+function closeBuscaModal(){document.getElementById('busca-modal').style.display='none'}
+
+function editBusca(id){const b=BUSCAS.find(x=>x.id===id);if(b) openBuscaModal(b)}
+
+async function saveBusca(){
+  const plats=Array.from(document.querySelectorAll('#busca-platforms input:checked')).map(i=>i.value);
+  const payload={
+    nome:document.getElementById('busca-nome').value.trim(),
+    query:document.getElementById('busca-query').value.trim(),
+    cidade:document.getElementById('busca-cidade').value.trim(),
+    nicho:document.getElementById('busca-nicho').value.trim(),
+    plataformas:plats,
+    intervalo_horas:parseInt(document.getElementById('busca-intervalo').value)||6,
+    ativa:document.getElementById('busca-ativa').value==='true',
+  };
+  const id=document.getElementById('busca-id').value;
+  try{
+    const url=id?('/api/local/searches/'+id):'/api/local/searches';
+    const method=id?'PATCH':'POST';
+    const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const data=await r.json();
+    if(!r.ok){notify('Erro: '+(data.error||'falhou'),'err');return}
+    notify(id?'Busca atualizada':'Busca criada','ok');
+    closeBuscaModal();
+    syncBuscasFromAPI();
+  }catch(e){notify('Erro: '+e.message,'err')}
+}
+
+async function toggleBusca(id,ativa){
+  const r=await fetch('/api/local/searches/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({ativa})});
+  if(r.ok){notify(ativa?'Busca ativada':'Busca pausada','ok');syncBuscasFromAPI()}
+}
+
+async function triggerBusca(id){
+  const r=await fetch('/api/local/searches/'+id+'/run',{method:'POST'});
+  if(r.ok){notify('Busca disparada - runner pega na proxima iteracao','ok');syncBuscasFromAPI()}
+  else notify('Erro ao disparar','err');
+}
+
+async function deleteBusca(id){
+  const b=BUSCAS.find(x=>x.id===id);
+  if(!b) return;
+  if(!confirm(`Remover a busca "${b.nome}"?`)) return;
+  const r=await fetch('/api/local/searches/'+id,{method:'DELETE'});
+  if(r.ok){notify('Busca removida','ok');syncBuscasFromAPI()}
+}
 
 function notify(msg,type='ok'){const n=document.getElementById('notif');n.className='notif '+type;n.textContent=msg;n.classList.add('show');setTimeout(()=>n.classList.remove('show'),3000)}
 

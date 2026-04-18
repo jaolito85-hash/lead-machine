@@ -6,3 +6,4 @@ __pycache__/
 *.pyc
 leads-export/*.log
 start.log
+leads-export/searches.json

@@ -410,10 +410,10 @@ python serve.py
 
 - [x] Criar `start.bat` para subir tudo com um clique
 - [x] Alertas Telegram — notificar lead quente novo
-- [ ] Rotinas automaticas (cron) — scraping a cada X horas
-- [ ] Multi-nicho — salvar buscas e rodar em paralelo
-- [ ] Envio de DM automatico — lead quente → DM sai
-- [ ] Deploy Docker — rodar 24/7 em servidor
+- [x] Rotinas automaticas (cron) — scraping a cada X horas
+- [x] Multi-nicho — salvar buscas e rodar em paralelo
+- [ ] Envio de DM automatico — ADIADO (risco de ban, manual e mais seguro por ora)
+- [ ] Deploy Docker — ADIADO (so faz sentido quando for hospedar em servidor)
 
 ---
 
@@ -483,4 +483,91 @@ No cmd normal ou duplo-clique no explorer: apenas `start.bat`.
 
 ---
 
-*Ultima atualizacao: 18/04/2026 — Dia 3 (Fase 9a+9b: start.bat + Telegram)*
+#### Fase 9c: Buscas salvas + Runner automatico + UI — CONCLUIDO
+
+Sistema agora roda sozinho 24/7 sem intervencao manual. Voce cadastra buscas, define
+intervalo, ativa, e o runner dispara automaticamente quando vence o proximo run.
+
+**Arquivos novos:**
+
+- `agents/searches.py` — modulo de gestao do `leads-export/searches.json`
+  (CRUD + validacao + compute de `next_run` + `trigger_now` pra "rodar agora").
+- `agents/runner.py` — daemon que loopa a cada 60s:
+  - Pega buscas ATIVAS com `next_run` vencido
+  - Dispara todos os agentes em paralelo via `ThreadPoolExecutor` + `subprocess`
+    (passa `SEARCH_QUERY`, `CITY`, `NICHO` via env vars)
+  - Quando todos terminam: roda qualifier (que ja dispara Telegram pros quentes)
+  - Atualiza `last_run`, `next_run`, `last_status`, `last_stats` na busca
+  - Flags: `--once` (1 iteracao), `--tick 30` (segundos entre checks), `--dry-run`
+- `serve.py` refatorado:
+  - Novos endpoints REST para buscas salvas (nao colidem com proxy Paperclip):
+    - `GET /api/local/searches` - lista
+    - `GET /api/local/searches/:id` - detalhe
+    - `POST /api/local/searches` - cria (valida nome, query, plataformas, intervalo 1-168h)
+    - `PATCH /api/local/searches/:id` - atualiza
+    - `DELETE /api/local/searches/:id` - remove
+    - `POST /api/local/searches/:id/run` - forca "rodar agora"
+  - `DELETE` method adicionado (antes so GET/POST/PATCH)
+- `dashboard/index.html`:
+  - Nova aba **Buscas Salvas** no menu lateral com badge de buscas ativas
+  - Lista de cards com nome, status, plataformas, query, cidade, nicho, intervalo,
+    last_run, next_run, last_stats
+  - Botoes por busca: Rodar agora / Pausar / Ativar / Editar / Remover
+  - Modal de "Nova Busca" / "Editar Busca" (nome, query, cidade, nicho,
+    checkboxes de plataformas, intervalo em horas, ativa/pausada)
+  - Auto-sync a cada 10s (mesmo ciclo dos agentes e leads)
+- `start.bat` — 4a janela "Lead Machine Runner" sobe junto (`python agents/runner.py`).
+- `stop.bat` — mata tambem a janela do Runner.
+
+**Testado end-to-end:**
+
+- CRUD completo via curl (POST, GET, PATCH, DELETE) - todos 200
+- Runner executou busca `dentista` em `Maringa-PR` via Google Maps:
+  - Google agent: OK em 2.2s (rc=0)
+  - Qualifier: OK (rodou Telegram internamente pros quentes novos)
+  - `last_run`, `next_run` (+24h), `last_status=success` atualizados corretamente
+- UI: abas navegam, badge de ativas atualiza, modal cria/edita, rodar agora funciona.
+
+**Decisoes:**
+
+- Buscas vivem em `searches.json` (nao no Paperclip) — evita acoplamento e fica
+  portavel. File locking com `portalocker` pra runner + UI coexistirem.
+- Endpoints em `/api/local/*` para nao colidir com o proxy `/api/*` do Paperclip.
+- Runner e um processo separado (1 janela de terminal). Se voce fechar, o resto do
+  sistema continua funcionando pra operacao manual via dashboard.
+- `next_run = now` em criacao — roda na proxima iteracao (feedback imediato).
+- `trigger_now` so muda `next_run` pra agora e forca `ativa=true` — runner pega.
+
+**Como usar a partir de agora (setup diario):**
+
+```
+C:\projetos\paperclip\start.bat     # sobe tudo
+# abre dashboard → aba "Buscas Salvas" → cria tuas buscas
+# sai fazer outras coisas — runner trabalha sozinho
+# leads quentes caem direto no teu Telegram
+C:\projetos\paperclip\stop.bat      # quando quiser parar
+```
+
+---
+
+### Status Final do Projeto
+
+Sistema **completo e funcional**. Tudo que estava na Fase 9 esta entregue, exceto:
+
+- **DM automatica**: adiada deliberadamente. Risco de ban da conta do Instagram
+  e o `disparar-instagram.html` manual ja resolve com mais controle.
+- **Docker**: adiado. Faz sentido so quando for hospedar em servidor 24/7 remoto.
+  Hoje roda local.
+
+Proximas direcoes possiveis (quando fizer sentido):
+
+- [ ] Relatorios semanais por email/Telegram (resumo de leads coletados)
+- [ ] Metricas: tempo medio de scraping por plataforma, taxa de conversao
+- [ ] Export CRM (planilha automatica por busca)
+- [ ] Webhook pra enviar leads quentes direto pro CRM externo (HubSpot, Pipedrive)
+- [ ] Rotacao de proxy quando detectar rate limit
+- [ ] UI de "testar busca" (roda 1 vez e mostra preview antes de salvar)
+
+---
+
+*Ultima atualizacao: 18/04/2026 — Dia 3 (Fase 9 COMPLETA: start.bat + Telegram + Runner + UI Buscas)*

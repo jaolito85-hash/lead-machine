@@ -55,11 +55,15 @@ goto waitpaperclip
 call :log       OK - Paperclip online em !TRIES!s.
 
 REM 3) Dashboard + proxy
-call :log [3/3] Subindo dashboard em %DASHBOARD_URL% ...
+call :log [3/4] Subindo dashboard em %DASHBOARD_URL% ...
 start "Lead Machine Dashboard" cmd /k "cd /d %ROOT% && python serve.py"
 
 REM Pequena espera para o serve.py abrir a porta
 ping -n 3 127.0.0.1 >nul
+
+REM 4) Runner automatico (cron das buscas salvas)
+call :log [4/4] Subindo Runner automatico (schedule das buscas salvas)...
+start "Lead Machine Runner" cmd /k "cd /d %ROOT% && python agents/runner.py"
 
 REM Abre browser
 start "" %DASHBOARD_URL%
@@ -69,8 +73,9 @@ call :log =============================================================
 call :log  TUDO PRONTO
 call :log  Dashboard: %DASHBOARD_URL%
 call :log  Paperclip: %PAPERCLIP_URL%
+call :log  Runner: checando buscas a cada 60s
 call :log.
-call :log  Para parar tudo: rode stop.bat ou feche as 2 janelas abertas.
+call :log  Para parar tudo: rode stop.bat ou feche as 3 janelas abertas.
 call :log =============================================================
 echo.
 echo Pressione qualquer tecla para fechar esta janela...
