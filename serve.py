@@ -12,6 +12,7 @@ Uso:
 """
 
 import json
+import os
 import sys
 import urllib.request
 import urllib.error
@@ -22,8 +23,16 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent / "agents"))
 import searches as searches_module
 
-PORT = 8081
-PAPERCLIP_URL = "http://localhost:3100"
+def env_int(name, default):
+    try:
+        return int(os.getenv(name, str(default)))
+    except ValueError:
+        return default
+
+
+PORT = env_int("DASHBOARD_PORT", 8081)
+PAPERCLIP_PORT = env_int("PAPERCLIP_PORT", 3100)
+PAPERCLIP_URL = os.getenv("PAPERCLIP_URL", f"http://localhost:{PAPERCLIP_PORT}").rstrip("/")
 BASE_DIR = Path(__file__).parent
 LEADS_DB = BASE_DIR / "leads-export" / "leads-db.json"
 
