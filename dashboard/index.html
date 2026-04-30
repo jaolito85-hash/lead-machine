@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lead Machine — Control Plane</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg-void: #08090b;
@@ -35,6 +36,25 @@
   --font-sans: 'Space Grotesk', sans-serif;
   --sidebar-w: 220px;
   --radius: 6px;
+
+  /* ═══ Glassmorphism tokens (Kanban redesign) ═══ */
+  --glass-bg: #0a0c0f;
+  --glass-emerald-400: #4edea3;
+  --glass-emerald-500: #10b981;
+  --glass-cyan-400: #22d3ee;
+  --glass-amber-400: #fbbf24;
+  --glass-blue-400: #60a5fa;
+  --glass-purple-400: #c084fc;
+  --glass-pink-400: #f472b6;
+  --glass-white-02: rgba(255,255,255,0.02);
+  --glass-white-05: rgba(255,255,255,0.05);
+  --glass-white-10: rgba(255,255,255,0.10);
+  --glass-white-20: rgba(255,255,255,0.20);
+  --glass-border: rgba(255,255,255,0.10);
+  --glass-border-strong: rgba(255,255,255,0.20);
+  --font-glass-body: 'Inter', system-ui, sans-serif;
+  --font-glass-display: 'Manrope', 'Inter', sans-serif;
+  --font-glass-mono: 'Inter', system-ui, sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:13px}
@@ -154,25 +174,321 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
 .score-bar{width:60px;height:6px;background:var(--bg-active);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:6px}
 .score-fill{height:100%;border-radius:3px}
 
-/* ═══ TASKS KANBAN ═══ */
-.kanban{display:flex;gap:12px;height:calc(100vh - 160px);overflow-x:auto;padding-bottom:12px}
-.kanban-col{min-width:260px;width:260px;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:8px;display:flex;flex-direction:column;flex-shrink:0}
-.kanban-col-head{padding:12px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:8px}
-.kanban-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.kanban-col-name{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary)}
-.kanban-col-count{margin-left:auto;font-size:10px;background:var(--bg-active);color:var(--text-tertiary);padding:1px 6px;border-radius:8px}
-.kanban-cards{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px}
+/* ═══════════════════════════════════════════════════════
+   KANBAN — GLASSMORPHISM REDESIGN
+   ═══════════════════════════════════════════════════════ */
+
+/* Background glows — ficam atrás de tudo quando a pagina Kanban está ativa */
+#page-kanban{position:relative}
+#page-kanban::before,#page-kanban::after{
+  content:"";position:fixed;width:620px;height:620px;border-radius:50%;
+  filter:blur(140px);pointer-events:none;z-index:0;opacity:.55
+}
+#page-kanban::before{top:-120px;left:18%;background:radial-gradient(circle,var(--glass-emerald-500) 0%,transparent 60%)}
+#page-kanban::after{bottom:-180px;right:12%;background:radial-gradient(circle,var(--glass-cyan-400) 0%,transparent 60%);opacity:.35}
+#page-kanban > *{position:relative;z-index:1}
+
+/* Material Symbols helper */
+.msi{font-family:'Material Symbols Outlined';font-size:16px;line-height:1;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;vertical-align:middle;user-select:none}
+.msi.fill{font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24}
+
+/* Topbar glass */
+.k-topbar{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:10px 14px;margin-bottom:18px;
+  background:var(--glass-white-02);
+  border:1px solid var(--glass-border);
+  border-radius:16px;
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  box-shadow:0 4px 20px rgba(0,0,0,.25)
+}
+.k-search{position:relative;flex:1;min-width:220px;max-width:360px}
+.k-search .msi{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-tertiary);font-size:18px;pointer-events:none}
+.k-search input{
+  width:100%;background:var(--glass-white-05);
+  border:1px solid var(--glass-border);
+  color:var(--text-primary);
+  padding:8px 14px 8px 40px;border-radius:999px;
+  font-family:var(--font-glass-body);font-size:13px;
+  outline:none;transition:all .2s;
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.2)
+}
+.k-search input::placeholder{color:var(--text-muted)}
+.k-search input:focus{border-color:rgba(78,222,163,.5);box-shadow:inset 0 2px 4px rgba(0,0,0,.2),0 0 0 3px rgba(78,222,163,.12)}
+
+/* Seletor de campanha (glass) */
+.k-campaign-select{
+  display:flex;align-items:center;gap:6px;
+  padding:4px 8px 4px 12px;
+  background:rgba(78,222,163,.06);
+  border:1px solid rgba(78,222,163,.22);
+  border-radius:999px;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  transition:all .2s
+}
+.k-campaign-select:hover{background:rgba(78,222,163,.1);border-color:rgba(78,222,163,.4)}
+.k-campaign-select .msi{font-size:17px}
+.k-campaign-select select{
+  background:transparent;border:none;outline:none;
+  color:#fff;font-family:var(--font-glass-body);font-size:13px;font-weight:500;
+  padding:6px 4px;cursor:pointer;
+  min-width:170px;max-width:280px
+}
+.k-campaign-select select option{
+  background:#14181f;color:#fff;font-family:var(--font-glass-body)
+}
+.k-campaign-btn{
+  width:28px;height:28px;border-radius:50%;
+  background:transparent;border:none;cursor:pointer;
+  color:#94a3b8;
+  display:inline-flex;align-items:center;justify-content:center;
+  transition:all .18s
+}
+.k-campaign-btn:hover{background:var(--glass-white-10);color:var(--glass-emerald-400)}
+.k-campaign-btn .msi{font-size:16px}
+
+.k-pill-group{display:flex;gap:6px;flex-wrap:wrap}
+.k-pill{
+  padding:6px 14px;border-radius:999px;
+  background:transparent;
+  border:1px solid var(--glass-border);
+  color:var(--text-tertiary);
+  font-family:var(--font-glass-body);font-size:12px;font-weight:500;
+  cursor:pointer;transition:all .18s;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)
+}
+.k-pill:hover{color:var(--text-primary);border-color:var(--glass-border-strong);background:var(--glass-white-05)}
+.k-pill.active{background:var(--glass-white-10);border-color:var(--glass-border-strong);color:#fff;font-weight:600}
+.k-pill.active.tipo{background:rgba(78,222,163,.14);border-color:rgba(78,222,163,.5);color:var(--glass-emerald-400)}
+
+.k-topbar-divider{width:1px;height:22px;background:var(--glass-border)}
+
+/* Kanban board */
+.kanban{
+  display:flex;gap:16px;
+  height:calc(100vh - 232px);
+  overflow-x:auto;padding:4px 2px 20px;
+  scrollbar-width:thin
+}
+.kanban::-webkit-scrollbar{height:8px;width:8px}
+.kanban::-webkit-scrollbar-thumb{background:var(--glass-white-10);border-radius:4px}
+
+/* Colunas glass */
+.kanban-col{
+  flex-shrink:0;width:300px;min-width:300px;
+  display:flex;flex-direction:column;
+  background:var(--glass-white-02);
+  border:1px solid var(--glass-border);
+  border-radius:18px;
+  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+  box-shadow:0 8px 32px rgba(0,0,0,.32);
+  overflow:hidden
+}
+.kanban-col-head{
+  padding:14px 16px;
+  border-bottom:1px solid var(--glass-border);
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,.012);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)
+}
+.kanban-dot{
+  width:9px;height:9px;border-radius:50%;flex-shrink:0;
+  box-shadow:0 0 10px currentColor
+}
+.kanban-col-name{
+  font-family:var(--font-glass-display);
+  font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1.5px;
+  color:#fff
+}
+.kanban-col-count{
+  margin-left:auto;
+  background:var(--glass-white-10);
+  border:1px solid rgba(255,255,255,.05);
+  color:#d1d5db;
+  font-family:var(--font-glass-body);
+  font-size:10px;font-weight:600;letter-spacing:.06em;
+  padding:2px 10px;border-radius:999px
+}
+.kanban-col-menu{
+  margin-left:6px;color:var(--text-tertiary);
+  background:none;border:none;cursor:pointer;
+  padding:2px;display:flex;align-items:center;
+  transition:color .15s
+}
+.kanban-col-menu:hover{color:#fff}
+
+.kanban-cards{
+  flex:1;padding:12px;
+  display:flex;flex-direction:column;gap:12px;
+  overflow-y:auto
+}
+.kanban-cards::-webkit-scrollbar{width:6px}
+.kanban-cards::-webkit-scrollbar-thumb{background:var(--glass-white-10);border-radius:3px}
+
+/* Empty state da coluna */
+.kanban-empty{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:40px 16px;text-align:center;gap:12px
+}
+.kanban-empty-icon{
+  width:56px;height:56px;border-radius:50%;
+  background:var(--glass-white-05);
+  border:1px solid var(--glass-border);
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  box-shadow:0 0 16px rgba(255,255,255,.04)
+}
+.kanban-empty-icon .msi{font-size:26px;opacity:.45}
+.kanban-empty-text{
+  font-family:var(--font-glass-body);font-size:12px;
+  color:var(--text-tertiary)
+}
+
+/* ═══ K-CARD glass ═══ */
+.k-card{
+  background:var(--glass-white-05);
+  border:1px solid var(--glass-border);
+  border-radius:14px;
+  padding:14px 14px 12px;
+  cursor:grab;
+  font-family:var(--font-glass-body);
+  transition:background .25s,border-color .25s,transform .25s,box-shadow .25s;
+  box-shadow:0 4px 20px rgba(0,0,0,.22);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  display:flex;flex-direction:column;gap:10px
+}
+.k-card:hover{background:var(--glass-white-10);border-color:var(--glass-border-strong);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.35)}
+.k-card:active{cursor:grabbing}
+.k-card.dragging{opacity:.4;border-color:var(--glass-emerald-400)}
+
+/* Destaque do card em coluna especifica — bar lateral amber */
+.k-card.highlight{
+  border-left:2px solid var(--glass-amber-400);
+  box-shadow:0 0 22px rgba(251,191,36,.18),0 4px 20px rgba(0,0,0,.22)
+}
+
+.k-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.k-card-ident{min-width:0;flex:1}
+.k-card-title{
+  font-family:var(--font-glass-body);
+  font-size:13px;line-height:18px;font-weight:500;
+  color:#fff;
+  overflow:hidden;text-overflow:ellipsis;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;
+  transition:color .2s
+}
+.k-card:hover .k-card-title{color:#a5f3fc}
+.k-card-id{
+  display:block;margin-top:2px;
+  font-size:11px;color:#94a3b8;letter-spacing:.02em
+}
+
+.k-card-score{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.k-card-pts{
+  font-family:var(--font-glass-body);font-size:11px;font-weight:600;
+  color:#cffafe;letter-spacing:.06em
+}
+.k-card-bar{
+  width:52px;height:4px;border-radius:999px;overflow:hidden;
+  background:var(--glass-white-10);
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.4)
+}
+.k-card-bar-fill{
+  height:100%;border-radius:999px;
+  background:var(--glass-cyan-400);
+  box-shadow:0 0 8px currentColor
+}
+.k-card-bar-fill.quente{background:#ff6b6b;color:#ff6b6b}
+.k-card-bar-fill.morno{background:var(--glass-amber-400);color:var(--glass-amber-400)}
+.k-card-bar-fill.frio{background:var(--glass-blue-400);color:var(--glass-blue-400)}
+
+/* Linha meta (⭐ rating · 📍 local, ou 💬 intent · 📍 cidade) */
+.k-card-meta-row{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  font-size:12px;color:#cbd5e1
+}
+.k-card-meta-row > span{display:inline-flex;align-items:center;gap:5px}
+.k-card-meta-row .msi{font-size:14px}
+.k-meta-rating{color:var(--glass-amber-400)}
+.k-meta-rating .msi{filter:drop-shadow(0 0 5px rgba(251,191,36,.45))}
+.k-meta-intent{
+  color:#a5f3fc;background:rgba(34,211,238,.1);
+  border:1px solid rgba(34,211,238,.25);
+  padding:2px 8px;border-radius:6px;font-size:10px;font-weight:500;
+  letter-spacing:.02em;text-transform:lowercase
+}
+.k-meta-intent.atendimento{color:#bbf7d0;background:rgba(78,222,163,.1);border-color:rgba(78,222,163,.3)}
+.k-meta-intent.preco{color:#fde68a;background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3)}
+.k-meta-intent.apostador{color:#86efac;background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.4);font-weight:600}
+.k-meta-intent.local{color:#bfdbfe;background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.3)}
+
+/* Footer do card: badge plataforma + CTA */
+.k-card-foot{
+  display:flex;justify-content:space-between;align-items:center;
+  padding-top:10px;margin-top:2px;
+  border-top:1px solid var(--glass-border)
+}
+
+.k-plat-badge{
+  padding:3px 9px;border-radius:6px;
+  font-family:var(--font-glass-body);
+  font-size:10px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  border:1px solid transparent
+}
+.k-plat-badge.google{background:rgba(59,130,246,.18);color:#93c5fd;border-color:rgba(59,130,246,.4);box-shadow:0 0 12px rgba(59,130,246,.22)}
+.k-plat-badge.instagram{background:rgba(236,72,153,.18);color:#f9a8d4;border-color:rgba(236,72,153,.4);box-shadow:0 0 12px rgba(236,72,153,.22)}
+.k-plat-badge.tiktok{background:rgba(6,182,212,.2);color:#67e8f9;border-color:rgba(6,182,212,.45);box-shadow:0 0 12px rgba(6,182,212,.22)}
+.k-plat-badge.facebook{background:rgba(37,99,235,.18);color:#93c5fd;border-color:rgba(37,99,235,.4);box-shadow:0 0 12px rgba(37,99,235,.22)}
+.k-plat-badge.x,.k-plat-badge.twitter{background:rgba(148,163,184,.18);color:#e2e8f0;border-color:rgba(148,163,184,.4)}
+.k-plat-badge.reddit{background:rgba(249,115,22,.18);color:#fdba74;border-color:rgba(249,115,22,.4)}
+.k-plat-badge.linkedin{background:rgba(2,132,199,.18);color:#7dd3fc;border-color:rgba(2,132,199,.4)}
+
+.k-card-cta{
+  display:inline-flex;align-items:center;gap:5px;
+  color:var(--glass-cyan-400);
+  font-family:var(--font-glass-body);font-size:12px;
+  text-decoration:none;
+  transition:all .2s
+}
+.k-card-cta .msi{font-size:14px}
+.k-card-cta:hover{color:#a5f3fc;filter:drop-shadow(0 0 8px rgba(34,211,238,.45))}
+.k-card-cta.highlight{color:var(--glass-amber-400)}
+.k-card-cta.highlight:hover{color:#fde68a;filter:drop-shadow(0 0 8px rgba(251,191,36,.5))}
+
+/* Grupo de icon-buttons pequenos no footer (Perfil / DM / Fonte) */
+.k-card-actions{display:flex;gap:4px;align-items:center}
+.k-ico-btn{
+  width:28px;height:28px;border-radius:8px;
+  display:inline-flex;align-items:center;justify-content:center;
+  color:#94a3b8;background:transparent;
+  border:1px solid transparent;
+  text-decoration:none;cursor:pointer;
+  transition:all .18s
+}
+.k-ico-btn .msi{font-size:15px}
+.k-ico-btn:hover{background:var(--glass-white-05);border-color:var(--glass-border)}
+.k-ico-btn.profile:hover{color:#f9a8d4;border-color:rgba(236,72,153,.35)}
+.k-ico-btn.dm:hover{color:var(--glass-emerald-400);border-color:rgba(78,222,163,.35)}
+.k-ico-btn.source:hover{color:var(--glass-cyan-400);border-color:rgba(34,211,238,.35)}
+.k-ico-btn[aria-disabled="true"]{opacity:.25;pointer-events:none}
+
+/* Entrada dos cards escalonada (stagger) — só na primeira carga.
+   Re-renders subsequentes (polling 10s) adicionam .no-anim pra evitar piscar. */
+@keyframes kFadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.kanban-cards:not(.no-anim) .k-card{animation:kFadeUp .35s ease both}
+.kanban-cards:not(.no-anim) .k-card:nth-child(1){animation-delay:0ms}
+.kanban-cards:not(.no-anim) .k-card:nth-child(2){animation-delay:40ms}
+.kanban-cards:not(.no-anim) .k-card:nth-child(3){animation-delay:80ms}
+.kanban-cards:not(.no-anim) .k-card:nth-child(4){animation-delay:120ms}
+.kanban-cards:not(.no-anim) .k-card:nth-child(5){animation-delay:160ms}
+.kanban-cards:not(.no-anim) .k-card:nth-child(n+6){animation-delay:200ms}
+
+/* Legacy — Tasks Kanban (outra tela que herda k-card) */
 .cmd-tipo-btn{transition:all .15s}.cmd-tipo-btn.active{background:var(--accent);border-color:var(--accent);color:var(--bg-void);font-weight:600}
-.k-card{background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:var(--radius);padding:12px;cursor:grab;transition:all .15s}
-.k-card:hover{border-color:var(--border-strong);transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.3)}
-.k-card.dragging{opacity:.4;border-color:var(--accent)}
-.k-card-id{font-size:10px;color:var(--text-secondary);margin-bottom:4px}
-.k-card-title{font-size:13px;font-weight:600;margin-bottom:8px;line-height:1.4;color:#fff;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.k-card-evidence{font-size:11px;color:#c8cad0;margin-bottom:8px;line-height:1.5;font-style:italic;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.k-card-meta{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--text-secondary)}
-.k-card-platform{font-size:9px;padding:1px 6px;border-radius:8px;font-weight:500}
-.k-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border-default);background:var(--bg-active)}
-.k-avatar-fallback{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;background:var(--bg-active);border:2px solid var(--border-default);color:var(--text-secondary)}
 
 /* ═══ ACTIVITY ═══ */
 .timeline{position:relative;padding-left:32px}
@@ -249,6 +565,7 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
     <div class="nav-item" data-page="kanban">&#9744; Kanban <span class="badge" id="leads-badge">0</span></div>
     <div class="nav-item" data-page="leads">&#9823; Pessoas <span class="badge" id="pessoas-badge">0</span></div>
     <div class="nav-item" data-page="empresas">&#9878; Empresas <span class="badge" id="empresas-badge">0</span></div>
+    <div class="nav-item" data-page="entregas">&#10148; Entregas <span class="badge" id="entregas-badge">0</span></div>
     <div class="nav-label">Operacao</div>
     <div class="nav-item" data-page="agents">&#9881; Agentes</div>
     <div class="nav-item" data-page="buscas">&#9202; Buscas Salvas <span class="badge" id="buscas-badge">0</span></div>
@@ -347,16 +664,67 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
 
     <!-- ═══ KANBAN DE LEADS ═══ -->
     <div class="page" id="page-kanban">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
         <div>
-          <span style="font-family:var(--font-sans);font-size:15px;font-weight:600">Pipeline de Leads</span>
-          <p style="font-size:11px;color:var(--text-tertiary);margin-top:4px">Funil: Descoberto → Qualificado → Enriquecido → Disponivel → Vendido → Convertido</p>
+          <span style="font-family:var(--font-glass-display);font-size:18px;font-weight:700;letter-spacing:-.01em;color:#fff">Pipeline de Leads</span>
+          <p style="font-family:var(--font-glass-body);font-size:12px;color:var(--text-tertiary);margin-top:2px">Descoberto → Qualificado → Enriquecido → Disponível → Vendido → Convertido</p>
         </div>
       </div>
+
+      <!-- Topbar glass: campanha + busca + pills -->
+      <div class="k-topbar">
+        <div class="k-campaign-select">
+          <span class="msi" style="color:var(--glass-emerald-400)">campaign</span>
+          <select id="kanban-campaign-sel" onchange="setKanbanCampaign(this.value)"></select>
+          <button class="k-campaign-btn" onclick="openCampaignModal('new')" title="Nova campanha">
+            <span class="msi">add</span>
+          </button>
+          <button class="k-campaign-btn" id="kanban-campaign-edit" onclick="openCampaignModal('edit')" title="Editar campanha" style="display:none">
+            <span class="msi">edit</span>
+          </button>
+        </div>
+
+        <div class="k-search">
+          <span class="msi">search</span>
+          <input type="text" id="kanban-search" placeholder="Buscar por nome, @user, texto, cidade, nicho..." oninput="setKanbanQuery(this.value)">
+        </div>
+
+        <div class="k-pill-group">
+          <button class="k-pill tipo active" data-tipo="pessoa" onclick="setKanbanTipo('pessoa')">
+            Pessoas <span id="kanban-count-pessoa" style="opacity:.65;margin-left:4px">0</span>
+          </button>
+          <button class="k-pill tipo" data-tipo="empresa" onclick="setKanbanTipo('empresa')">
+            Empresas <span id="kanban-count-empresa" style="opacity:.65;margin-left:4px">0</span>
+          </button>
+        </div>
+
+        <div class="k-topbar-divider"></div>
+
+        <div class="k-pill-group">
+          <button class="k-pill active" data-plat="all" onclick="setKanbanPlat('all')">Todas</button>
+          <button class="k-pill" data-plat="instagram" onclick="setKanbanPlat('instagram')">Instagram</button>
+          <button class="k-pill" data-plat="tiktok" onclick="setKanbanPlat('tiktok')">TikTok</button>
+          <button class="k-pill" data-plat="facebook" onclick="setKanbanPlat('facebook')">Facebook</button>
+          <button class="k-pill" data-plat="google" onclick="setKanbanPlat('google')">Google</button>
+        </div>
+      </div>
+
       <div class="kanban" id="kanban-leads"></div>
     </div>
 
     <!-- ═══ BUSCAS SALVAS PAGE ═══ -->
+    <!-- ═══ ENTREGAS PAGE ═══ -->
+    <div class="page" id="page-entregas">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div>
+          <span style="font-family:var(--font-sans);font-size:15px;font-weight:600">Entregas pra cliente</span>
+          <p style="font-size:11px;color:var(--text-tertiary);margin-top:4px">Cada campanha vira um arquivo padronizado (CSV ou XLSX) pronto pra mandar pro cliente. Filtra por <code>campaign_id</code>, ordena por temperatura/score, salva em <code>leads-export/exports/</code>.</p>
+        </div>
+        <button class="btn" onclick="renderEntregas()">&#x21bb; Recarregar</button>
+      </div>
+      <div id="entregas-list"></div>
+    </div>
+
     <div class="page" id="page-buscas">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
         <div>
@@ -455,6 +823,80 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
     <div class="modal-footer">
       <button class="btn" onclick="closeBuscaModal()">Cancelar</button>
       <button class="btn primary" onclick="saveBusca()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Nova/Editar Campanha ═══ -->
+<div class="modal-overlay" id="campaign-modal" style="display:none">
+  <div class="modal" style="width:560px">
+    <div class="modal-header">
+      <span id="campaign-modal-title">Nova Campanha</span>
+      <span style="cursor:pointer;color:var(--text-tertiary)" onclick="closeCampaignModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="campaign-id" />
+
+      <!-- Presets rápidos -->
+      <div class="form-group" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+        <span style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;align-self:center;margin-right:4px">Presets:</span>
+        <button type="button" class="btn" style="font-size:10px;padding:4px 10px" onclick="applyCampaignPreset('apostas')">🎰 Apostas Esportivas</button>
+        <button type="button" class="btn" style="font-size:10px;padding:4px 10px" onclick="applyCampaignPreset('estetica')">💉 Estética local</button>
+        <button type="button" class="btn" style="font-size:10px;padding:4px 10px" onclick="applyCampaignPreset('solar')">☀️ Solar nacional</button>
+        <button type="button" class="btn" style="font-size:10px;padding:4px 10px" onclick="applyCampaignPreset('juridico')">⚖️ Jurídico local</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nome da campanha*</label>
+        <input class="form-input" id="campaign-nome" placeholder="Ex: Harmonização Facial — Maringa-PR (Dra. Camila)" />
+      </div>
+
+      <!-- Checkbox Nacional (esconde cidade quando marcado) -->
+      <div class="form-group" style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="campaign-nacional" style="width:auto;margin:0" onchange="toggleCampaignNacional()" />
+        <label for="campaign-nacional" style="cursor:pointer;font-size:12px;color:var(--text-secondary)">
+          <strong>Nacional</strong> — atende Brasil todo (sem filtro por cidade/estado).
+          <span style="color:var(--text-tertiary);font-size:11px">Ideal pra e-commerce, apostas, SaaS, serviços online.</span>
+        </label>
+      </div>
+
+      <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="campaign-nicho-cidade-row">
+        <div>
+          <label class="form-label">Nicho</label>
+          <input class="form-input" id="campaign-nicho" placeholder="Ex: harmonizacao facial" />
+        </div>
+        <div id="campaign-cidade-wrapper">
+          <label class="form-label">Cidade</label>
+          <input class="form-input" id="campaign-cidade" placeholder="Ex: Maringa-PR" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cliente destino (pra quem esses leads vão)</label>
+        <input class="form-input" id="campaign-cliente" placeholder="Ex: Dra. Camila / Clínica Royal Face" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Query padrão (usada ao executar busca associada)</label>
+        <input class="form-input" id="campaign-query" placeholder="Ex: harmonizacao facial" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Plataformas da campanha</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="campaign-platforms">
+          <label class="plat-check"><input type="checkbox" value="google" /> Google Maps</label>
+          <label class="plat-check"><input type="checkbox" value="instagram" /> Instagram</label>
+          <label class="plat-check"><input type="checkbox" value="facebook" /> Facebook</label>
+          <label class="plat-check"><input type="checkbox" value="tiktok" /> TikTok</label>
+          <label class="plat-check"><input type="checkbox" value="twitter" /> X/Twitter</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notas (opcional)</label>
+        <input class="form-input" id="campaign-notes" placeholder="Contexto, briefing, lembretes..." />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="campaign-archive-btn" onclick="archiveCampaign()" style="display:none;margin-right:auto;color:#ff6b6b">Arquivar</button>
+      <button class="btn" onclick="closeCampaignModal()">Cancelar</button>
+      <button class="btn primary" onclick="saveCampaign()">Salvar</button>
     </div>
   </div>
 </div>
@@ -567,7 +1009,7 @@ async function syncLeadsFromAPI(){
   }catch(e){}
 }
 
-async function triggerAgent(agentId, query, city){
+async function triggerAgent(agentId, query, city, campaignId){
   const uuid=AGENT_IDS[agentId];
   if(!uuid)return null;
   try{
@@ -582,7 +1024,8 @@ async function triggerAgent(agentId, query, city){
       SEARCH_QUERY: query,
       CITY: city,
       NICHO: query,
-      LIMIT: '30'
+      LIMIT: '30',
+      CAMPAIGN_ID: campaignId || 'C-LEGACY'
     }};
 
     await fetch(`${PAPERCLIP_API}/agents/${uuid}`,{
@@ -635,9 +1078,9 @@ function updateStatusIndicator(){
 }
 
 // Auto-sync a cada 10 segundos
-setInterval(()=>{syncAgentsFromAPI();syncLeadsFromAPI();syncBuscasFromAPI();updateStatusIndicator()},10000);
+setInterval(()=>{syncAgentsFromAPI();syncLeadsFromAPI();syncBuscasFromAPI();fetchCampaigns();updateStatusIndicator()},10000);
 // Sync inicial
-setTimeout(()=>{syncAgentsFromAPI();syncLeadsFromAPI();syncBuscasFromAPI();updateStatusIndicator()},1000);
+setTimeout(()=>{syncAgentsFromAPI();syncLeadsFromAPI();syncBuscasFromAPI();fetchCampaigns();updateStatusIndicator()},1000);
 
 // ════════════════════════════════════════
 // BUSCAS SALVAS (CRUD + RENDER)
@@ -726,6 +1169,148 @@ function closeBuscaModal(){document.getElementById('busca-modal').style.display=
 
 function editBusca(id){const b=BUSCAS.find(x=>x.id===id);if(b) openBuscaModal(b)}
 
+// ─── CAMPANHAS: modal ───
+function toggleCampaignNacional(){
+  const isNacional=document.getElementById('campaign-nacional').checked;
+  const wrapper=document.getElementById('campaign-cidade-wrapper');
+  const cidadeInput=document.getElementById('campaign-cidade');
+  if(isNacional){
+    wrapper.style.display='none';
+    cidadeInput.value='';
+  }else{
+    wrapper.style.display='';
+  }
+}
+
+const CAMPAIGN_PRESETS={
+  apostas:{
+    nome:'Apostas Esportivas — Brasil',
+    nicho:'apostas esportivas',
+    query:'aposta esportiva dicas',
+    plataformas:['tiktok','x'],
+    nacional:true,
+    notes:'Tipsters e apostadores reais. Filtrar afiliados/concorrentes. Atua Brasil todo.',
+  },
+  estetica:{
+    nome:'Harmonização Facial — Maringa-PR',
+    nicho:'harmonizacao facial',
+    query:'harmonizacao facial',
+    plataformas:['instagram','tiktok'],
+    nacional:false,
+  },
+  solar:{
+    nome:'Painel Solar — Brasil',
+    nicho:'painel solar',
+    query:'painel solar energia',
+    plataformas:['tiktok','instagram'],
+    nacional:true,
+    notes:'Empresas de solar atendem o Brasil todo; leads filtrados por idioma e intent.',
+  },
+  juridico:{
+    nome:'Advocacia — Local',
+    nicho:'advogado',
+    query:'advogado criminal',
+    plataformas:['google','instagram'],
+    nacional:false,
+  },
+};
+
+function applyCampaignPreset(key){
+  const p=CAMPAIGN_PRESETS[key];
+  if(!p) return;
+  document.getElementById('campaign-nome').value=p.nome;
+  document.getElementById('campaign-nicho').value=p.nicho;
+  document.getElementById('campaign-query').value=p.query;
+  document.getElementById('campaign-notes').value=p.notes||'';
+  document.getElementById('campaign-nacional').checked=!!p.nacional;
+  toggleCampaignNacional();
+  document.querySelectorAll('#campaign-platforms input').forEach(i=>{
+    i.checked=(p.plataformas||[]).includes(i.value);
+  });
+  notify(`Preset aplicado: ${p.nome}`,'info');
+}
+
+function openCampaignModal(mode){
+  const modal=document.getElementById('campaign-modal');
+  const title=document.getElementById('campaign-modal-title');
+  const archBtn=document.getElementById('campaign-archive-btn');
+  const isEdit=mode==='edit'&&kanbanCampaign!=='all'&&kanbanCampaign!=='C-LEGACY';
+  const c=isEdit?campaignsCache.find(x=>x.id===kanbanCampaign):null;
+
+  title.textContent=isEdit?'Editar Campanha':'Nova Campanha';
+  document.getElementById('campaign-id').value=c?c.id:'';
+  document.getElementById('campaign-nome').value=c?c.nome:'';
+  document.getElementById('campaign-nicho').value=c?c.nicho:'';
+  document.getElementById('campaign-cidade').value=c?c.cidade:'';
+  document.getElementById('campaign-cliente').value=c?c.cliente_destino:'';
+  document.getElementById('campaign-query').value=c?c.query:'';
+  document.getElementById('campaign-notes').value=c?(c.notes||''):'';
+  document.getElementById('campaign-nacional').checked=c?!!c.nacional:false;
+  toggleCampaignNacional();
+  document.querySelectorAll('#campaign-platforms input').forEach(i=>{
+    i.checked=c?(c.plataformas||[]).includes(i.value):false;
+  });
+  archBtn.style.display=isEdit?'inline-flex':'none';
+  modal.style.display='flex';
+}
+function closeCampaignModal(){document.getElementById('campaign-modal').style.display='none'}
+
+async function saveCampaign(){
+  const plats=Array.from(document.querySelectorAll('#campaign-platforms input:checked')).map(i=>i.value);
+  const nacional=document.getElementById('campaign-nacional').checked;
+  const payload={
+    nome:document.getElementById('campaign-nome').value.trim(),
+    nicho:document.getElementById('campaign-nicho').value.trim(),
+    cidade:nacional?'':document.getElementById('campaign-cidade').value.trim(),
+    cliente_destino:document.getElementById('campaign-cliente').value.trim(),
+    query:document.getElementById('campaign-query').value.trim(),
+    plataformas:plats,
+    nacional:nacional,
+    notes:document.getElementById('campaign-notes').value.trim(),
+  };
+  if(!payload.nome){notify('Nome da campanha é obrigatório','err');return}
+  const id=document.getElementById('campaign-id').value;
+  try{
+    let r;
+    if(id){
+      r=await fetch(`/api/local/campaigns/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    }else{
+      r=await fetch('/api/local/campaigns',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    }
+    if(!r.ok){const err=await r.json();throw new Error(err.error||'falha ao salvar')}
+    const saved=await r.json();
+    notify(`Campanha ${id?'atualizada':'criada'}: ${saved.nome}`,'ok');
+    closeCampaignModal();
+    await fetchCampaigns();
+    // Se acabou de criar, seleciona automaticamente
+    if(!id&&saved.id){
+      kanbanCampaign=saved.id;
+      document.getElementById('kanban-campaign-sel').value=saved.id;
+      setKanbanCampaign(saved.id);
+    }
+  }catch(e){
+    notify('Erro ao salvar: '+e.message,'err');
+  }
+}
+
+async function archiveCampaign(){
+  const id=document.getElementById('campaign-id').value;
+  if(!id||id==='C-LEGACY') return;
+  const c=campaignsCache.find(x=>x.id===id);
+  if(!confirm(`Arquivar campanha "${c?c.nome:id}"? Leads vão continuar visíveis em "Todas as campanhas", mas a campanha some do seletor.`)) return;
+  try{
+    const r=await fetch(`/api/local/campaigns/${id}`,{method:'DELETE'});
+    if(!r.ok) throw new Error('falha ao arquivar');
+    notify('Campanha arquivada','ok');
+    closeCampaignModal();
+    kanbanCampaign='all';
+    await fetchCampaigns();
+    renderKanban();
+  }catch(e){
+    notify('Erro: '+e.message,'err');
+  }
+}
+
 async function saveBusca(){
   const plats=Array.from(document.querySelectorAll('#busca-platforms input:checked')).map(i=>i.value);
   const payload={
@@ -780,7 +1365,8 @@ document.querySelectorAll('.nav-item').forEach(el=>{
     const p=el.dataset.page;if(!p)return;
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');
     document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('active'));document.getElementById('page-'+p).classList.add('active');
-    const titles={command:['Central de Comando','Voce da a ordem. Agentes executam.'],kanban:['Pipeline','Arraste os cards entre as etapas do funil'],leads:['Pessoas','Pessoas que demonstraram interesse no servico'],empresas:['Empresas','Negocios encontrados no Google Maps'],agents:['Agentes','Seus funcionarios especializados'],activity:['Atividades','Log do sistema'],settings:['Configuracao','API keys, proxies, plataformas']};
+    const titles={command:['Central de Comando','Voce da a ordem. Agentes executam.'],kanban:['Pipeline','Arraste os cards entre as etapas do funil'],leads:['Pessoas','Pessoas que demonstraram interesse no servico'],empresas:['Empresas','Negocios encontrados no Google Maps'],entregas:['Entregas','Exportar leads de uma campanha pra entregar ao cliente'],agents:['Agentes','Seus funcionarios especializados'],buscas:['Buscas Salvas','Buscas executadas automaticamente em loop'],activity:['Atividades','Log do sistema'],settings:['Configuracao','API keys, proxies, plataformas']};
+    if(p==='entregas') renderEntregas();
     document.getElementById('pg-title').textContent=titles[p][0];
     document.getElementById('pg-sub').textContent=titles[p][1];
   });
@@ -806,9 +1392,71 @@ function executeCommand(){
 }
 
 // ─── EXECUCAO REAL (Paperclip API) ───
+async function resolveCommandCampaign(parsed){
+  // 1) Se o Kanban tem campanha != "Todas"/"Legado" selecionada, usa ela
+  if(kanbanCampaign!=='all'&&kanbanCampaign!=='C-LEGACY'){
+    const c=campaignsCache.find(x=>x.id===kanbanCampaign);
+    if(c) return c.id;
+  }
+  // 2) Senão, procura campanha ativa que bata nicho+cidade (case/acento-insensitive, parcial)
+  const norm=s=>(s||'').toString().toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
+  const nichoQ=norm(parsed.nicho);
+  const cidadeQ=norm(parsed.cidade);
+  const matches=campaignsCache.filter(c=>{
+    if(c.status!=='ativa'||c.id==='C-LEGACY') return false;
+    const cNicho=norm(c.nicho);
+    const cCidade=norm(c.cidade);
+    const nichoOk=cNicho&&nichoQ&&(cNicho===nichoQ||cNicho.includes(nichoQ)||nichoQ.includes(cNicho));
+    const cidadeOk=cCidade&&cidadeQ&&(cCidade===cidadeQ||cCidade.includes(cidadeQ)||cidadeQ.includes(cCidade));
+    return nichoOk&&cidadeOk;
+  });
+  if(matches.length===1) return matches[0].id;
+  if(matches.length>1){
+    // Escolhe o match mais específico (nomes com mais caracteres em comum)
+    matches.sort((a,b)=>(norm(b.nicho).length+norm(b.cidade).length)-(norm(a.nicho).length+norm(a.cidade).length));
+    return matches[0].id;
+  }
+  // 3) Senão, pergunta ao usuário (criar nova baseada no comando)
+  const ok=confirm(`Não há campanha ativa para "${parsed.nicho}" em ${parsed.cidade}.\n\nCriar uma nova campanha agora?\n\n(OK = cria; Cancelar = usa "Legado")`);
+  if(!ok) return 'C-LEGACY';
+  const autoName=`${parsed.nicho} — ${parsed.cidade}`.replace(/^\s*—\s*/,'').trim()||`Campanha ${new Date().toISOString().slice(0,10)}`;
+  const payload={
+    nome:autoName,
+    nicho:parsed.nicho||'',
+    cidade:parsed.cidade||'',
+    query:parsed.nicho||'',
+    plataformas:parsed.plataformas||[],
+  };
+  try{
+    const r=await fetch('/api/local/campaigns',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!r.ok) throw new Error('falha');
+    const created=await r.json();
+    await fetchCampaigns();
+    kanbanCampaign=created.id;
+    const sel=document.getElementById('kanban-campaign-sel');
+    if(sel) sel.value=created.id;
+    notify(`Campanha criada: ${created.nome}`,'ok');
+    return created.id;
+  }catch(e){
+    notify('Não consegui criar campanha, usando Legado','err');
+    return 'C-LEGACY';
+  }
+}
+
 async function executeCommandReal(parsed){
-  addActivity('info','CEO processando',`Nicho: ${parsed.nicho} | Cidade: ${parsed.cidade} | Plataformas: ${parsed.plataformas.join(', ')}`);
-  notify(`Executando: ${parsed.plataformas.length} agentes em paralelo...`,'info');
+  // Resolve campanha ANTES de disparar (via seletor/match/criação)
+  const campaignId=await resolveCommandCampaign(parsed);
+
+  // Se a campanha resolvida e NACIONAL, ignora cidade (empresa atende Brasil todo).
+  const campObj=campaignsCache.find(c=>c.id===campaignId);
+  const isNacional=campObj&&campObj.nacional;
+  if(isNacional){
+    parsed.cidade='';  // zera pra nao filtrar
+  }
+
+  addActivity('info','CEO processando',`Nicho: ${parsed.nicho} | Cidade: ${parsed.cidade||'(nacional)'} | Plataformas: ${parsed.plataformas.join(', ')} | Campanha: ${campaignId}`);
+  notify(`Executando: ${parsed.plataformas.length} agentes em paralelo (${isNacional?'nacional':parsed.cidade||'sem cidade'})...`,'info');
 
   let completedCount = 0;
   let totalNewLeads = 0;
@@ -824,10 +1472,10 @@ async function executeCommandReal(parsed){
     const taskId='T-'+String(S.taskCounter++).padStart(3,'0');
     S.tasks.push({id:taskId,title:`${parsed.nicho} em ${parsed.cidade} — ${platformLabels[plat]||plat}`,platform:plat,agent:agentId,status:'in_progress',created:now()});
     agent.status='running';
-    addActivity('info',`${agent.name} iniciado`,`${taskId}: buscando no ${platformLabels[plat]||plat}`);
+    addActivity('info',`${agent.name} iniciado`,`${taskId}: buscando no ${platformLabels[plat]||plat} (${campaignId})`);
     renderAll();
 
-    const runId = await triggerAgent(agentId, parsed.nicho, parsed.cidade);
+    const runId = await triggerAgent(agentId, parsed.nicho, parsed.cidade, campaignId);
 
     if(runId){
       pollRunStatus(runId, agentId, async (run)=>{
@@ -938,31 +1586,108 @@ function executeCommandSimulated(parsed){
   renderAll();
 }
 
+// UFs do Brasil (usadas como ancora confiavel pra detectar cidade)
+const BR_UF_SET = new Set(['ac','al','am','ap','ba','ce','df','es','go','ma','mg','ms','mt','pa','pb','pe','pi','pr','rj','rn','ro','rr','rs','sc','se','sp','to']);
+
+// Prefixos de cidades compostas brasileiras (pra decidir se "palavra anterior" e parte da cidade)
+const CITY_COMPOUND_PREFIXES = new Set(['sao','são','rio','nova','novo','santa','santo','belo','porto','campo','feira','juiz','boa','vila','ribeirao','ribeirão']);
+
+function _normalizeCity(s){
+  if(!s) return '';
+  return s.trim().toLowerCase().split(/\s+/).map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
+}
+
 function parseCommand(text){
   const t=text.toLowerCase();
+
+  // 1) Plataformas mencionadas
   const plataformas=[];
   ['instagram','x','twitter','google','reddit','linkedin','facebook','tiktok'].forEach(p=>{
     if(t.includes(p))plataformas.push(p==='twitter'?'x':p);
   });
-  // Auto-selecionar plataformas baseado no tipo se nenhuma foi mencionada
   if(!plataformas.length){
-    if(cmdTipo==='pessoa') plataformas.push('instagram','facebook');
-    else if(cmdTipo==='empresa') plataformas.push('google');
+    // Default pra 'pessoa': Instagram + TikTok (FB Pages so serve pra empresa).
+    if(cmdTipo==='pessoa') plataformas.push('instagram','tiktok');
+    else if(cmdTipo==='empresa') plataformas.push('google','facebook');
     else plataformas.push('instagram','google');
   }
 
-  // Extract city
-  let cidade='Brasil';
-  const cidadeMatch=text.match(/em\s+([A-ZÀ-Ú][a-zà-ú]+(?:[\s-][A-ZÀ-Ú][a-zà-ú]+)*(?:\s*[-–]\s*[A-Z]{2})?)/);
-  if(cidadeMatch)cidade=cidadeMatch[1].trim();
+  // 2) Limpa noise do texto (prefixos + menções de plataforma).
+  //    Aplica em loop pra casos encadeados ("Buscar pessoas interessadas em...").
+  let clean=text;
+  const noisePrefixes=[
+    /^(pessoas interessadas (em|no|na)\s+)/i,
+    /^(preciso de leads (para|de)\s+)/i,
+    /^(buscar|encontrar|quero|procure|procurar|me (traga|ache|busque|encontre))\s+/i,
+    /^(clientes (para|de|em)\s+)/i,
+  ];
+  let prev='';
+  while(prev!==clean){
+    prev=clean;
+    for(const re of noisePrefixes){
+      clean=clean.replace(re,'');
+    }
+  }
+  clean=clean
+    .replace(/\b(no|na|em|pelo|pela)\s+(instagram|x|twitter|google|reddit|linkedin|facebook|tiktok)\b/gi,'')
+    .replace(/\b(instagram|x|twitter|google|reddit|linkedin|facebook|tiktok)\b/gi,'')
+    .replace(/\s{2,}/g,' ')
+    .replace(/[.,!?]+\s*$/,'')
+    .trim();
 
-  // Extract niche (everything before "em" or main subject)
-  let nicho=text.replace(/buscar?\s*(no|na|em|pelo|pela)?\s*(instagram|x|twitter|google|reddit|linkedin|facebook|tiktok|,|\s+e\s+|etc|\.|!)/gi,'').trim();
-  nicho=nicho.replace(/^(preciso de leads para|preciso de|buscar|encontrar|quero|procure|procurar|me (traga|ache|busque|encontre))\s*/i,'').trim();
-  nicho=nicho.replace(/em\s+[A-ZÀ-Ú].*/,'').trim();
-  nicho=nicho.replace(/pessoas interessadas (em|no|na)\s*/i,'').trim();
-  if(nicho.length>80)nicho=nicho.slice(0,80);
-  if(!nicho)nicho='servico local';
+  // 3) Extrai cidade — estratégia passo a passo em vez de regex monstro
+  let cidade='Brasil';
+  let cidadeLen=0;  // quantos chars do final do `clean` foram consumidos pela cidade
+
+  // 3a) Caminho A: "<palavra>-UF" no final (hífen obrigatório)
+  const mHyphen=clean.match(/([a-zà-úA-ZÀ-Ú][\wà-úÀ-Ú]*)\s*[-–]\s*([a-zA-Z]{2})\s*$/);
+  if(mHyphen && BR_UF_SET.has(mHyphen[2].toLowerCase())){
+    let cityName=mHyphen[1];
+    // Se a palavra IMEDIATAMENTE anterior é um prefixo composto, anexa
+    const before=clean.slice(0,mHyphen.index).trim();
+    const bWords=before.split(/\s+/);
+    const prevWord=bWords[bWords.length-1];
+    if(prevWord && CITY_COMPOUND_PREFIXES.has(prevWord.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''))){
+      cityName=prevWord+' '+cityName;
+      cidadeLen=mHyphen[0].length+prevWord.length+1;
+    }else{
+      cidadeLen=mHyphen[0].length;
+    }
+    cidade=_normalizeCity(cityName)+'-'+mHyphen[2].toUpperCase();
+  }else{
+    // 3b) Caminho B: " UF" isolado no final (sem hífen) — "painel solar sp"
+    const mSpace=clean.match(/([a-zà-úA-ZÀ-Ú][\wà-úÀ-Ú]*)\s+([a-zA-Z]{2})\s*$/);
+    if(mSpace && BR_UF_SET.has(mSpace[2].toLowerCase())){
+      let cityName=mSpace[1];
+      const before=clean.slice(0,mSpace.index).trim();
+      const bWords=before.split(/\s+/);
+      const prevWord=bWords[bWords.length-1];
+      if(prevWord && CITY_COMPOUND_PREFIXES.has(prevWord.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''))){
+        cityName=prevWord+' '+cityName;
+        cidadeLen=mSpace[0].length+prevWord.length+1;
+      }else{
+        cidadeLen=mSpace[0].length;
+      }
+      cidade=_normalizeCity(cityName)+'-'+mSpace[2].toUpperCase();
+    }else{
+      // 3c) Caminho C: "em <Cidade>" no fim (sem UF)
+      const mEm=clean.match(/\bem\s+([a-zà-úA-ZÀ-Ú][\wà-úÀ-Ú]*(?:\s+[a-zà-úA-ZÀ-Ú][\wà-úÀ-Ú]*)?)\s*$/i);
+      if(mEm){
+        cidade=_normalizeCity(mEm[1]);
+        cidadeLen=mEm[0].length;
+      }
+    }
+  }
+
+  // 4) Nicho = clean menos a cauda que virou cidade
+  let nicho=cidadeLen>0 ? clean.slice(0, clean.length-cidadeLen) : clean;
+  nicho=nicho
+    .replace(/\bem\s*$/i,'')
+    .replace(/\s{2,}/g,' ')
+    .replace(/[,.]+$/,'')
+    .trim();
+  if(nicho.length>80) nicho=nicho.slice(0,80);
+  if(!nicho) nicho='servico local';
 
   return{nicho,cidade,plataformas};
 }
@@ -1168,74 +1893,425 @@ function exportEmpresas(){
   notify('Empresas exportadas!');
 }
 
+let kanbanTipo='pessoa';      // 'pessoa' | 'empresa'
+let kanbanPlat='all';         // 'all' | 'instagram' | 'tiktok' | 'facebook' | 'google'
+let kanbanQuery='';           // busca textual livre
+let kanbanCampaign='all';     // 'all' | campaign_id
+let campaignsCache=[];        // cache local da lista
+
+async function fetchCampaigns(){
+  try{
+    const r=await fetch('/api/local/campaigns');
+    campaignsCache=await r.json();
+  }catch(e){
+    campaignsCache=[];
+  }
+  renderCampaignSelect();
+}
+
+function renderCampaignSelect(){
+  const sel=document.getElementById('kanban-campaign-sel');
+  if(!sel) return;
+  const current=kanbanCampaign;
+  const active=campaignsCache.filter(c=>c.status==='ativa');
+  let html=`<option value="all">Todas as campanhas (${campaignsCache.reduce((s,c)=>s+(c._total_leads||0),0)})</option>`;
+  html+=active.map(c=>{
+    const n=c._total_leads||0;
+    const hot=c._hot_leads||0;
+    const hotStr=hot?`  · ${hot}🔥`:'';
+    return `<option value="${c.id}">${escapeHtml(c.nome)} (${n}${hotStr})</option>`;
+  }).join('');
+  sel.innerHTML=html;
+  sel.value=current;
+  // Mostra/esconde botao editar conforme seleção
+  const editBtn=document.getElementById('kanban-campaign-edit');
+  if(editBtn){
+    editBtn.style.display=(current!=='all'&&current!=='C-LEGACY')?'inline-flex':'none';
+  }
+}
+
+function setKanbanCampaign(id){
+  kanbanCampaign=id||'all';
+  // Edit button
+  const editBtn=document.getElementById('kanban-campaign-edit');
+  if(editBtn){
+    editBtn.style.display=(kanbanCampaign!=='all'&&kanbanCampaign!=='C-LEGACY')?'inline-flex':'none';
+  }
+  renderKanban();
+}
+
+// ─── ENTREGAS (export por campanha) ───
+async function renderEntregas(){
+  const list=document.getElementById('entregas-list');
+  if(!list) return;
+  list.innerHTML='<div style="padding:24px;color:var(--text-tertiary);font-size:12px">Carregando campanhas...</div>';
+  try{
+    const r=await fetch('/api/local/campaigns');
+    campaignsCache=await r.json();
+  }catch(e){
+    list.innerHTML='<div style="padding:24px;color:var(--text-tertiary);font-size:12px">Falha ao carregar campanhas. Server offline?</div>';
+    return;
+  }
+  const entregaveis=campaignsCache.filter(c=>c.status==='ativa'&&(c._total_leads||0)>0);
+  const badge=document.getElementById('entregas-badge');
+  if(badge) badge.textContent=String(entregaveis.length);
+  if(!entregaveis.length){
+    list.innerHTML='<div style="padding:24px;color:var(--text-tertiary);font-size:12px">Nenhuma campanha com leads ainda. Rode uma busca primeiro.</div>';
+    return;
+  }
+  const fmtData=(iso)=>{
+    if(!iso) return '<span style="color:var(--text-tertiary)">nunca</span>';
+    try{const d=new Date(iso);return d.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}catch(e){return iso}
+  };
+  list.innerHTML=entregaveis.map(c=>{
+    const total=c._total_leads||0;
+    const hot=c._hot_leads||0;
+    const cliente=c.cliente_destino||'(sem cliente definido)';
+    const nicho=c.nicho||'-';
+    const cidade=c.nacional?'Nacional':(c.cidade||'-');
+    const last=fmtData(c.last_exported_at);
+    const lastCount=c.last_exported_count?` · ${c.last_exported_count} leads · ${(c.last_exported_format||'').toUpperCase()}`:'';
+    return `
+      <div class="panel" style="margin-bottom:12px">
+        <div class="panel-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+          <div>
+            <div style="font-family:var(--font-sans);font-size:14px;font-weight:600">${escapeHtml(c.nome)} <span style="color:var(--text-tertiary);font-size:11px;font-weight:400">(${c.id})</span></div>
+            <div style="font-size:11px;color:var(--text-tertiary);margin-top:4px">Cliente: <strong style="color:var(--text-secondary)">${escapeHtml(cliente)}</strong> · Nicho: ${escapeHtml(nicho)} · Cidade: ${escapeHtml(cidade)}</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span style="font-size:11px;color:var(--text-tertiary)">${total} leads${hot?` · ${hot}🔥`:''}</span>
+            <button class="btn" onclick="exportCampaignDownload('${c.id}','csv')">Exportar CSV</button>
+            <button class="btn primary" onclick="exportCampaignDownload('${c.id}','xlsx')">Exportar XLSX</button>
+          </div>
+        </div>
+        <div class="panel-body" style="padding:10px 14px;font-size:11px;color:var(--text-tertiary)">
+          Ultimo export: ${last}${lastCount}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function exportCampaignDownload(cid,fmt){
+  try{
+    const url=`/api/local/exports?campaign_id=${encodeURIComponent(cid)}&format=${fmt}`;
+    const r=await fetch(url);
+    if(!r.ok){
+      const err=await r.json().catch(()=>({error:r.statusText}));
+      notify(`Falha no export: ${err.error||r.statusText}`,'err');
+      return;
+    }
+    const count=parseInt(r.headers.get('X-Lead-Count')||'0',10);
+    if(count===0){
+      notify('Campanha sem leads — nada a exportar','err');
+      return;
+    }
+    const blob=await r.blob();
+    const dispo=r.headers.get('Content-Disposition')||'';
+    const m=dispo.match(/filename="([^"]+)"/);
+    const filename=m?m[1]:`export-${cid}.${fmt}`;
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    notify(`Export pronto: ${count} leads → ${filename}`,'ok');
+    // Refresh pra atualizar "ultimo export"
+    setTimeout(renderEntregas,500);
+  }catch(e){
+    notify(`Erro: ${e.message}`,'err');
+  }
+}
+
+function setKanbanTipo(tipo){
+  kanbanTipo=tipo;
+  document.querySelectorAll('.k-pill.tipo').forEach(b=>{
+    b.classList.toggle('active',b.dataset.tipo===tipo);
+  });
+  renderKanban();
+}
+function setKanbanPlat(plat){
+  kanbanPlat=plat;
+  document.querySelectorAll('.k-pill[data-plat]').forEach(b=>{
+    b.classList.toggle('active',b.dataset.plat===plat);
+  });
+  renderKanban();
+}
+function setKanbanQuery(q){
+  kanbanQuery=(q||'').toLowerCase().trim();
+  renderKanban(true);
+}
+
+function kanbanLeadTipo(l){
+  return l.tipo || (l.plataforma==='google'?'empresa':'pessoa');
+}
+
+function kanbanFilterLeads(){
+  // Ponto de partida: escopo da campanha ativa
+  let scoped=S.leads;
+  if(kanbanCampaign!=='all'){
+    scoped=scoped.filter(l=>(l.campaign_id||'C-LEGACY')===kanbanCampaign);
+  }
+
+  // Contadores por tipo (dentro do escopo de campanha)
+  const countsTipo={pessoa:0,empresa:0};
+  scoped.forEach(l=>{
+    const t=kanbanLeadTipo(l);
+    if(t in countsTipo) countsTipo[t]++;
+  });
+  const cp=document.getElementById('kanban-count-pessoa');
+  const ce=document.getElementById('kanban-count-empresa');
+  if(cp) cp.textContent='('+countsTipo.pessoa+')';
+  if(ce) ce.textContent='('+countsTipo.empresa+')';
+
+  // Filtra por tipo
+  let pool=scoped.filter(l=>kanbanLeadTipo(l)===kanbanTipo);
+
+  // Filtra por plataforma
+  if(kanbanPlat!=='all') pool=pool.filter(l=>l.plataforma===kanbanPlat);
+
+  // Busca textual: nome, user, evidencia, texto_original, cidade, nicho, intent
+  if(kanbanQuery){
+    const q=kanbanQuery;
+    pool=pool.filter(l=>{
+      const hay=[
+        l.nome,l.user,l.perfil,l.evidencia,l.texto_original,
+        l.cidade,l.nicho,l.intent,l.clienteDestino,l.endereco
+      ].filter(Boolean).join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }
+  return pool;
+}
+
+// Dot color + glow pela etapa
+const KANBAN_COLS=[
+  {key:'descoberto',label:'Descoberto',color:'#22d3ee'},
+  {key:'qualificado',label:'Qualificado',color:'#fbbf24',highlight:true},
+  {key:'enriquecido',label:'Enriquecido',color:'#60a5fa'},
+  {key:'disponivel',label:'Disponível',color:'#4edea3'},
+  {key:'contactado',label:'DM Enviada',color:'#c084fc'},
+  {key:'respondeu',label:'Respondeu',color:'#f472b6'},
+  {key:'vendido',label:'Vendido',color:'#67e8f9'},
+  {key:'convertido',label:'Convertido',color:'#4edea3'},
+];
+
+const KANBAN_EMPTY_ICONS={
+  descoberto:'explore',qualificado:'verified',enriquecido:'auto_awesome',
+  disponivel:'inbox',contactado:'send',respondeu:'forum',
+  vendido:'handshake',convertido:'emoji_events',
+};
+
+function kanbanIntentClass(intent){
+  if(!intent) return '';
+  if(intent.includes('atendimento')) return 'atendimento';
+  if(intent.includes('preco')||intent.includes('preço')) return 'preco';
+  if(intent.includes('apostador')) return 'apostador';
+  if(intent.includes('local')) return 'local';
+  return '';
+}
+
+function kanbanIntentLabel(intent){
+  const map={
+    'buscando_atendimento':'quer agendar',
+    'perguntando_preco':'pede valor',
+    'apostador_ativo':'apostador ativo',
+    'perguntando_local':'quer local',
+    'elogio':'elogio',
+    'outros':'—',
+  };
+  return map[intent]||(intent||'').replace(/_/g,' ');
+}
+
+function escapeHtml(s){
+  if(!s) return '';
+  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ─── Deep links por plataforma ───
+function leadProfileUrl(l){
+  if(l.author_url) return l.author_url;
+  const u=(l.user||'').replace('@','');
+  if(!u) return '';
+  const p=l.plataforma;
+  if(p==='instagram') return `https://www.instagram.com/${u}/`;
+  if(p==='tiktok')    return `https://www.tiktok.com/@${u}`;
+  if(p==='facebook')  return `https://www.facebook.com/${u}`;
+  if(p==='x'||p==='twitter') return `https://x.com/${u}`;
+  return '';
+}
+function leadDMUrl(l){
+  const u=(l.user||'').replace('@','');
+  if(!u) return '';
+  const p=l.plataforma;
+  // Deep links pra DM (estabilidade varia):
+  // - Instagram: ig.me/m/ foi descontinuado em 2022. direct/new/ abre a tela
+  //   "Nova mensagem" quando o usuário está logado no browser.
+  // - Facebook: m.me/ ainda oficial e estável.
+  if(p==='instagram') return `https://www.instagram.com/direct/new/?username=${u}`;
+  if(p==='facebook')  return `https://m.me/${u}`;
+  // TikTok/Twitter/Reddit: sem deep link publico pra DM -> retorna vazio
+  return '';
+}
+
+// Copia handle pra clipboard como fallback — se o deep link não abrir a tela
+// de DM direto, o @ ja esta na area de transferencia pra o usuario colar.
+async function copyLeadHandle(user, platform){
+  const handle='@'+(user||'').replace('@','');
+  try{
+    await navigator.clipboard.writeText(handle);
+    if(typeof notify==='function') notify(`${handle} copiado — cole na busca se o DM não abrir`,'info');
+  }catch(e){
+    // Fallback: nada. Clipboard pode falhar em alguns browsers sem https.
+  }
+}
+
+function renderKanbanCard(l,highlightCol){
+  const tipo=kanbanLeadTipo(l);
+  const nomeTitle=l.plataforma==='google'&&l.nome&&l.nome.includes('|')
+    ? l.nome.split('|')[0].trim() : (l.nome||'—');
+  const scoreClass=l.temp==='quente'?'quente':l.temp==='morno'?'morno':'frio';
+
+  // Linha meta: empresa -> rating + endereço; pessoa -> intent + cidade
+  let metaHtml='';
+  if(tipo==='empresa'){
+    const rating=l.rating||0;
+    const reviews=l.reviews_count||0;
+    const addr=(l.endereco||'').split(',')[0].trim()||l.cidade||'';
+    const parts=[];
+    if(rating){
+      parts.push(`<span class="k-meta-rating"><span class="msi fill">star</span>${rating.toFixed(1)}${reviews?` <span style="opacity:.55">(${reviews})</span>`:''}</span>`);
+    }
+    if(addr){
+      parts.push(`<span><span class="msi">location_on</span>${escapeHtml(addr.slice(0,22))}</span>`);
+    }
+    metaHtml=parts.join('');
+  }else{
+    const intent=l.intent||'';
+    const intentCls=kanbanIntentClass(intent);
+    const intentLbl=kanbanIntentLabel(intent);
+    const parts=[];
+    if(intent){
+      parts.push(`<span class="k-meta-intent ${intentCls}">${escapeHtml(intentLbl)}</span>`);
+    }else if(l.evidencia){
+      const evi=(l.evidencia||'').replace(/^"|"$/g,'').slice(0,28);
+      parts.push(`<span style="font-style:italic;color:#e2e8f0">"${escapeHtml(evi)}"</span>`);
+    }
+    if(l.cidade){
+      parts.push(`<span><span class="msi">location_on</span>${escapeHtml(l.cidade)}</span>`);
+    }
+    metaHtml=parts.join('');
+  }
+
+  // CTAs: pessoa -> [Perfil][DM se IG/FB][Fonte]; empresa -> [Call se tem fone][Fonte]
+  let ctaHtml='';
+  if(tipo==='empresa'){
+    const parts=[];
+    if(l.telefone){
+      parts.push(`<a class="k-card-cta ${highlightCol?'highlight':''}" href="tel:${escapeHtml(l.telefone)}" onclick="event.stopPropagation()" title="Ligar"><span class="msi">call</span>Call</a>`);
+    }
+    if(l.url){
+      parts.push(`<a class="k-ico-btn source" href="${escapeHtml(l.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Abrir no Google Maps"><span class="msi">open_in_new</span></a>`);
+    }
+    ctaHtml=`<div class="k-card-actions">${parts.join('')}</div>`;
+  }else{
+    const profileUrl=leadProfileUrl(l);
+    const dmUrl=leadDMUrl(l);
+    const sourceUrl=l.url||'';
+    const parts=[];
+    // Perfil (sempre, se tem user)
+    if(profileUrl){
+      parts.push(`<a class="k-ico-btn profile" href="${escapeHtml(profileUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Ver perfil de @${escapeHtml((l.user||'').replace('@',''))}"><span class="msi">person</span></a>`);
+    }
+    // DM (só se tem deep link — IG/FB)
+    if(dmUrl){
+      const userEsc=escapeHtml((l.user||'').replace('@',''));
+      parts.push(`<a class="k-ico-btn dm" href="${escapeHtml(dmUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation();copyLeadHandle('${userEsc}','${escapeHtml(l.plataforma)}')" title="Enviar DM (copia @ como fallback)"><span class="msi">chat</span></a>`);
+    }else if(profileUrl){
+      // TikTok/X: sem deep link de DM, mas mostra o botao desabilitado pra manter visual consistente
+      parts.push(`<span class="k-ico-btn dm" aria-disabled="true" title="DM não disponível nesta plataforma (abra o perfil)"><span class="msi">chat</span></span>`);
+    }
+    // Fonte do comentario
+    if(sourceUrl){
+      parts.push(`<a class="k-ico-btn source" href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Abrir post onde comentou"><span class="msi">open_in_new</span></a>`);
+    }
+    ctaHtml=`<div class="k-card-actions">${parts.join('')}</div>`;
+  }
+
+  const platLabel=(platformLabels[l.plataforma]||l.plataforma||'—').toString();
+  const score=Math.min(100,Math.max(0,l.score||0));
+
+  // Click no card (fora dos botoes) abre: pessoa -> perfil; empresa -> maps url
+  const cardClickUrl=tipo==='empresa'?(l.url||''):(leadProfileUrl(l)||l.url||'');
+  const cardTitle=tipo==='empresa'?'Abrir no Google Maps':'Abrir perfil de '+((l.user||l.nome||'lead'));
+  return `<div class="k-card ${highlightCol?'highlight':''}"
+      draggable="true"
+      ondragstart="dragLead(event,'${l.id}')"
+      data-lead-id="${l.id}"
+      onclick="if(event.target.closest('a,.k-ico-btn'))return;${cardClickUrl?`window.open('${escapeHtml(cardClickUrl)}','_blank')`:''}"
+      title="${escapeHtml(cardTitle)}">
+    <div class="k-card-top">
+      <div class="k-card-ident">
+        <div class="k-card-title">${escapeHtml(nomeTitle)}</div>
+        <span class="k-card-id">${l.id||''}</span>
+      </div>
+      <div class="k-card-score">
+        <span class="k-card-pts">${score}pts</span>
+        <div class="k-card-bar"><div class="k-card-bar-fill ${scoreClass}" style="width:${score}%"></div></div>
+      </div>
+    </div>
+    ${metaHtml?`<div class="k-card-meta-row">${metaHtml}</div>`:''}
+    <div class="k-card-foot">
+      <span class="k-plat-badge ${l.plataforma||''}">${escapeHtml(platLabel)}</span>
+      ${ctaHtml}
+    </div>
+  </div>`;
+}
+
 function renderKanban(preserveScroll){
-  // Salvar posicoes de scroll de cada coluna antes de re-renderizar
+  // Preservar scroll das colunas
   const scrollPositions={};
   if(preserveScroll){
     document.querySelectorAll('#kanban-leads .kanban-cards').forEach((col,i)=>{
       if(col.scrollTop>0) scrollPositions[i]=col.scrollTop;
     });
   }
-  // Funil REAL de lead generation:
-  // Descoberto → Qualificado → Enriquecido → Disponivel → Vendido → Convertido
-  const cols=[
-    {key:'descoberto',label:'Descoberto',color:'var(--text-muted)',desc:'Encontrado nas plataformas'},
-    {key:'qualificado',label:'Qualificado',color:'var(--warm)',desc:'Interesse confirmado'},
-    {key:'enriquecido',label:'Enriquecido',color:'var(--running)',desc:'Contato encontrado'},
-    {key:'disponivel',label:'Disponivel',color:'var(--accent)',desc:'Pronto pra contato'},
-    {key:'contactado',label:'DM Enviada',color:'#e91e63',desc:'Mensagem automatica enviada'},
-    {key:'respondeu',label:'Respondeu',color:'#7c4dff',desc:'Lead respondeu a DM'},
-    {key:'vendido',label:'Vendido',color:'#00e5ff',desc:'Entregue ao cliente'},
-    {key:'convertido',label:'Convertido',color:'#00e5ff',desc:'Virou paciente'},
-  ];
-  document.getElementById('kanban-leads').innerHTML=cols.map(c=>{
-    const leads=S.leads.filter(l=>l.etapa===c.key);
-    return`<div class="kanban-col">
-      <div class="kanban-col-head"><span class="kanban-dot" style="background:${c.color}"></span><span class="kanban-col-name">${c.label}</span><span class="kanban-col-count">${leads.length}</span></div>
-      <div style="padding:2px 8px 6px;font-size:9px;color:var(--text-muted);border-bottom:1px solid var(--border-subtle)">${c.desc}</div>
-      <div class="kanban-cards">${leads.map(l=>{
-        const initials=(l.nome||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-        const user=(l.user||l.perfil||'').replace('@','');
-        const isIG=l.plataforma==='instagram'||l.plataforma==='tiktok';
-        const avatarUrl=isIG&&user?`https://unavatar.io/${l.plataforma}/${user}`:'';
-        const avatarEl=avatarUrl
-          ?`<img class="k-avatar" src="${avatarUrl}" onerror="this.outerHTML='<div class=\\'k-avatar-fallback\\'>${initials}</div>'" alt="${l.nome}">`
-          :`<div class="k-avatar-fallback">${initials}</div>`;
-        const tempDot=l.temp==='quente'?'var(--hot)':l.temp==='morno'?'var(--warm)':'var(--cold)';
-        const scoreBar=`<span style="display:inline-block;width:40px;height:4px;background:var(--bg-active);border-radius:2px;vertical-align:middle;margin-left:4px;overflow:hidden"><span style="display:block;height:100%;width:${l.score}%;border-radius:2px;background:${tempDot}"></span></span>`;
-        return`<div class="k-card" draggable="true" ondragstart="dragLead(event,'${l.id}')" data-lead-id="${l.id}" onclick="window.open('${l.url}','_blank')" style="cursor:pointer" title="Clique para ver a fonte original">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-            ${avatarEl}
-            <div style="min-width:0;flex:1">
-              <div class="k-card-title" style="margin:0">${l.plataforma==='google'&&l.nome.includes('|')?l.nome.split('|')[0].trim():l.nome}</div>
-              <div class="k-card-id" style="margin:0">${l.id} · ${l.score}pts ${scoreBar} <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${tempDot};vertical-align:middle;margin-left:4px"></span></div>
-            </div>
-          </div>
-          <div class="k-card-evidence">${l.plataforma==='google'?formatGoogleEvidence(l):(l.evidencia||'').slice(0,100)}</div>
-          <div class="k-card-meta">
-            <span class="lead-source ${l.plataforma}" style="font-size:9px;padding:2px 8px">${platformLabels[l.plataforma]||l.plataforma}</span>
-            ${l.telefone?`<span style="font-size:9px;color:var(--accent)">&#9742; ${l.telefone}</span>`:`<span style="font-size:9px;color:var(--text-secondary)">&#128279; ver fonte</span>`}
-          </div>
-          ${l.dmEnviada?`<div style="margin-top:6px;font-size:9px;padding:3px 8px;background:#e91e6322;color:#e91e63;border-radius:4px;display:inline-flex;align-items:center;gap:4px">&#10003; DM enviada ${l.dmEnviada}</div>`:''}
-          ${l.clienteDestino?`<div style="margin-top:4px;font-size:9px;padding:2px 6px;background:#00e5ff22;color:#00e5ff;border-radius:4px;display:inline-block">${l.clienteDestino}</div>`:''}
+
+  const filteredPool=kanbanFilterLeads();
+
+  document.getElementById('kanban-leads').innerHTML=KANBAN_COLS.map(c=>{
+    const leads=filteredPool.filter(l=>l.etapa===c.key);
+    const cards=leads.length
+      ? leads.map(l=>renderKanbanCard(l,c.highlight)).join('')
+      : `<div class="kanban-empty">
+          <div class="kanban-empty-icon"><span class="msi" style="color:${c.color}">${KANBAN_EMPTY_ICONS[c.key]||'inbox'}</span></div>
+          <div class="kanban-empty-text">Nenhum lead nesta etapa</div>
         </div>`;
-      }).join('')}</div>
+    const animCls = preserveScroll ? 'no-anim' : '';
+    return `<div class="kanban-col">
+      <div class="kanban-col-head">
+        <span class="kanban-dot" style="background:${c.color};color:${c.color}"></span>
+        <span class="kanban-col-name">${c.label}</span>
+        <span class="kanban-col-count">${leads.length}</span>
+        <button class="kanban-col-menu" title="Mais opções"><span class="msi">more_horiz</span></button>
+      </div>
+      <div class="kanban-cards ${animCls}">${cards}</div>
     </div>`;
   }).join('');
 
-  // Restaurar posicoes de scroll
+  // Restaurar scroll
   if(preserveScroll && Object.keys(scrollPositions).length>0){
     document.querySelectorAll('#kanban-leads .kanban-cards').forEach((col,i)=>{
       if(scrollPositions[i]) col.scrollTop=scrollPositions[i];
     });
   }
 
-  // Enable drop on all columns
+  // Drop nas colunas
   document.querySelectorAll('#kanban-leads .kanban-col').forEach(col=>{
     col.addEventListener('dragover',e=>e.preventDefault());
     col.addEventListener('drop',e=>{
       e.preventDefault();
-      const etapa=cols[Array.from(col.parentNode.children).indexOf(col)].key;
+      const etapa=KANBAN_COLS[Array.from(col.parentNode.children).indexOf(col)].key;
       if(draggedLeadId){
         const lead=S.leads.find(l=>l.id===draggedLeadId);
         if(lead){
