@@ -4,9 +4,24 @@ paperclip/
 .claude/
 __pycache__/
 *.pyc
+*.tmp
+.venv/
 leads-export/*.log
 start.log
+start_boot.out
 leads-export/searches.json
+
+# Cache local + backups ad-hoc (nao versionar)
+leads-export/comments.db
+leads-export/serve.out
+leads-export/*.backup-*.json
+leads-export/exports/
+
+# Snapshots de scrape antigos (lixo de 15/04, ja nao usados)
+ig_posts.json
+ig_leads_clean.json
+ig_leads_raw.json
+ig_results.json
 
 # archive/ — material side-quest (decks, docs antigos, midia)
 # Versionamos os MDs (historico do projeto) mas nao a midia pesada
