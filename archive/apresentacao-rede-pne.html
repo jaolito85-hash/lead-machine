@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rede Nacional Dra. Carol — De viral a vital</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        petrol: { 50: '#f0f5f6', 100: '#dae8eb', 500: '#2d6b76', 700: '#1a4d5c', 900: '#0f2d36' },
+        coral: { 100: '#ffe5e5', 400: '#ff8a8a', 500: '#ff6b6b', 600: '#e84545' },
+        cream: { 50: '#fdfbf7', 100: '#f8f3ea', 200: '#ede4d3' },
+        sage: { 400: '#9bbcaf', 500: '#7ba797', 700: '#5b8473' },
+        gold: { 400: '#f0c062', 500: '#e8b04b', 600: '#c8911f' },
+        ink: { 700: '#3d4852', 900: '#1a202c' }
+      },
+      fontFamily: {
+        display: ['Fraunces', 'Georgia', 'serif'],
+        sans: ['Manrope', 'system-ui', 'sans-serif']
+      }
+    }
+  }
+}
+</script>
+<style>
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Manrope', system-ui, sans-serif;
+    background: #fdfbf7;
+    color: #1a202c;
+    overflow-x: hidden;
+  }
+  .display { font-family: 'Fraunces', Georgia, serif; font-optical-sizing: auto; }
+  .slide {
+    min-height: 100vh;
+    padding: 5rem 2rem;
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+  @media (min-width: 768px) {
+    .slide { padding: 6rem 4rem; }
+  }
+  .slide-num {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    opacity: 0.5;
+  }
+  .ribbon {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    border-radius: 100px;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.9s ease, transform 0.9s ease;
+  }
+  .reveal.in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .grain {
+    position: relative;
+  }
+  .grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+    opacity: 0.06;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+  }
+  .funnel-step {
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+  }
+  .funnel-step:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -10px rgba(26, 77, 92, 0.18);
+  }
+  .pulse-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ff6b6b;
+    position: relative;
+    display: inline-block;
+  }
+  .pulse-dot::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid #ff6b6b;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(2); opacity: 0; }
+  }
+  .stat-num {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.04em;
+  }
+  /* Map dots */
+  .br-map { position: relative; aspect-ratio: 1 / 1; max-width: 380px; margin: 0 auto; }
+  .br-pin {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ff6b6b;
+    box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.2);
+    transform: translate(-50%, -50%);
+  }
+  .br-pin.parceiro { background: #2d6b76; box-shadow: 0 0 0 4px rgba(45, 107, 118, 0.18); }
+  .br-pin.maringa { background: #e8b04b; box-shadow: 0 0 0 6px rgba(232, 176, 75, 0.25); width: 18px; height: 18px; }
+
+  /* Thin nav */
+  .navlink {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #1a4d5c;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+  .navlink:hover, .navlink.active { opacity: 1; }
+
+  .quote-mark {
+    font-family: 'Fraunces', serif;
+    font-size: 6rem;
+    line-height: 0.5;
+    color: #ff6b6b;
+    opacity: 0.4;
+  }
+
+  hr.line {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #1a4d5c, transparent);
+    opacity: 0.18;
+    margin: 0;
+  }
+
+  .underline-handdrawn {
+    background-image: linear-gradient(120deg, #ff6b6b 0%, #ff6b6b 100%);
+    background-repeat: no-repeat;
+    background-size: 100% 0.3em;
+    background-position: 0 88%;
+    padding: 0 0.1em;
+  }
+
+  details summary { cursor: pointer; list-style: none; }
+  details summary::-webkit-details-marker { display: none; }
+</style>
+</head>
+<body>
+
+<!-- Side navigation -->
+<nav class="hidden lg:flex fixed right-8 top-1/2 -translate-y-1/2 flex-col gap-3 z-50">
+  <a href="#abertura" class="navlink" data-target="abertura">01 · Abertura</a>
+  <a href="#momento" class="navlink" data-target="momento">02 · O momento</a>
+  <a href="#problema" class="navlink" data-target="problema">03 · O problema</a>
+  <a href="#visao" class="navlink" data-target="visao">04 · A visão</a>
+  <a href="#maquina" class="navlink" data-target="maquina">05 · A máquina</a>
+  <a href="#tecnologia" class="navlink" data-target="tecnologia">06 · Tecnologia</a>
+  <a href="#numeros" class="navlink" data-target="numeros">07 · Números</a>
+  <a href="#impacto" class="navlink" data-target="impacto">08 · Impacto</a>
+  <a href="#destino" class="navlink" data-target="destino">09 · Destino</a>
+  <a href="#proximos" class="navlink" data-target="proximos">10 · Próximos passos</a>
+</nav>
+
+<!-- ============ SLIDE 01 — ABERTURA ============ -->
+<section id="abertura" class="slide bg-petrol-900 text-cream-50 grain">
+  <span class="slide-num text-cream-50">01 / 10</span>
+  <div class="max-w-6xl mx-auto w-full">
+    <div class="flex items-center gap-3 mb-12 reveal">
+      <span class="pulse-dot"></span>
+      <span class="text-xs tracking-[0.2em] uppercase text-sage-400">Proposta confidencial</span>
+    </div>
+
+    <h1 class="display text-5xl md:text-7xl lg:text-8xl font-medium leading-[0.95] reveal mb-8">
+      De <em class="italic text-coral-500">viral</em><br/>
+      a <em class="italic text-gold-400">vital</em>.
+    </h1>
+
+    <p class="text-lg md:text-2xl max-w-2xl text-cream-100/80 leading-relaxed reveal mb-16">
+      A maior rede de odontologia humanizada para pessoas com necessidades especiais do Brasil.
+      Construída sobre a autoridade nacional da <strong class="text-cream-50">Dra. Carol Pantaleão</strong>.
+    </p>
+
+    <div class="flex flex-wrap gap-8 items-end reveal">
+      <div>
+        <div class="text-xs tracking-widest uppercase text-sage-400 mb-2">Apresentado para</div>
+        <div class="display text-2xl md:text-3xl">Dra. Carol & equipe criativa</div>
+      </div>
+      <div class="hidden md:block w-px h-16 bg-cream-50/20"></div>
+      <div>
+        <div class="text-xs tracking-widest uppercase text-sage-400 mb-2">Por</div>
+        <div class="display text-2xl md:text-3xl">João · Lead Machine</div>
+      </div>
+      <div class="hidden md:block w-px h-16 bg-cream-50/20"></div>
+      <div>
+        <div class="text-xs tracking-widest uppercase text-sage-400 mb-2">Abril</div>
+        <div class="display text-2xl md:text-3xl">2026</div>
+      </div>
+    </div>
+  </div>
+  <div class="absolute bottom-8 left-8 text-cream-50/40 text-xs tracking-widest uppercase">role para descer ↓</div>
+</section>
+
+<!-- ============ SLIDE 02 — O MOMENTO ============ -->
+<section id="momento" class="slide bg-cream-50">
+  <span class="slide-num text-petrol-700">02 / 10</span>
+  <div class="max-w-6xl mx-auto w-full">
+    <div class="reveal">
+      <span class="ribbon bg-coral-100 text-coral-600">o que está acontecendo</span>
+    </div>
+
+    <h2 class="display text-4xl md:text-6xl font-medium text-petrol-900 mt-8 mb-6 leading-tight reveal">
+      Você não é uma promessa.<br/>
+      Você <span class="underline-handdrawn">já é referência.</span>
+    </h2>
+
+    <p class="text-lg md:text-xl text-ink-700 max-w-3xl leading-relaxed mb-16 reveal">
+      A audiência que você construiu no Instagram e TikTok colocou a Dra. Carol em uma posição que praticamente nenhum profissional brasileiro de odontologia ocupa hoje. E ela cresce todo dia.
+    </p>
+
+    <div class="grid md:grid-cols-3 gap-6 reveal">
+      <div class="bg-white border border-petrol-100 p-8 rounded-2xl">
+        <div class="text-xs tracking-widest uppercase text-sage-700 mb-3">vídeo de maior alcance</div>
+        <div class="stat-num display text-6xl md:text-7xl font-bold text-petrol-900">20<span class="text-3xl font-normal text-coral-500">M</span></div>
+        <div class="text-sm text-ink-700 mt-2">visualizações em um único conteúdo</div>
+      </div>
+      <div class="bg-petrol-700 text-cream-50 p-8 rounded-2xl">
+        <div class="text-xs tracking-widest uppercase text-sage-400 mb-3">vídeos com tração massiva</div>
+        <div class="stat-num display text-6xl md:text-7xl font-bold">10<span class="text-3xl font-normal text-coral-400">M</span></div>
+        <div class="text-sm text-cream-100/70 mt-2">e dezenas de vídeos com 1M+ views</div>
+      </div>
+      <div class="bg-coral-500 text-cream-50 p-8 rounded-2xl">
+        <div class="text-xs tracking-widest uppercase text-cream-50/80 mb-3">engajamento real</div>
+        <div class="stat-num display text-6xl md:text-7xl font-bold">1<span class="text-3xl font-normal">M+</span></div>
+        <div class="text-sm text-cream-50/90 mt-2">curtidas em um único vídeo</div>
+      </div>
+    </div>
+
+    <div class="mt-16 grid md:grid-cols-2 gap-12 items-center reveal">
+      <div class="border-l-4 border-coral-500 pl-6">
+        <div class="quote-mark">"</div>
+        <p class="display text-2xl md:text-3xl italic text-petrol-900 leading-tight -mt-6">
+          Dra. Carol, você atende em Salvador? Em Manaus? Em Recife? Em Porto Alegre?
+        </p>
+        <p class="mt-6 text-sm uppercase tracking-widest text-ink-700/60">— centenas de comentários · todos os dias</p>
+      </div>
+      <div>
+        <div class="bg-cream-100 p-8 rounded-2xl">
+          <div class="text-xs tracking-widest uppercase text-sage-700 mb-3">o que isso significa</div>
+          <p class="text-lg text-ink-900 leading-relaxed">
+            Cada um desses comentários é uma <strong>família real</strong> procurando dentista pra um filho, pai, mãe, avó com necessidade especial — e não encontrando.
+          </p>
+          <p class="text-lg text-ink-900 leading-relaxed mt-3">
+            Hoje, <strong class="text-coral-600">99% dessas famílias vão embora sem resposta.</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 03 — O PROBLEMA ============ -->
+<section id="problema" class="slide bg-petrol-700 text-cream-50">
+  <span class="slide-num text-cream-50">03 / 10</span>
+  <div class="max-w-6xl mx-auto w-full">
+    <div class="reveal">
+      <span class="ribbon bg-coral-500 text-cream-50">o problema invisível</span>
+    </div>
+
+    <h2 class="display text-4xl md:text-6xl font-medium mt-8 mb-12 leading-tight reveal">
+      Sua audiência é nacional.<br/>
+      <span class="text-gold-400 italic">Sua agenda é local.</span>
+    </h2>
+
+    <div class="grid md:grid-cols-12 gap-8 items-start mb-16">
+      <div class="md:col-span-7 reveal">
+        <p class="text-xl md:text-2xl text-cream-100/85 leading-relaxed mb-8">
+          Você atende em <strong class="text-cream-50">Maringá-PR</strong>. Sua audiência está nas <strong class="text-cream-50">27 unidades da federação</strong>.
+        </p>
+        <p class="text-xl md:text-2xl text-cream-100/85 leading-relaxed mb-8">
+          Por mais que você cresça pessoalmente, só consegue atender uma fração mínima das famílias que sua marca atrai.
+        </p>
+        <div class="flex items-center gap-6 mt-12">
+          <div class="text-center">
+            <div class="stat-num display text-5xl md:text-6xl font-bold text-gold-400">~1%</div>
+            <div class="text-xs tracking-widest uppercase mt-2 text-cream-100/60">do tráfego é monetizável<br/>pela clínica em Maringá</div>
+          </div>
+          <div class="w-px h-16 bg-cream-50/20"></div>
+          <div class="text-center">
+            <div class="stat-num display text-5xl md:text-6xl font-bold text-coral-400">~99%</div>
+            <div class="text-xs tracking-widest uppercase mt-2 text-cream-100/60">vai embora hoje<br/>sem resposta nem direção</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="md:col-span-5 reveal">
+        <div class="bg-petrol-900 rounded-3xl p-8 border border-cream-50/10">
+          <div class="text-xs tracking-widest uppercase text-sage-400 mb-6">cobertura atual vs. demanda</div>
+          <div class="br-map">
+            <!-- Simplified BR shape -->
+            <svg viewBox="0 0 380 380" class="w-full h-full opacity-30">
+              <path d="M 80 90 Q 100 60 150 65 L 200 60 Q 260 70 290 100 L 320 140 Q 330 180 320 220 L 310 270 Q 290 310 250 320 L 200 330 Q 150 335 110 310 L 80 280 Q 60 240 65 200 L 70 150 Q 75 110 80 90 Z" fill="#a8dadc" stroke="#a8dadc" stroke-width="1"/>
+            </svg>
+            <!-- Maringá (center, gold) -->
+            <div class="br-pin maringa" style="top: 65%; left: 38%;" title="Maringá - você está aqui"></div>
+            <!-- Demand pins (coral, scattered) -->
+            <div class="br-pin" style="top: 25%; left: 42%;"></div>
+            <div class="br-pin" style="top: 30%; left: 60%;"></div>
+            <div class="br-pin" style="top: 18%; left: 55%;"></div>
+            <div class="br-pin" style="top: 35%; left: 70%;"></div>
+            <div class="br-pin" style="top: 45%; left: 75%;"></div>
+            <div class="br-pin" style="top: 50%; left: 50%;"></div>
+            <div class="br-pin" style="top: 55%; left: 65%;"></div>
+            <div class="br-pin" style="top: 70%; left: 55%;"></div>
+            <div class="br-pin" style="top: 78%; left: 45%;"></div>
+            <div class="br-pin" style="top: 82%; left: 50%;"></div>
+            <div class="br-pin" style="top: 25%; left: 30%;"></div>
+            <div class="br-pin" style="top: 40%; left: 40%;"></div>
+            <div class="br-pin" style="top: 60%; left: 30%;"></div>
+            <div class="br-pin" style="top: 75%; left: 38%;"></div>
+            <div class="br-pin" style="top: 50%; left: 25%;"></div>
+            <div class="br-pin" style="top: 35%; left: 50%;"></div>
+            <div class="br-pin" style="top: 65%; left: 48%;"></div>
+            <div class="br-pin" style="top: 22%; left: 48%;"></div>
+            <div class="br-pin" style="top: 42%; left: 65%;"></div>
+            <div class="br-pin" style="top: 58%; left: 75%;"></div>
+          </div>
+          <div class="flex items-center gap-6 mt-8 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="inline-block w-3 h-3 rounded-full bg-gold-500"></span>
+              <span class="text-cream-100/70">Você (Maringá)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-block w-3 h-3 rounded-full bg-coral-500"></span>
+              <span class="text-cream-100/70">Famílias buscando</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 04 — A VISÃO ============ -->
+<section id="visao" class="slide bg-cream-50">
+  <span class="slide-num text-petrol-700">04 / 10</span>
+  <div class="max-w-6xl mx-auto w-full">
+    <div class="reveal">
+      <span class="ribbon bg-sage-500/20 text-sage-700">a virada</span>
+    </div>
+
+    <h2 class="display text-4xl md:text-6xl font-medium text-petrol-900 mt-8 mb-6 leading-tight reveal">
+      E se cada uma dessas famílias<br/>
+      encontrasse <span class="italic text-coral-500">um dentista treinado</span>,<br/>
+      perto de casa?
+    </h2>
+
+    <p class="text-lg md:text-xl text-ink-700 max-w-3xl leading-relaxed mb-16 reveal">
+      A Rede Nacional Dra. Carol é uma rede credenciada de dentistas especializados em PNE em todo Brasil. Você empresta a autoridade. Eles atendem na cidade da família. A tecnologia faz o meio de campo. Sua missão se multiplica.
+    </p>
+
+    <div class="grid md:grid-cols-3 gap-6 reveal">
+      <div class="bg-white p-8 rounded-2xl border-t-4 border-coral-500">
+        <div class="text-xs tracking-widest uppercase text-sage-700 mb-3">camada 1</div>
+        <div class="display text-3xl text-petrol-900 mb-4">A marca</div>
+        <p class="text-ink-700 leading-relaxed">Dra. Carol é a referência nacional. Ela gera o tráfego e empresta credibilidade. A missão dela amplifica.</p>
+      </div>
+      <div class="bg-white p-8 rounded-2xl border-t-4 border-petrol-700">
+        <div class="text-xs tracking-widest uppercase text-sage-700 mb-3">camada 2</div>
+        <div class="display text-3xl text-petrol-900 mb-4">A operação</div>
+        <p class="text-ink-700 leading-relaxed">Sistema automatizado captura, qualifica e roteia famílias por região, 24h por dia, com tom acolhedor.</p>
+      </div>
+      <div class="bg-white p-8 rounded-2xl border-t-4 border-sage-500">
+        <div class="text-xs tracking-widest uppercase text-sage-700 mb-3">camada 3</div>
+        <div class="display text-3xl text-petrol-900 mb-4">A rede</div>
+        <p class="text-ink-700 leading-relaxed">Dentistas credenciados em todo o Brasil, validados pela Dra. Carol, pagam para receber leads qualificados.</p>
+      </div>
+    </div>
+
+    <div class="mt-16 bg-petrol-900 text-cream-50 rounded-3xl p-10 grain reveal">
+      <div class="grid md:grid-cols-2 gap-10 items-center">
+        <div>
+          <div class="text-xs tracking-widest uppercase text-sage-400 mb-3">posicionamento</div>
+          <p class="display text-3xl md:text-4xl leading-tight">
+            "<span class="italic">Dra. Carol em Maringá. <br/>A confiança dela em todo o Brasil.</span>"
+          </p>
+        </div>
+        <div>
+          <p class="text-cream-100/85 leading-relaxed">Não é uma "indicação" comum. É uma rede curada, com critérios técnicos e éticos definidos pela Carol. O dentista parceiro só entra se atender padrões reais — e responde por isso.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 05 — A MÁQUINA (FUNIL) ============ -->
+<section id="maquina" class="slide bg-cream-100">
+  <span class="slide-num text-petrol-700">05 / 10</span>
+  <div class="max-w-7xl mx-auto w-full">
+    <div class="reveal">
+      <span class="ribbon bg-petrol-700 text-cream-50">a máquina, em 6 passos</span>
+    </div>
+
+    <h2 class="display text-4xl md:text-6xl font-medium text-petrol-900 mt-8 mb-4 leading-tight reveal">
+      Do <em class="italic">comentário</em><br/>
+      ao <em class="italic text-coral-500">consultório.</em>
+    </h2>
+    <p class="text-lg text-ink-700 mb-16 max-w-3xl reveal">Cada passo abaixo já tem código rodando. A máquina existe — falta plugar na sua audiência.</p>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5 reveal">
+      <!-- Passo 1 -->
+      <div class="funnel-step bg-white rounded-2xl p-6 border border-petrol-100">
+        <div class="flex items-start justify-between mb-4">
+          <span class="ribbon bg-coral-100 text-coral-600">passo 01</span>
+          <span class="display text-3xl text-petrol-100">01</span>
+        </div>
+        <div class="display text-xl font-semibold text-petrol-900 mb-2">Vídeo viraliza</div>
+        <p class="text-sm text-ink-700 leading-relaxed">Você posta. Algoritmo distribui. 1 milhão de pessoas veem em 48 horas. Centenas comentam pedindo atendimento na cidade delas.</p>
+      </div>
+
+      <!-- Passo 2 -->
+      <div class="funnel-step bg-white rounded-2xl p-6 border border-petrol-100">
+        <div class="flex items-start justify-between mb-4">
+          <span class="ribbon bg-coral-100 text-coral-600">passo 02</span>
+          <span class="display text-3xl text-petrol-100">02</span>
+        </div>
+        <div class="display text-xl font-semibold text-petrol-900 mb-2">Scraper captura</div>
+        <p class="text-sm text-ink-700 leading-relaxed">Sistema lê comentários e DMs em tempo real. Identifica intenção real ("você atende em X?", "minha filha tem autismo, onde encontro?").</p>
+      </div>
+
+      <!-- Passo 3 -->
+      <div class="funnel-step bg-white rounded-2xl p-6 border border-petrol-100">
+        <div class="flex items-start justify-between mb-4">
+          <span class="ribbon bg-coral-100 text-coral-600">passo 03</span>
+          <span class="display text-3xl text-petrol-100">03</span>
+        </div>
+        <div class="display text-xl font-semibold text-petrol-900 mb-2">IA conversa</div>
+        <p class="text-sm text-ink-700 leading-relaxed">Resposta automática no DM em 30 segundos, com tom acolhedor. Coleta cidade, condição, idade, urgência. Sem parecer robô frio.</p>
+      </div>
+
+      <!-- Passo 4 -->
+      <div class="funnel-step bg-white rounded-2xl p-6 border border-petrol-100">
+        <div class="flex items-start justify-between mb-4">
+          <span class="ribbon bg-sage-500/20 text-sage-700">passo 04</span>
+          <span class="display text-3xl text-petrol-100">04</span>
+        </div>
+        <div class="display text-xl font-semibold text-petrol-900 mb-2">Roteamento</div>
+        <p class="text-sm text-ink-700 leading-relaxed">Sistema cruza CEP da família com base de parceiros. Encontra o dentista mais próximo, com experiência na condição específica.</p>
+      </div>
+
+      <!-- Passo 5 -->
+      <div class="funnel-step bg-white rounded-2xl p-6 border border-petrol-100">
+        <div class="flex items-start justify-between mb-4">
+          <span class="ribbon bg-sage-500/20 text-sage-700">passo 05</span>
+          <span class="display text-3xl text-petrol-100">05</span>
+        </div>
+        <div class="display text-xl font-semibold text-petrol-900 mb-2">Entrega no WhatsApp</div>
+        <p class="text-sm text-ink-700 leading-relaxed">Dentista parceiro recebe a família no WhatsApp dele com contexto completo. Família é avisada: "encontrei a Dra. Fulana, em sua cidade."</p>
+      </div>
+
+      <!-- Passo 6 -->
+      <div class="funnel-step bg-petrol-900 text-cream-50 rounded-2xl p-6">
+        <div class="flex items-start justify-between mb-4">
+          <span class="ribbon bg-gold-500/20 text-gold-400">passo 06</span>
+          <span class="display text-3xl text-cream-50/30">06</span>
+        </div>
+        <div class="display text-xl font-semibold mb-2">Atendimento + feedback</div>
+        <p class="text-sm text-cream-100/85 leading-relaxed">Família atendida. Survey pós-consulta volta pra rede. Parceiro com problema sai. Marca da Carol fica protegida.</p>
+      </div>
+    </div>
+
+    <!-- Highlight bar -->
+    <div class="mt-16 bg-coral-500 text-cream-50 rounded-2xl p-8 grid md:grid-cols-3 gap-8 items-center reveal">
+      <div>
+        <div class="text-xs tracking-widest uppercase text-cream-50/70 mb-2">tempo médio</div>
+        <div class="display text-4xl font-bold">&lt; 30s</div>
+        <div class="text-sm mt-1">primeira resposta no DM</div>
+      </div>
+      <div>
+        <div class="text-xs tracking-widest uppercase text-cream-50/70 mb-2">disponibilidade</div>
+        <div class="display text-4xl font-bold">24 / 7</div>
+        <div class="text-sm mt-1">sem precisar contratar pessoa</div>
+      </div>
+      <div>
+        <div class="text-xs tracking-widest uppercase text-cream-50/70 mb-2">escala</div>
+        <div class="display text-4xl font-bold">∞</div>
+        <div class="text-sm mt-1">100 ou 10 mil DMs por dia, mesmo custo</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 06 — TECNOLOGIA ============ -->
+<section id="tecnologia" class="slide bg-cream-50">
+  <span class="slide-num text-petrol-700">06 / 10</span>
+  <div class="max-w-6xl mx-auto w-full">
+    <div class="reveal">
+      <span class="ribbon bg-petrol-700/10 text-petrol-700">por baixo do capô</span>
+    </div>
+
+    <h2 class="display text-4xl md:text-6xl font-medium text-petrol-900 mt-8 mb-6 leading-tight reveal">
+      A tecnologia já existe.<br/>
+      <span class="italic text-petrol-500">Está rodando hoje.</span>
+    </h2>
+
+    <p class="text-lg text-ink-700 max-w-3xl mb-16 reveal">Não é promessa. O Lead Machine — sistema que opera por trás disso tudo — já tem agentes Python específicos pra cada parte do processo.</p>
+
+    <div class="grid md:grid-cols-2 gap-8 reveal">
+      <div class="bg-white border border-petrol-100 rounded-2xl p-8">
+        <div class="text-xs tracking-widest uppercase text-sage-700 mb-3">scrapers especializados</div>
+        <div class="display text-2xl text-petrol-900 mb-6">Captura por canal</div>
+        <ul class="space-y-3 text-ink-700">
+          <li class="flex items-start gap-3"><span class="text-coral-500 mt-1">●</span><span><strong>agent_instagram.py</strong> — comentários e DMs do Instagram</span></li>
+          <li class="flex items-start gap-3"><span class="text-coral-500 mt-1">●</span><span><strong>agent_tiktok.py</strong> — comentários do TikTok</span></li>
+          <li class="flex items-start gap-3"><span class="text-coral-500 mt-1">●</span><span><strong>agent_facebook.py</strong> — leads de campanhas pagas</span></li>
+          <li class="flex items-start gap-3"><span class="text-coral-500 mt-1">●</span><span><strong>agent_google_maps.py</strong> — prospecção de dentistas parceiros</span></li>
+        </ul>
+      </div>
+
+      <div class="bg-petrol-900 text-cream-50 rounded-2xl p-8 grain">
+        <div class="text-xs tracking-widest uppercase text-sage-400 mb-3">processamento inteligente</div>
+        <div class="display text-2xl mb-6">Qualificação e roteamento</div>
+        <ul class="space-y-3 text-cream-100/85">
+          <li class="flex items-start gap-3"><span class="text-gold-400 mt-1">●</span><span><strong>agent_qualifier.py</strong> — classifica intenção e urgência</span></li>
+          <li class="flex items-start gap-3"><span class="text-gold-400 mt-1">●</span><span><strong>agent_enricher.py</strong> — completa dados (CEP, perfil, histórico)</span></li>
+          <li class="flex items-start gap-3"><span class="text-gold-400 mt-1">●</span><span><strong>agent_conversador_pne</strong> — IA conversacional acolhedora</span></li>
+          <li class="flex items-start gap-3"><span class="text-gold-400 mt-1">●</span><span><strong>agent_matcher</strong> — distribui por geografia + capacidade</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-12 grid md:grid-cols-4 gap-4 reveal">
+      <div class="bg-white p-6 rounded-xl border border-petrol-100 text-center">
+        <div class="display text-3xl text-petrol-900 mb-1">7</div>
+        <div class="text-xs tracking-widest uppercase text-sage-700">agentes prontos</div>
+      </div>
+      <div class="bg-white p-6 rounded-xl border border-petrol-100 text-center">
+        <div class="display text-3xl text-petrol-900 mb-1">100%</div>
+        <div class="text-xs tracking-widest uppercase text-sage-700">infra própria</div>
+      </div>
+      <div class="bg-white p-6 rounded-xl border border-petrol-100 text-center">
+        <div class="display text-3xl text-petrol-900 mb-1">LGPD</div>
+        <div class="text-xs tracking-widest uppercase text-sage-700">compliance built-in</div>
+      </div>
+      <div class="bg-white p-6 rounded-xl border border-petrol-100 text-center">
+        <div class="display text-3xl text-petrol-900 mb-1">90d</div>
+        <div class="text-xs tracking-widest uppercase text-sage-700">para MVP no ar</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 07 — NÚMEROS ============ -->
+<section id="numeros" class="slide bg-petrol-900 text-cream-50 grain">
+  <span class="slide-num text-cream-50">07 / 10</span>
+  <div class="max-w-6xl mx-auto w-full">
+    <div class="reveal">
+      <span class="ribbon bg-gold-500 text-petrol-900">os números possíveis</span>
+    </div>
+
+    <h2 class="display text-4xl md:text-6xl font-medium mt-8 mb-6 leading-tight reveal">
+      Quanto isso pode <span class="italic text-gold-400">render</span>,<br/>
+      em receita real?
+    </h2>
+
+    <p class="text-lg md:text-xl text-cream-100/80 max-w-3xl leading-relaxed mb-16 reveal">
+      Três cenários. Mesmo o conservador transforma economicamente o nosso plano de vida. O realista financia uma operação de impacto nacional. O otimista nos coloca na liderança absoluta de um mercado que ainda nem existe.
+    </p>
+
+    <div class="grid md:grid-cols-3 gap-5 mb-16 reveal">
+      <!-- Conservador -->
+      <div class="bg-cream-50 text-petrol-900 rounded-2xl p-8">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="w-2 h-2 rounded-full bg-sage-500"></span>
+          <span class="text-xs tracking-widest uppercase text-sage-700">cenário 1 · conservador</span>
+        </div>
+        <div class="display text-5xl font-bold stat-num mb-2">R$ 124k</div>
+        <div class="text-sm text-ink-700 mb-6">por mês recorrente</div>
+        <hr class="line my-4" />
+        <ul class="space-y-2 text-sm text-ink-700">
+          <li class="flex justify-between"><span>Parceiros ativos</span><strong>30</strong></li>
+          <li class="flex justify-between"><span>Mensalidades</span><strong>R$ 34k</strong></li>
+          <li class="flex justify-between"><span>Per-lead (800/mês)</span><strong>R$ 90k</strong></li>
+          <li class="flex justify-between border-t border-petrol-100 pt-2 mt-2"><span>Anual</span><strong class="text-petrol-700">R$ 1,49M</strong></li>
+        </ul>
+      </div>
+
+      <!-- Realista -->
+      <div class="bg-coral-500 text-cream-50 rounded-2xl p-8 transform md:scale-105 shadow-2xl">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="w-2 h-2 rounded-full bg-cream-50"></span>
+          <span class="text-xs tracking-widest uppercase text-cream-50/90">cenário 2 · realista</span>
+        </div>
+        <div class="display text-5xl font-bold stat-num mb-2">R$ 200k</div>
+        <div class="text-sm text-cream-50/85 mb-6">por mês recorrente</div>
+        <hr class="line my-4" style="background: linear-gradient(to right, transparent, #ffffff, transparent);" />
+        <ul class="space-y-2 text-sm">
+          <li class="flex justify-between"><span>Parceiros ativos</span><strong>50</strong></li>
+          <li class="flex justify-between"><span>Mensalidades</span><strong>R$ 75k</strong></li>
+          <li class="flex justify-between"><span>Per-lead (1.500/mês)</span><strong>R$ 125k</strong></li>
+          <li class="flex justify-between border-t border-cream-50/30 pt-2 mt-2"><span>Anual</span><strong>R$ 2,4M</strong></li>
+        </ul>
+      </div>
+
+      <!-- Otimista -->
+      <div class="bg-cream-50 text-petrol-900 rounded-2xl p-8">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="w-2 h-2 rounded-full bg-gold-500"></span>
+          <span class="text-xs tracking-widest uppercase text-sage-700">cenário 3 · otimista</span>
+        </div>
+        <div class="display text-5xl font-bold stat-num mb-2">R$ 500k+</div>
+        <div class="text-sm text-ink-700 mb-6">por mês recorrente</div>
+        <hr class="line my-4" />
+        <ul class="space-y-2 text-sm text-ink-700">
+          <li class="flex justify-between"><span>Parceiros ativos</span><strong>150</strong></li>
+          <li class="flex justify-between"><span>Cobertura</span><strong>todas capitais</strong></li>
+          <li class="flex justify-between"><span>Per-lead (4.500/mês)</span><strong>R$ 350k+</strong></li>
+          <li class="flex justify-between border-t border-petrol-100 pt-2 mt-2"><span>Anual</span><strong class="text-petrol-700">R$ 6M+</strong></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="bg-petrol-700 rounded-2xl p-8 reveal">
+      <div class="grid md:grid-cols-3 gap-8 items-center">
+        <div>
+          <div class="text-xs tracking-widest uppercase text-sage-400 mb-2">por que isso é possível</div>
+          <p class="text-cream-100/90">PNE é o único nicho de odontologia sem agregador nacional consolidado. Você é a única referência com audiência massiva. Combinação rara.</p>
+        </div>
+        <div>
+          <div class="text-xs tracking-widest uppercase text-sage-400 mb-2">divisão sugerida</div>
+          <p class="text-cream-100/90">Sociedade <strong class="text-cream-50">50/50</strong> ou <strong class="text-cream-50">60/40</strong>. Você empresta a marca e valida a rede. Eu opero a tecnologia, vendas e operação. Formalizada em contrato.</p>
+        </div>
+        <div>
+          <div class="text-xs tracking-widest uppercase text-sage-400 mb-2">investimento inicial</div>
+          <p class="text-cream-100/90">Praticamente zero financeiro. <strong class="text-cream-50">90 dias</strong> de execução técnica + tempo seu para alinhamentos e validação de parceiros.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 08 — IMPACTO ============ -->
+<section id="impacto" class="slide bg-sage-500 text-petrol-900">
+  <span class="slide-num text-petrol-900">08 / 10</span>
+  <div class="max-w-6xl mx-auto w-full">
+    <div class="reveal">
+      <span class="ribbon bg-petrol-900 text-cream-50">o que isso significa de verdade</span>
+    </div>
+
+    <h2 class="display text-4xl md:text-6xl font-medium mt-8 mb-6 leading-tight reveal">
+      Não é monetização.<br/>
+      É <em class="italic">multiplicação da missão.</em>
+    </h2>
+
+    <p class="text-lg md:text-xl text-petrol-900/85 max-w-3xl leading-relaxed mb-16 reveal">
+      Cada família que você atende em Maringá hoje toca uma vida. Cada família que a rede atende amanhã, em qualquer cidade, toca outra. A diferença está em quantas vidas, e a que distância.
+    </p>
+
+    <div class="grid md:grid-cols-3 gap-6 reveal mb-16">
+      <div class="bg-cream-50 rounded-2xl p-8">
+        <div class="display text-5xl font-bold text-coral-500 stat-num mb-2">12k+</div>
+        <div class="text-xs tracking-widest uppercase text-sage-700 mb-3">famílias / ano</div>
+        <p class="text-sm text-ink-700">atendidas pela rede em todo Brasil quando ela estiver consolidada</p>
+      </div>
+      <div class="bg-cream-50 rounded-2xl p-8">
+        <div class="display text-5xl font-bold text-petrol-700 stat-num mb-2">150</div>
+        <div class="text-xs tracking-widest uppercase text-sage-700 mb-3">profissionais</div>
+        <p class="text-sm text-ink-700">treinados, alinhados e com case real de atendimento PNE em escala</p>
+      </div>
+      <div class="bg-cream-50 rounded-2xl p-8">
+        <div class="display text-5xl font-bold text-gold-600 stat-num mb-2">#1</div>
+        <div class="text-xs tracking-widest uppercase text-sage-700 mb-3">referência nacional</div>
+        <p class="text-sm text-ink-700">posição da Dra. Carol como autoridade reconhecida na área PNE no Brasil</p>
+      </div>
+    </div>
+
+    <div class="bg-petrol-900 text-cream-50 rounded-3xl p-10 reveal">
+      <div class="grid md:grid-cols-2 gap-10 items-center">
+        <div>
+          <div class="quote-mark text-coral-400">"</div>
+          <p class="display text-2xl md:text-3xl italic leading-tight -mt-6">
+            Pela primeira vez, encontrei alguém que sabe atender meu filho. Sem julgamento, sem pressa, sem medo.
+          </p>
+          <p class="mt-6 text-sm uppercase tracking-widest text-sage-400">— mãe atendida pela rede · cidade real, em algum lugar do Brasil</p>
+        </div>
+        <div class="text-cream-100/80 leading-relaxed">
+          <p class="mb-4">Esse depoimento não existe ainda. Mas vai existir.</p>
+          <p>E quando existir, ele vai virar conteúdo, vai viralizar, e vai atrair mais famílias e mais dentistas pra rede. O ciclo se retroalimenta.</p>
+          <p class="mt-4 text-cream-50"><strong>Missão e modelo de negócio crescem juntos.</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 09 — ONDE QUEREMOS CHEGAR ============ -->
+<section id="destino" class="slide bg-cream-50">
+  <span class="slide-num text-petrol-700">09 / 10</span>
+  <div class="max-w-6xl mx-auto w-full">
+    <div class="reveal">
+      <span class="ribbon bg-coral-500 text-cream-50">onde queremos chegar</span>
+    </div>
+
+    <h2 class="display text-4xl md:text-6xl font-medium text-petrol-900 mt-8 mb-16 leading-tight reveal">
+      Três horizontes,<br/>
+      <span class="italic text-coral-500">um destino só.</span>
+    </h2>
+
+    <div class="space-y-6 reveal">
+      <!-- Ano 1 -->
+      <div class="bg-white border-l-8 border-sage-500 rounded-r-2xl p-8 grid md:grid-cols-12 gap-6 items-start">
+        <div class="md:col-span-3">
+          <div class="text-xs tracking-widest uppercase text-sage-700 mb-2">ano 01 · 2026</div>
+          <div class="display text-3xl text-petrol-900">Fundação</div>
+        </div>
+        <div class="md:col-span-9">
+          <p class="text-ink-700 mb-4 leading-relaxed">Construir a rede e provar o modelo. Foco em qualidade absoluta dos primeiros parceiros e em mensagem alinhada com a marca da Carol.</p>
+          <div class="grid grid-cols-3 gap-4">
+            <div><div class="display text-2xl text-petrol-900 stat-num">30</div><div class="text-xs uppercase text-sage-700 tracking-wider">parceiros</div></div>
+            <div><div class="display text-2xl text-petrol-900 stat-num">15</div><div class="text-xs uppercase text-sage-700 tracking-wider">capitais cobertas</div></div>
+            <div><div class="display text-2xl text-petrol-900 stat-num">R$ 1,5M</div><div class="text-xs uppercase text-sage-700 tracking-wider">receita anual</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ano 2 -->
+      <div class="bg-white border-l-8 border-petrol-700 rounded-r-2xl p-8 grid md:grid-cols-12 gap-6 items-start">
+        <div class="md:col-span-3">
+          <div class="text-xs tracking-widest uppercase text-sage-700 mb-2">ano 02 · 2027</div>
+          <div class="display text-3xl text-petrol-900">Consolidação</div>
+        </div>
+        <div class="md:col-span-9">
+          <p class="text-ink-700 mb-4 leading-relaxed">Cobertura nacional. A Rede vira sinônimo de odontologia PNE no Brasil. Conteúdo orgânico cresce, marca se torna porta de entrada do nicho inteiro.</p>
+          <div class="grid grid-cols-3 gap-4">
+            <div><div class="display text-2xl text-petrol-900 stat-num">80</div><div class="text-xs uppercase text-sage-700 tracking-wider">parceiros</div></div>
+            <div><div class="display text-2xl text-petrol-900 stat-num">27</div><div class="text-xs uppercase text-sage-700 tracking-wider">estados ativos</div></div>
+            <div><div class="display text-2xl text-petrol-900 stat-num">R$ 2,4M</div><div class="text-xs uppercase text-sage-700 tracking-wider">receita anual</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ano 3 -->
+      <div class="bg-petrol-900 text-cream-50 border-l-8 border-coral-500 rounded-r-2xl p-8 grid md:grid-cols-12 gap-6 items-start grain">
+        <div class="md:col-span-3">
+          <div class="text-xs tracking-widest uppercase text-coral-400 mb-2">ano 03 · 2028</div>
+          <div class="display text-3xl">Expansão</div>
+        </div>
+        <div class="md:col-span-9">
+          <p class="text-cream-100/85 mb-4 leading-relaxed">Maior rede de odontologia humanizada da América Latina. Treinamentos próprios pra dentistas, eventos, possíveis novas verticais (fono, TO, psico) na mesma lógica.</p>
+          <div class="grid grid-cols-3 gap-4">
+            <div><div class="display text-2xl stat-num text-coral-400">150+</div><div class="text-xs uppercase text-sage-400 tracking-wider">parceiros</div></div>
+            <div><div class="display text-2xl stat-num text-coral-400">LATAM</div><div class="text-xs uppercase text-sage-400 tracking-wider">expansão regional</div></div>
+            <div><div class="display text-2xl stat-num text-coral-400">R$ 6M+</div><div class="text-xs uppercase text-sage-400 tracking-wider">receita anual</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 10 — PRÓXIMOS PASSOS ============ -->
+<section id="proximos" class="slide bg-petrol-900 text-cream-50 grain">
+  <span class="slide-num text-cream-50">10 / 10</span>
+  <div class="max-w-6xl mx-auto w-full">
+    <div class="reveal">
+      <span class="ribbon bg-coral-500 text-cream-50">vamos juntos?</span>
+    </div>
+
+    <h2 class="display text-5xl md:text-7xl font-medium mt-8 mb-6 leading-tight reveal">
+      Três decisões.<br/>
+      <span class="italic text-gold-400">E começamos.</span>
+    </h2>
+
+    <p class="text-lg md:text-xl text-cream-100/80 max-w-3xl leading-relaxed mb-16 reveal">
+      Tudo o que está aqui é executável. Eu já tenho a tecnologia. Você já tem a audiência. Falta a gente combinar três coisas e dar partida.
+    </p>
+
+    <div class="grid md:grid-cols-3 gap-6 mb-16 reveal">
+      <div class="bg-petrol-700 rounded-2xl p-8 border border-cream-50/10">
+        <div class="display text-6xl text-coral-400 mb-4 stat-num">01</div>
+        <div class="display text-xl mb-3">Você está dentro?</div>
+        <p class="text-cream-100/80 text-sm leading-relaxed">A Carol topa emprestar a marca, validar dentistas e mencionar a rede no conteúdo? Sem isso, nada acontece. Com isso, tudo flui.</p>
+      </div>
+      <div class="bg-petrol-700 rounded-2xl p-8 border border-cream-50/10">
+        <div class="display text-6xl text-coral-400 mb-4 stat-num">02</div>
+        <div class="display text-xl mb-3">Como dividimos?</div>
+        <p class="text-cream-100/80 text-sm leading-relaxed">Sociedade formal, com contrato. Sugestão inicial de 50/50, mas aberto a conversar. Definir agora evita confusão depois.</p>
+      </div>
+      <div class="bg-petrol-700 rounded-2xl p-8 border border-cream-50/10">
+        <div class="display text-6xl text-coral-400 mb-4 stat-num">03</div>
+        <div class="display text-xl mb-3">Qual o nome?</div>
+        <p class="text-cream-100/80 text-sm leading-relaxed">"Rede Dra. Carol PNE", "Conexão PNE", outra coisa? Decisão em conjunto com você e o filmaker, que cuida da identidade visual.</p>
+      </div>
+    </div>
+
+    <div class="bg-coral-500 rounded-3xl p-10 reveal">
+      <div class="grid md:grid-cols-2 gap-10 items-center">
+        <div>
+          <div class="text-xs tracking-widest uppercase text-cream-50/80 mb-3">primeiros 90 dias</div>
+          <div class="display text-3xl md:text-4xl text-cream-50 leading-tight">
+            Mês 1: alinhamento + setup técnico.<br/>
+            Mês 2: MVP da captura no ar.<br/>
+            Mês 3: primeiros 5-10 parceiros pagantes.
+          </div>
+        </div>
+        <div>
+          <p class="text-cream-50 leading-relaxed mb-6">Nada é definitivo neste documento. É a primeira versão pra você visualizar e me dizer: o que faz sentido, o que não faz, o que falta.</p>
+          <p class="text-cream-50 leading-relaxed"><strong>Pega um café com a equipe, leia, pensa. E depois a gente conversa.</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-16 flex flex-wrap items-center justify-between gap-6 reveal">
+      <div>
+        <div class="display text-xl text-cream-50">João · Lead Machine</div>
+        <div class="text-sm text-sage-400 mt-1">Tecnologia, operação e crescimento</div>
+      </div>
+      <div class="text-right">
+        <div class="text-sm text-cream-100/60">Apresentação preliminar · v1</div>
+        <div class="text-sm text-cream-100/60">Abril 2026</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Reveal on scroll
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in');
+      }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // Active nav highlighting
+  const navLinks = document.querySelectorAll('.navlink');
+  const sections = document.querySelectorAll('.slide');
+  const navObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => link.classList.remove('active'));
+        const active = document.querySelector(`.navlink[data-target="${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { threshold: 0.5 });
+  sections.forEach(section => navObserver.observe(section));
+</script>
+</body>
+</html>

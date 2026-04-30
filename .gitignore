@@ -7,3 +7,9 @@ __pycache__/
 leads-export/*.log
 start.log
 leads-export/searches.json
+
+# archive/ — material side-quest (decks, docs antigos, midia)
+# Versionamos os MDs (historico do projeto) mas nao a midia pesada
+archive/video-lancamento/
+archive/**/*.mp4
+archive/**/*.mp3

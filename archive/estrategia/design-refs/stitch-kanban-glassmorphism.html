@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lead Machine - Pipeline</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container-highest": "#333539",
+                        "on-tertiary-fixed": "#410005",
+                        "on-primary-fixed": "#002113",
+                        "surface-container-high": "#282a2e",
+                        "outline": "#86948a",
+                        "on-tertiary-container": "#711419",
+                        "secondary-fixed": "#d8e2ff",
+                        "secondary": "#adc6ff",
+                        "on-error-container": "#ffdad6",
+                        "surface-variant": "#333539",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "error": "#ffb4ab",
+                        "on-primary-container": "#00422b",
+                        "error-container": "#93000a",
+                        "tertiary": "#ffb3af",
+                        "surface-container-lowest": "#0c0e12",
+                        "surface-container": "#1e2024",
+                        "background": "#111317",
+                        "on-secondary": "#002e6a",
+                        "on-surface": "#e2e2e8",
+                        "tertiary-fixed-dim": "#ffb3af",
+                        "surface-container-low": "#1a1c20",
+                        "secondary-container": "#0566d9",
+                        "on-tertiary-fixed-variant": "#842225",
+                        "on-primary-fixed-variant": "#005236",
+                        "surface-bright": "#37393e",
+                        "on-surface-variant": "#bbcabf",
+                        "on-secondary-container": "#e6ecff",
+                        "primary-fixed-dim": "#4edea3",
+                        "inverse-surface": "#e2e2e8",
+                        "on-error": "#690005",
+                        "inverse-primary": "#006c49",
+                        "on-background": "#e2e2e8",
+                        "tertiary-container": "#fc7c78",
+                        "inverse-on-surface": "#2f3035",
+                        "surface-tint": "#4edea3",
+                        "primary-fixed": "#6ffbbe",
+                        "primary-container": "#10b981",
+                        "on-tertiary": "#650911",
+                        "surface-dim": "#111317",
+                        "outline-variant": "#3c4a42",
+                        "surface": "#111317",
+                        "on-secondary-fixed-variant": "#004395",
+                        "on-secondary-fixed": "#001a42",
+                        "on-primary": "#003824",
+                        "primary": "#4edea3",
+                        "tertiary-fixed": "#ffdad7"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    spacing: {
+                        "sm": "8px",
+                        "xl": "48px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "kanban-gutter": "12px",
+                        "lg": "24px",
+                        "unit": "4px",
+                        "card-padding": "16px"
+                    },
+                    fontFamily: {
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "h3": ["Manrope"],
+                        "h1": ["Manrope"],
+                        "data-tabular": ["Inter"],
+                        "h2": ["Manrope"]
+                    },
+                    fontSize: {
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "label-caps": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "600" }],
+                        "h3": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "h1": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "data-tabular": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+                        "h2": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Hide scrollbar for kanban board but keep functionality */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="bg-[#0a0c0f] text-[#e2e2e8] font-body-md min-h-screen flex overflow-hidden relative">
+<!-- Background glow elements -->
+<div class="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] -z-10"></div>
+<div class="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] -z-10"></div>
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col h-screen fixed left-0 top-0 pt-4 pb-8 bg-white/5 backdrop-blur-lg border-r border-white/10 w-64 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
+<div class="px-6 mb-8 flex flex-col gap-1">
+<span class="text-white font-black font-h1 text-h1 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.4)]">Lead Machine</span>
+<span class="text-gray-400 font-label-caps text-label-caps">Enterprise Tier</span>
+</div>
+<div class="flex-1 flex flex-col gap-2">
+<a class="flex items-center gap-3 text-gray-400 hover:text-white hover:bg-white/5 px-4 py-3 cursor-pointer transition-all duration-200 font-manrope text-sm font-medium rounded-lg mx-2" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 text-gray-400 hover:text-white hover:bg-white/5 px-4 py-3 cursor-pointer transition-all duration-200 font-manrope text-sm font-medium rounded-lg mx-2" href="#">
+<span class="material-symbols-outlined" data-icon="view_kanban">view_kanban</span>
+                Leads
+            </a>
+<a class="flex items-center gap-3 text-emerald-400 border-r-2 border-emerald-400 bg-emerald-400/10 px-4 py-3 cursor-pointer transition-all duration-200 font-manrope text-sm font-medium rounded-lg mx-2 shadow-[inset_0_0_12px_rgba(52,211,153,0.1)]" href="#">
+<span class="material-symbols-outlined" data-icon="account_tree">account_tree</span>
+                Pipelines
+            </a>
+<a class="flex items-center gap-3 text-gray-400 hover:text-white hover:bg-white/5 px-4 py-3 cursor-pointer transition-all duration-200 font-manrope text-sm font-medium rounded-lg mx-2" href="#">
+<span class="material-symbols-outlined" data-icon="insights">insights</span>
+                Analytics
+            </a>
+<a class="flex items-center gap-3 text-gray-400 hover:text-white hover:bg-white/5 px-4 py-3 cursor-pointer transition-all duration-200 font-manrope text-sm font-medium rounded-lg mx-2" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+                Team
+            </a>
+</div>
+<div class="px-4 mt-auto mb-4">
+<button class="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-white py-2 rounded-lg font-body-md font-medium hover:opacity-90 transition-all shadow-[0_0_15px_rgba(52,211,153,0.4)] flex items-center justify-center gap-2 border border-white/10">
+<span class="material-symbols-outlined" style="font-size: 18px;">add</span>
+                New Lead
+            </button>
+</div>
+<div class="flex flex-col gap-2 border-t border-white/10 pt-4 px-2">
+<a class="flex items-center gap-3 text-gray-400 hover:text-white hover:bg-white/5 px-4 py-3 cursor-pointer transition-all duration-200 font-manrope text-sm font-medium rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="contact_support">contact_support</span>
+                Support
+            </a>
+<a class="flex items-center gap-3 text-gray-400 hover:text-white hover:bg-white/5 px-4 py-3 cursor-pointer transition-all duration-200 font-manrope text-sm font-medium rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                Logout
+            </a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col md:ml-64 w-full h-screen overflow-hidden">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-6 h-16 bg-white/5 backdrop-blur-md border-b border-white/10 font-manrope antialiased z-10 shrink-0 shadow-sm">
+<div class="flex items-center gap-4">
+<div class="md:hidden text-xl font-bold text-white tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Lead Machine</div>
+<!-- Search Bar -->
+<div class="hidden sm:flex relative items-center">
+<span class="material-symbols-outlined absolute left-3 text-gray-400" style="font-size: 20px;">search</span>
+<input class="bg-white/5 backdrop-blur-sm border border-white/10 text-white text-sm rounded-full pl-10 pr-4 py-2 w-64 focus:outline-none focus:border-emerald-400/50 focus:ring-1 focus:ring-emerald-400/50 transition-all placeholder-gray-500 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]" placeholder="Search leads..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-2 sm:gap-4">
+<!-- Filters -->
+<div class="hidden lg:flex gap-2 mr-4">
+<button class="px-4 py-1.5 bg-white/10 border border-white/20 rounded-full text-white font-body-sm hover:bg-white/20 transition-all shadow-sm backdrop-blur-sm">All</button>
+<button class="px-4 py-1.5 bg-transparent border border-white/10 rounded-full text-gray-400 font-body-sm hover:text-white hover:border-white/30 hover:bg-white/5 transition-all backdrop-blur-sm">Instagram</button>
+<button class="px-4 py-1.5 bg-transparent border border-white/10 rounded-full text-gray-400 font-body-sm hover:text-white hover:border-white/30 hover:bg-white/5 transition-all backdrop-blur-sm">TikTok</button>
+<button class="px-4 py-1.5 bg-transparent border border-white/10 rounded-full text-gray-400 font-body-sm hover:text-white hover:border-white/30 hover:bg-white/5 transition-all backdrop-blur-sm">Facebook</button>
+<button class="px-4 py-1.5 bg-transparent border border-white/10 rounded-full text-gray-400 font-body-sm hover:text-white hover:border-white/30 hover:bg-white/5 transition-all backdrop-blur-sm">Google</button>
+</div>
+<button class="text-gray-400 hover:text-white hover:bg-white/10 transition-colors duration-200 p-2 rounded-full active:scale-95 transition-transform flex items-center justify-center backdrop-blur-sm border border-transparent hover:border-white/10">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-gray-400 hover:text-white hover:bg-white/10 transition-colors duration-200 p-2 rounded-full active:scale-95 transition-transform flex items-center justify-center hidden sm:flex backdrop-blur-sm border border-transparent hover:border-white/10">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<button class="text-gray-400 hover:text-white hover:bg-white/10 transition-colors duration-200 p-2 rounded-full active:scale-95 transition-transform flex items-center justify-center hidden sm:flex backdrop-blur-sm border border-transparent hover:border-white/10">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<div class="w-9 h-9 rounded-full bg-white/10 overflow-hidden ml-2 border border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.1)] ring-2 ring-transparent hover:ring-emerald-400/50 transition-all cursor-pointer">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="professional headshot of a businessman in a dark suit against a grey background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDA5IEMbmiU5L4p466KSnzF95IMlMQXyyl8nC-cq7pZjVuDuTJWwhw3nFAYLhXCxGdHhjsNcxvISF_Mkd8UQYKESaU56qRzCrFFOJw2jImjz-iS_Ag4IkPJIHRlDHCc1hFkJPljZIlDWZKcnciJhjUJbSjiNqOF8jyq5J459KHBQE6Nk-r91TLjG-xfFXzHYaXc8sjf2bl8a9G5vuD_lvlS3PZ-nUt0u5J8gEXj-1CIuHLOUys2XLlrXiqIyh3cL171b1kM2kmjKeQ"/>
+</div>
+</div>
+</header>
+<!-- Mobile Filter Bar -->
+<div class="lg:hidden flex gap-2 p-4 overflow-x-auto border-b border-white/10 bg-white/5 backdrop-blur-md shrink-0 no-scrollbar">
+<button class="px-4 py-1.5 bg-white/10 border border-white/20 rounded-full text-white font-body-sm whitespace-nowrap backdrop-blur-sm">All</button>
+<button class="px-4 py-1.5 bg-transparent border border-white/10 rounded-full text-gray-400 font-body-sm whitespace-nowrap hover:bg-white/5 backdrop-blur-sm">Instagram</button>
+<button class="px-4 py-1.5 bg-transparent border border-white/10 rounded-full text-gray-400 font-body-sm whitespace-nowrap hover:bg-white/5 backdrop-blur-sm">TikTok</button>
+<button class="px-4 py-1.5 bg-transparent border border-white/10 rounded-full text-gray-400 font-body-sm whitespace-nowrap hover:bg-white/5 backdrop-blur-sm">Facebook</button>
+<button class="px-4 py-1.5 bg-transparent border border-white/10 rounded-full text-gray-400 font-body-sm whitespace-nowrap hover:bg-white/5 backdrop-blur-sm">Google</button>
+</div>
+<!-- Kanban Canvas -->
+<main class="flex-1 overflow-x-auto overflow-y-hidden p-6 bg-transparent no-scrollbar">
+<div class="flex gap-kanban-gutter h-full items-start pb-xl">
+<!-- Column 1: DESCOBERTO -->
+<div class="flex-shrink-0 w-80 flex flex-col h-full bg-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
+<div class="p-4 border-b border-white/10 flex items-center justify-between sticky top-0 bg-white/[0.01] backdrop-blur-xl rounded-t-2xl z-10">
+<div class="flex items-center gap-3">
+<div class="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)]"></div>
+<h2 class="font-h3 text-h3 text-white uppercase tracking-wider">Descoberto</h2>
+<span class="bg-white/10 text-gray-300 px-2.5 py-0.5 rounded-full font-label-caps text-label-caps ml-1 border border-white/5">85</span>
+</div>
+<button class="text-gray-400 hover:text-white transition-colors"><span class="material-symbols-outlined text-sm">more_horiz</span></button>
+</div>
+<div class="p-3 flex flex-col gap-4 overflow-y-auto no-scrollbar flex-1">
+<!-- Card 1 -->
+<div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-card-padding cursor-grab hover:bg-white/10 hover:border-white/20 transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.2)] group">
+<div class="flex justify-between items-start mb-3">
+<div>
+<h3 class="font-data-tabular text-data-tabular text-white mb-1 group-hover:text-cyan-300 transition-colors">Dra. Thayane Lemos</h3>
+<span class="text-gray-400 font-body-sm text-body-sm block">L-00107</span>
+</div>
+<div class="flex flex-col items-end gap-1.5">
+<span class="text-white font-label-caps text-label-caps text-cyan-100">93pts</span>
+<div class="w-12 h-1 bg-white/10 rounded-full overflow-hidden shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]">
+<div class="h-full bg-cyan-400 w-[93%] rounded-full shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4 mb-4">
+<div class="flex items-center gap-1 text-amber-400">
+<span class="material-symbols-outlined drop-shadow-[0_0_5px_rgba(251,191,36,0.5)]" data-weight="fill" style="font-size: 14px;">star</span>
+<span class="font-body-sm text-body-sm font-medium">5.0</span>
+<span class="text-gray-400 font-body-sm text-body-sm">(12)</span>
+</div>
+<div class="flex items-center gap-1 text-gray-400">
+<span class="material-symbols-outlined" style="font-size: 14px;">location_on</span>
+<span class="font-body-sm text-body-sm">Praia do Flamengo</span>
+</div>
+</div>
+<div class="flex justify-between items-center pt-3 border-t border-white/10">
+<span class="bg-blue-500/20 text-blue-300 border border-blue-500/40 px-2 py-1 rounded-md font-label-caps text-[10px] shadow-[0_0_12px_rgba(59,130,246,0.3)] backdrop-blur-sm">GOOGLE</span>
+<a class="text-cyan-400 hover:text-cyan-300 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] font-body-sm text-body-sm flex items-center gap-1 transition-all" href="tel:+552199999999">
+<span class="material-symbols-outlined" style="font-size: 14px;">call</span>
+                                    Call
+                                </a>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-card-padding cursor-grab hover:bg-white/10 hover:border-white/20 transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.2)] group">
+<div class="flex justify-between items-start mb-3">
+<div>
+<h3 class="font-data-tabular text-data-tabular text-white mb-1 group-hover:text-cyan-300 transition-colors">Dr. Marcos Silva</h3>
+<span class="text-gray-400 font-body-sm text-body-sm block">L-00108</span>
+</div>
+<div class="flex flex-col items-end gap-1.5">
+<span class="text-white font-label-caps text-label-caps text-cyan-100">78pts</span>
+<div class="w-12 h-1 bg-white/10 rounded-full overflow-hidden shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]">
+<div class="h-full bg-cyan-400 w-[78%] rounded-full shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4 mb-4">
+<div class="flex items-center gap-1 text-amber-400">
+<span class="material-symbols-outlined drop-shadow-[0_0_5px_rgba(251,191,36,0.5)]" data-weight="fill" style="font-size: 14px;">star</span>
+<span class="font-body-sm text-body-sm font-medium">4.8</span>
+<span class="text-gray-400 font-body-sm text-body-sm">(45)</span>
+</div>
+<div class="flex items-center gap-1 text-gray-400">
+<span class="material-symbols-outlined" style="font-size: 14px;">location_on</span>
+<span class="font-body-sm text-body-sm">Copacabana</span>
+</div>
+</div>
+<div class="flex justify-between items-center pt-3 border-t border-white/10">
+<span class="bg-pink-500/20 text-pink-300 border border-pink-500/40 px-2 py-1 rounded-md font-label-caps text-[10px] shadow-[0_0_12px_rgba(236,72,153,0.3)] backdrop-blur-sm">INSTAGRAM</span>
+<a class="text-cyan-400 hover:text-cyan-300 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] font-body-sm text-body-sm flex items-center gap-1 transition-all" href="tel:+552199999999">
+<span class="material-symbols-outlined" style="font-size: 14px;">call</span>
+                                    Call
+                                </a>
+</div>
+</div>
+</div>
+</div>
+<!-- Column 2: QUALIFICADO -->
+<div class="flex-shrink-0 w-80 flex flex-col h-full bg-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
+<div class="p-4 border-b border-white/10 flex items-center justify-between sticky top-0 bg-white/[0.01] backdrop-blur-xl rounded-t-2xl z-10">
+<div class="flex items-center gap-3">
+<div class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.8)]"></div>
+<h2 class="font-h3 text-h3 text-white uppercase tracking-wider">Qualificado</h2>
+<span class="bg-white/10 text-gray-300 px-2.5 py-0.5 rounded-full font-label-caps text-label-caps ml-1 border border-white/5">62</span>
+</div>
+<button class="text-gray-400 hover:text-white transition-colors"><span class="material-symbols-outlined text-sm">more_horiz</span></button>
+</div>
+<div class="p-3 flex flex-col gap-4 overflow-y-auto no-scrollbar flex-1">
+<!-- Card 3 -->
+<div class="bg-white/5 backdrop-blur-md border border-white/10 border-l-2 border-l-amber-400 rounded-xl p-card-padding cursor-grab hover:bg-white/10 hover:border-white/20 transition-all duration-300 shadow-[0_0_20px_rgba(251,191,36,0.15)] scale-102 group">
+<div class="flex justify-between items-start mb-3">
+<div>
+<h3 class="font-data-tabular text-data-tabular text-white mb-1 group-hover:text-amber-300 transition-colors">Clinica Sorriso</h3>
+<span class="text-gray-400 font-body-sm text-body-sm block">L-00042</span>
+</div>
+<div class="flex flex-col items-end gap-1.5">
+<span class="text-white font-label-caps text-label-caps text-amber-100">99pts</span>
+<div class="w-12 h-1 bg-white/10 rounded-full overflow-hidden shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]">
+<div class="h-full bg-amber-400 w-[99%] rounded-full shadow-[0_0_8px_rgba(251,191,36,0.8)]"></div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4 mb-4">
+<div class="flex items-center gap-1 text-amber-400">
+<span class="material-symbols-outlined drop-shadow-[0_0_5px_rgba(251,191,36,0.5)]" data-weight="fill" style="font-size: 14px;">star</span>
+<span class="font-body-sm text-body-sm font-medium">4.9</span>
+<span class="text-gray-400 font-body-sm text-body-sm">(128)</span>
+</div>
+<div class="flex items-center gap-1 text-gray-400">
+<span class="material-symbols-outlined" style="font-size: 14px;">location_on</span>
+<span class="font-body-sm text-body-sm">Ipanema</span>
+</div>
+</div>
+<div class="flex justify-between items-center pt-3 border-t border-white/10">
+<span class="bg-blue-500/20 text-blue-300 border border-blue-500/40 px-2 py-1 rounded-md font-label-caps text-[10px] shadow-[0_0_12px_rgba(59,130,246,0.3)] backdrop-blur-sm">GOOGLE</span>
+<a class="text-amber-400 hover:text-amber-300 hover:drop-shadow-[0_0_8px_rgba(251,191,36,0.5)] font-body-sm text-body-sm flex items-center gap-1 transition-all" href="tel:+552199999999">
+<span class="material-symbols-outlined" style="font-size: 14px;">call</span>
+                                    Call
+                                </a>
+</div>
+</div>
+</div>
+</div>
+<!-- Column 3: ENRIQUECIDO -->
+<div class="flex-shrink-0 w-80 flex flex-col h-full bg-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
+<div class="p-4 border-b border-white/10 flex items-center justify-between sticky top-0 bg-white/[0.01] backdrop-blur-xl rounded-t-2xl z-10">
+<div class="flex items-center gap-3">
+<div class="w-2.5 h-2.5 rounded-full bg-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.8)]"></div>
+<h2 class="font-h3 text-h3 text-white uppercase tracking-wider">Enriquecido</h2>
+<span class="bg-white/10 text-gray-300 px-2.5 py-0.5 rounded-full font-label-caps text-label-caps ml-1 border border-white/5">21</span>
+</div>
+<button class="text-gray-400 hover:text-white transition-colors"><span class="material-symbols-outlined text-sm">more_horiz</span></button>
+</div>
+<div class="p-3 flex flex-col gap-4 overflow-y-auto no-scrollbar flex-1">
+</div>
+</div>
+<!-- Column 4: DISPONÍVEL -->
+<div class="flex-shrink-0 w-80 flex flex-col h-full bg-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
+<div class="p-4 border-b border-white/10 flex items-center justify-between sticky top-0 bg-white/[0.01] backdrop-blur-xl rounded-t-2xl z-10">
+<div class="flex items-center gap-3">
+<div class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]"></div>
+<h2 class="font-h3 text-h3 text-white uppercase tracking-wider">Disponível</h2>
+<span class="bg-white/10 text-gray-300 px-2.5 py-0.5 rounded-full font-label-caps text-label-caps ml-1 border border-white/5">0</span>
+</div>
+<button class="text-gray-400 hover:text-white transition-colors"><span class="material-symbols-outlined text-sm">more_horiz</span></button>
+</div>
+<div class="p-3 flex flex-col gap-4 overflow-y-auto no-scrollbar flex-1 items-center justify-center text-center">
+<div class="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-3 backdrop-blur-sm shadow-[0_0_15px_rgba(255,255,255,0.05)]">
+<span class="material-symbols-outlined text-emerald-400/50" style="font-size: 32px;">inbox</span>
+</div>
+<p class="text-gray-400 font-body-sm text-body-sm">No leads in this stage</p>
+</div>
+</div>
+<!-- Column 5: DM ENVIADA -->
+<div class="flex-shrink-0 w-80 flex flex-col h-full bg-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
+<div class="p-4 border-b border-white/10 flex items-center justify-between sticky top-0 bg-white/[0.01] backdrop-blur-xl rounded-t-2xl z-10">
+<div class="flex items-center gap-3">
+<div class="w-2.5 h-2.5 rounded-full bg-purple-400 shadow-[0_0_10px_rgba(192,132,252,0.8)]"></div>
+<h2 class="font-h3 text-h3 text-white uppercase tracking-wider">DM Enviada</h2>
+<span class="bg-white/10 text-gray-300 px-2.5 py-0.5 rounded-full font-label-caps text-label-caps ml-1 border border-white/5">0</span>
+</div>
+<button class="text-gray-400 hover:text-white transition-colors"><span class="material-symbols-outlined text-sm">more_horiz</span></button>
+</div>
+<div class="p-3 flex flex-col gap-4 overflow-y-auto no-scrollbar flex-1 items-center justify-center text-center">
+<div class="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-3 backdrop-blur-sm shadow-[0_0_15px_rgba(255,255,255,0.05)]">
+<span class="material-symbols-outlined text-purple-400/50" style="font-size: 32px;">send</span>
+</div>
+<p class="text-gray-400 font-body-sm text-body-sm">No leads in this stage</p>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>
