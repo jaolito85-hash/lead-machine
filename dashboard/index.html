@@ -168,7 +168,7 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
 .leads-table tr:hover td{background:var(--bg-hover)}
 .lead-name{font-weight:500;color:var(--text-primary)}
 .lead-source{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500}
-.lead-source.instagram{background:#c837ab22;color:#c837ab}.lead-source.google{background:#4285f422;color:#6ea8fe}.lead-source.x{background:#1da1f222;color:#90caf9}.lead-source.reddit{background:#ff640022;color:#ff9100}.lead-source.linkedin{background:#0077b522;color:#29b6f6}.lead-source.facebook{background:#1877f222;color:#42a5f5}.lead-source.tiktok{background:#00f2ea22;color:#00f2ea}
+.lead-source.instagram{background:#c837ab22;color:#c837ab}.lead-source.google{background:#4285f422;color:#6ea8fe}.lead-source.reddit{background:#ff640022;color:#ff9100}.lead-source.linkedin{background:#0077b522;color:#29b6f6}.lead-source.tiktok{background:#00f2ea22;color:#00f2ea}
 .temp-badge{font-size:10px;padding:2px 10px;border-radius:10px;font-weight:600}
 .temp-badge.quente{background:var(--hot-dim);color:var(--hot)}.temp-badge.morno{background:var(--warm-dim);color:var(--warm)}.temp-badge.frio{background:var(--cold-dim);color:var(--cold)}
 .score-bar{width:60px;height:6px;background:var(--bg-active);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:6px}
@@ -442,8 +442,6 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
 .k-plat-badge.google{background:rgba(59,130,246,.18);color:#93c5fd;border-color:rgba(59,130,246,.4);box-shadow:0 0 12px rgba(59,130,246,.22)}
 .k-plat-badge.instagram{background:rgba(236,72,153,.18);color:#f9a8d4;border-color:rgba(236,72,153,.4);box-shadow:0 0 12px rgba(236,72,153,.22)}
 .k-plat-badge.tiktok{background:rgba(6,182,212,.2);color:#67e8f9;border-color:rgba(6,182,212,.45);box-shadow:0 0 12px rgba(6,182,212,.22)}
-.k-plat-badge.facebook{background:rgba(37,99,235,.18);color:#93c5fd;border-color:rgba(37,99,235,.4);box-shadow:0 0 12px rgba(37,99,235,.22)}
-.k-plat-badge.x,.k-plat-badge.twitter{background:rgba(148,163,184,.18);color:#e2e8f0;border-color:rgba(148,163,184,.4)}
 .k-plat-badge.reddit{background:rgba(249,115,22,.18);color:#fdba74;border-color:rgba(249,115,22,.4)}
 .k-plat-badge.linkedin{background:rgba(2,132,199,.18);color:#7dd3fc;border-color:rgba(2,132,199,.4)}
 
@@ -704,7 +702,7 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
           <button class="k-pill active" data-plat="all" onclick="setKanbanPlat('all')">Todas</button>
           <button class="k-pill" data-plat="instagram" onclick="setKanbanPlat('instagram')">Instagram</button>
           <button class="k-pill" data-plat="tiktok" onclick="setKanbanPlat('tiktok')">TikTok</button>
-          <button class="k-pill" data-plat="facebook" onclick="setKanbanPlat('facebook')">Facebook</button>
+          <button class="k-pill" data-plat="youtube" onclick="setKanbanPlat('youtube')">YouTube</button>
           <button class="k-pill" data-plat="google" onclick="setKanbanPlat('google')">Google</button>
         </div>
       </div>
@@ -801,9 +799,8 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="busca-platforms">
           <label class="plat-check"><input type="checkbox" value="google" /> Google Maps</label>
           <label class="plat-check"><input type="checkbox" value="instagram" /> Instagram</label>
-          <label class="plat-check"><input type="checkbox" value="facebook" /> Facebook</label>
           <label class="plat-check"><input type="checkbox" value="tiktok" /> TikTok</label>
-          <label class="plat-check"><input type="checkbox" value="twitter" /> X/Twitter</label>
+          <label class="plat-check"><input type="checkbox" value="youtube" /> YouTube</label>
         </div>
       </div>
       <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -883,9 +880,8 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="campaign-platforms">
           <label class="plat-check"><input type="checkbox" value="google" /> Google Maps</label>
           <label class="plat-check"><input type="checkbox" value="instagram" /> Instagram</label>
-          <label class="plat-check"><input type="checkbox" value="facebook" /> Facebook</label>
           <label class="plat-check"><input type="checkbox" value="tiktok" /> TikTok</label>
-          <label class="plat-check"><input type="checkbox" value="twitter" /> X/Twitter</label>
+          <label class="plat-check"><input type="checkbox" value="youtube" /> YouTube</label>
         </div>
       </div>
       <div class="form-group">
@@ -911,12 +907,11 @@ const S = {
     { id:'ceo', name:'CEO', type:'ceo', desc:'Interpreta seus comandos. Entende nicho, servico, cidade, plataformas. Cria tasks e distribui para os agentes certos.', adapter:'claude_local', status:'active', icon:'\u265B' },
     { id:'cto', name:'CTO', type:'cto', desc:'Monitora se os scrapers estao rodando. Detecta falhas, ajusta estrategia de busca, gerencia infraestrutura.', adapter:'claude_local', status:'active', icon:'\u2699' },
     { id:'ig', name:'Agent Instagram', type:'scraper', desc:'Busca hashtags, posts geolocalizados, comentarios e perfis no Instagram. Coleta quem demonstra interesse.', adapter:'process', status:'idle', icon:'\uD83D\uDCF7', platform:'instagram' },
-    { id:'tw', name:'Agent X/Twitter', type:'scraper', desc:'Busca tweets, replies e conversas no X. Encontra quem pergunta, reclama ou demonstra interesse.', adapter:'process', status:'idle', icon:'\uD835\uDD4F', platform:'x' },
     { id:'gg', name:'Agent Google', type:'scraper', desc:'Busca no Google Search e Google Maps. Coleta negocios locais, avaliacoes e quem pesquisa o servico.', adapter:'process', status:'idle', icon:'\uD83D\uDD0D', platform:'google' },
     { id:'rd', name:'Agent Reddit', type:'scraper', desc:'Busca em subreddits relevantes. Encontra posts pedindo indicacao, discussoes e opinioes sobre o tema.', adapter:'process', status:'idle', icon:'\uD83E\uDD16', platform:'reddit' },
     { id:'li', name:'Agent LinkedIn', type:'scraper', desc:'Busca profissionais, empresas e decisores. Coleta perfis relevantes do nicho na regiao.', adapter:'process', status:'idle', icon:'\uD83D\uDCBC', platform:'linkedin' },
-    { id:'fb', name:'Agent Facebook', type:'scraper', desc:'Busca em grupos e paginas. Coleta posts, comentarios e perfis de pessoas interessadas.', adapter:'process', status:'idle', icon:'\uD83D\uDC64', platform:'facebook' },
     { id:'tk', name:'Agent TikTok', type:'scraper', desc:'Busca videos sobre o tema. Coleta comentarios de pessoas interessadas e perfis engajados.', adapter:'process', status:'idle', icon:'\uD83C\uDFB5', platform:'tiktok' },
+    { id:'yt', name:'Agent YouTube', type:'scraper', desc:'Busca videos sobre o tema. Coleta comentarios de pessoas com intencao de compra.', adapter:'process', status:'idle', icon:'\uD83D\uDCFA', platform:'youtube' },
     { id:'qual', name:'Qualificador', type:'qualifier', desc:'Recebe leads brutos. Classifica por temperatura (quente/morno/frio). Remove duplicatas. Pontua relevancia.', adapter:'claude_local', status:'idle', icon:'\u2605' },
     { id:'enrich', name:'Enriquecedor', type:'enricher', desc:'Busca email, telefone, WhatsApp e redes sociais de cada lead. Usa Hunter.io, Apollo e OSINT.', adapter:'process', status:'idle', icon:'\uD83D\uDD0E' },
   ],
@@ -945,8 +940,8 @@ const S = {
   activeFilter: 'todos',
 };
 
-const platformMap = {instagram:'ig',x:'tw',twitter:'tw',google:'gg',reddit:'rd',linkedin:'li',facebook:'fb',tiktok:'tk'};
-const platformLabels = {instagram:'Instagram',x:'X/Twitter',google:'Google',reddit:'Reddit',linkedin:'LinkedIn',facebook:'Facebook',tiktok:'TikTok'};
+const platformMap = {instagram:'ig',google:'gg',reddit:'rd',linkedin:'li',tiktok:'tk',youtube:'yt'};
+const platformLabels = {instagram:'Instagram',google:'Google',reddit:'Reddit',linkedin:'LinkedIn',tiktok:'TikTok',youtube:'YouTube'};
 const tempColors = {quente:'hot',morno:'warm',frio:'cold'};
 
 // ─── PAPERCLIP API CONFIG ───
@@ -974,7 +969,7 @@ function setCmdTipo(tipo){
   document.getElementById('cmd-tipo-'+tipo+'s').classList.add('active');
   // Atualizar placeholder
   const input=document.getElementById('cmd-input');
-  if(tipo==='pessoa') input.placeholder='Ex: Pessoas que precisam de advogado criminalista em Maringa-PR. Buscar no Instagram e Facebook.';
+  if(tipo==='pessoa') input.placeholder='Ex: Pessoas que precisam de advogado criminalista em Maringa-PR. Buscar no Instagram e Google.';
   else if(tipo==='empresa') input.placeholder='Ex: Escritorios de advocacia criminal em Maringa-PR.';
   else input.placeholder='Ex: Buscar advogados criminalistas em Maringa-PR. Instagram e Google.';
 }
@@ -1602,13 +1597,12 @@ function parseCommand(text){
 
   // 1) Plataformas mencionadas
   const plataformas=[];
-  ['instagram','x','twitter','google','reddit','linkedin','facebook','tiktok'].forEach(p=>{
-    if(t.includes(p))plataformas.push(p==='twitter'?'x':p);
+  ['instagram','google','reddit','linkedin','tiktok','youtube'].forEach(p=>{
+    if(t.includes(p))plataformas.push(p);
   });
   if(!plataformas.length){
-    // Default pra 'pessoa': Instagram + TikTok (FB Pages so serve pra empresa).
     if(cmdTipo==='pessoa') plataformas.push('instagram','tiktok');
-    else if(cmdTipo==='empresa') plataformas.push('google','facebook');
+    else if(cmdTipo==='empresa') plataformas.push('google');
     else plataformas.push('instagram','google');
   }
 
@@ -1629,8 +1623,8 @@ function parseCommand(text){
     }
   }
   clean=clean
-    .replace(/\b(no|na|em|pelo|pela)\s+(instagram|x|twitter|google|reddit|linkedin|facebook|tiktok)\b/gi,'')
-    .replace(/\b(instagram|x|twitter|google|reddit|linkedin|facebook|tiktok)\b/gi,'')
+    .replace(/\b(no|na|em|pelo|pela)\s+(instagram|google|reddit|linkedin|tiktok|youtube)\b/gi,'')
+    .replace(/\b(instagram|google|reddit|linkedin|tiktok|youtube)\b/gi,'')
     .replace(/\s{2,}/g,' ')
     .replace(/[.,!?]+\s*$/,'')
     .trim();
@@ -1700,12 +1694,11 @@ function fakeName(){return firstNames[Math.floor(Math.random()*firstNames.length
 function generateLeads(count,platform,parsed){
   const evidences={
     instagram:['Comentou "quero fazer" em post','Curtiu 5+ posts sobre o tema','Segue perfis do nicho','Story perguntando sobre o servico','Bio menciona interesse'],
-    x:['Tweet perguntando indicacao','Reply em thread sobre o tema','Retweet de conteudo relacionado','Tweet reclamando do servico atual'],
     google:['Avaliou clinica similar no Maps','Pesquisou o servico recentemente','Avaliacao pedindo mais info','Perfil Local Guide ativo na regiao'],
     reddit:['Post pedindo indicacao','Comentario em thread sobre o tema','Post com duvida sobre o servico','Ativo em subreddit relacionado'],
     linkedin:['Profissional do nicho na regiao','Empresa do segmento','Decisor em clinica/empresa','Post sobre o tema'],
-    facebook:['Post em grupo sobre o tema','Comentario pedindo indicacao','Membro de grupo relevante','Curtiu pagina de concorrente'],
-    tiktok:['Comentou em video sobre o tema','Curtiu videos relacionados','Criou video perguntando','Seguiu perfil do nicho']
+    tiktok:['Comentou em video sobre o tema','Curtiu videos relacionados','Criou video perguntando','Seguiu perfil do nicho'],
+    youtube:['Comentou em video sobre o tema','Pediu indicacao em comentario','Engajou com conteudo do nicho']
   };
 
   const evs=evidences[platform]||['Interesse demonstrado'];
@@ -1894,7 +1887,7 @@ function exportEmpresas(){
 }
 
 let kanbanTipo='pessoa';      // 'pessoa' | 'empresa'
-let kanbanPlat='all';         // 'all' | 'instagram' | 'tiktok' | 'facebook' | 'google'
+let kanbanPlat='all';         // 'all' | 'instagram' | 'tiktok' | 'google' | 'youtube'
 let kanbanQuery='';           // busca textual livre
 let kanbanCampaign='all';     // 'all' | campaign_id
 let campaignsCache=[];        // cache local da lista
@@ -2136,8 +2129,7 @@ function leadProfileUrl(l){
   const p=l.plataforma;
   if(p==='instagram') return `https://www.instagram.com/${u}/`;
   if(p==='tiktok')    return `https://www.tiktok.com/@${u}`;
-  if(p==='facebook')  return `https://www.facebook.com/${u}`;
-  if(p==='x'||p==='twitter') return `https://x.com/${u}`;
+  if(p==='youtube')   return `https://www.youtube.com/@${u}`;
   return '';
 }
 function leadDMUrl(l){
@@ -2147,10 +2139,8 @@ function leadDMUrl(l){
   // Deep links pra DM (estabilidade varia):
   // - Instagram: ig.me/m/ foi descontinuado em 2022. direct/new/ abre a tela
   //   "Nova mensagem" quando o usuário está logado no browser.
-  // - Facebook: m.me/ ainda oficial e estável.
   if(p==='instagram') return `https://www.instagram.com/direct/new/?username=${u}`;
-  if(p==='facebook')  return `https://m.me/${u}`;
-  // TikTok/Twitter/Reddit: sem deep link publico pra DM -> retorna vazio
+  // TikTok/YouTube/Reddit: sem deep link publico pra DM -> retorna vazio
   return '';
 }
 
