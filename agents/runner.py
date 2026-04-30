@@ -33,9 +33,8 @@ from base import setup_logger
 AGENT_SCRIPTS = {
     "google": "agent_google_maps.py",
     "instagram": "agent_instagram.py",
-    "facebook": "agent_facebook.py",
     "tiktok": "agent_tiktok.py",
-    "twitter": "agent_twitter.py",
+    "youtube": "agent_youtube.py",
 }
 
 AGENTS_DIR = Path(__file__).parent
