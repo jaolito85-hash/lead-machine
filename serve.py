@@ -22,6 +22,9 @@ from pathlib import Path
 # Permite importar modulos de agents/
 sys.path.insert(0, str(Path(__file__).parent / "agents"))
 import searches as searches_module
+import campaigns as campaigns_module
+import exports as exports_module
+from urllib.parse import quote, parse_qs, urlparse
 
 def env_int(name, default):
     try:
@@ -63,6 +66,13 @@ class LeadMachineHandler(SimpleHTTPRequestHandler):
         if path.startswith("/api/local/searches/"):
             sid = path.split("/api/local/searches/")[1].rstrip("/")
             return self.serve_search_get(sid)
+        if path == "/api/local/campaigns":
+            return self.serve_campaigns_list()
+        if path.startswith("/api/local/campaigns/"):
+            cid = path.split("/api/local/campaigns/")[1].rstrip("/")
+            return self.serve_campaign_get(cid)
+        if path == "/api/local/exports":
+            return self.serve_export()
         if path.startswith("/api/"):
             return self.proxy_to_paperclip("GET")
         if path in ("/", "/index.html"):
@@ -76,6 +86,8 @@ class LeadMachineHandler(SimpleHTTPRequestHandler):
         if path.endswith("/run") and path.startswith("/api/local/searches/"):
             sid = path.replace("/api/local/searches/", "").replace("/run", "")
             return self.serve_search_trigger(sid)
+        if path == "/api/local/campaigns":
+            return self.serve_campaign_create()
         if path.startswith("/api/"):
             return self.proxy_to_paperclip("POST")
         self.send_response(404)
@@ -86,6 +98,9 @@ class LeadMachineHandler(SimpleHTTPRequestHandler):
         if path.startswith("/api/local/searches/"):
             sid = path.split("/api/local/searches/")[1].rstrip("/")
             return self.serve_search_update(sid)
+        if path.startswith("/api/local/campaigns/"):
+            cid = path.split("/api/local/campaigns/")[1].rstrip("/")
+            return self.serve_campaign_update(cid)
         if path.startswith("/api/"):
             return self.proxy_to_paperclip("PATCH")
         self.send_response(404)
@@ -96,6 +111,9 @@ class LeadMachineHandler(SimpleHTTPRequestHandler):
         if path.startswith("/api/local/searches/"):
             sid = path.split("/api/local/searches/")[1].rstrip("/")
             return self.serve_search_delete(sid)
+        if path.startswith("/api/local/campaigns/"):
+            cid = path.split("/api/local/campaigns/")[1].rstrip("/")
+            return self.serve_campaign_delete(cid)
         self.send_response(404)
         self.end_headers()
 
@@ -192,6 +210,128 @@ class LeadMachineHandler(SimpleHTTPRequestHandler):
         if s is None:
             return self._send_json(404, {"error": "busca nao encontrada"})
         self._send_json(200, {"triggered": s})
+
+    # ── Campanhas ───────────────────────────────────────────────
+
+    def _campaigns_with_counts(self):
+        """Anexa total_leads e leads_quentes em cada campanha pra UI."""
+        camps = campaigns_module.load()
+        if LEADS_DB.exists():
+            try:
+                leads = json.loads(LEADS_DB.read_text(encoding="utf-8"))
+            except Exception:
+                leads = []
+        else:
+            leads = []
+        counts = {}
+        hot_counts = {}
+        for l in leads:
+            cid = l.get("campaign_id") or "C-LEGACY"
+            counts[cid] = counts.get(cid, 0) + 1
+            if l.get("temp") == "quente":
+                hot_counts[cid] = hot_counts.get(cid, 0) + 1
+        for c in camps:
+            c["_total_leads"] = counts.get(c["id"], 0)
+            c["_hot_leads"] = hot_counts.get(c["id"], 0)
+        return camps
+
+    def serve_campaigns_list(self):
+        try:
+            self._send_json(200, self._campaigns_with_counts())
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def serve_campaign_get(self, cid):
+        c = campaigns_module.get(cid)
+        if c is None:
+            return self._send_json(404, {"error": "campanha nao encontrada"})
+        self._send_json(200, c)
+
+    def serve_campaign_create(self):
+        payload = self._read_json()
+        if payload is None:
+            return
+        try:
+            # Garante Legado existe como ancora de integridade referencial
+            campaigns_module.ensure_legacy()
+            created = campaigns_module.add(payload)
+            self._send_json(201, created)
+        except ValueError as e:
+            self._send_json(400, {"error": str(e)})
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def serve_campaign_update(self, cid):
+        payload = self._read_json()
+        if payload is None:
+            return
+        updated = campaigns_module.update(cid, payload)
+        if updated is None:
+            return self._send_json(404, {"error": "campanha nao encontrada"})
+        self._send_json(200, updated)
+
+    def serve_campaign_delete(self, cid):
+        # DELETE = arquivar (soft). Pra remover definitivo usar ?hard=1
+        qs = self.path.split("?", 1)
+        hard = len(qs) > 1 and "hard=1" in qs[1]
+        if hard:
+            ok = campaigns_module.delete(cid)
+        else:
+            archived = campaigns_module.archive(cid)
+            ok = archived is not None
+        if not ok:
+            return self._send_json(404, {"error": "campanha nao encontrada ou protegida"})
+        self._send_json(200, {"archived" if not hard else "deleted": cid})
+
+    # ── Exports ─────────────────────────────────────────────────
+
+    def serve_export(self):
+        """GET /api/local/exports?campaign_id=C-0001&format=csv|xlsx"""
+        qs = parse_qs(urlparse(self.path).query)
+        campaign_id = (qs.get("campaign_id", [""])[0] or "").strip()
+        fmt = (qs.get("format", ["csv"])[0] or "csv").lower()
+
+        if not campaign_id:
+            return self._send_json(400, {"error": "campaign_id obrigatorio"})
+
+        try:
+            filename, content, count, campaign = exports_module.build_export(campaign_id, fmt)
+        except exports_module.ExportError as e:
+            status = 404 if e.code == "campaign_not_found" else 400
+            return self._send_json(status, {"error": str(e), "code": e.code})
+        except Exception as e:
+            return self._send_json(500, {"error": str(e)})
+
+        # Persiste arquivo + atualiza campanha (se nao for caso vazio).
+        if count > 0:
+            try:
+                exports_module.EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
+                (exports_module.EXPORTS_DIR / filename).write_bytes(content)
+                campaigns_module.update(campaign_id, {
+                    "last_exported_at": exports_module.datetime.now().isoformat(timespec="seconds"),
+                    "last_exported_count": count,
+                    "last_exported_format": fmt,
+                })
+            except Exception as e:
+                # Falhou em salvar, mas ainda entregamos o arquivo pro cliente
+                print(f"[exports] aviso: falha ao persistir/atualizar: {e}")
+
+        if fmt == "xlsx":
+            ctype = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        else:
+            ctype = "text/csv; charset=utf-8"
+
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", len(content))
+        self.send_header(
+            "Content-Disposition",
+            f"attachment; filename=\"{filename}\"; filename*=UTF-8''{quote(filename)}",
+        )
+        self.send_header("X-Lead-Count", str(count))
+        self.end_headers()
+        if content:
+            self.wfile.write(content)
 
     # ── Helpers ─────────────────────────────────────────────────
 

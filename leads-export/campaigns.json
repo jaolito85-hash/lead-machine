@@ -1,0 +1,396 @@
+[
+  {
+    "id": "C-LEGACY",
+    "nome": "Legado — Imports anteriores",
+    "nicho": "",
+    "cidade": "",
+    "cliente_destino": "",
+    "query": "",
+    "plataformas": [],
+    "status": "ativa",
+    "notes": "Campanha criada automaticamente pra acomodar leads coletados antes do sistema de Campanhas.",
+    "created_at": "2026-04-22T16:08:02",
+    "updated_at": "2026-04-22T16:08:02",
+    "nacional": true
+  },
+  {
+    "id": "C-0001",
+    "nome": "Harmonizacao Facial Maringa",
+    "nicho": "harmonizacao facial",
+    "cidade": "Maringa-PR",
+    "cliente_destino": "Dra. Camila",
+    "query": "harmonizacao facial",
+    "plataformas": [
+      "instagram",
+      "tiktok"
+    ],
+    "status": "ativa",
+    "notes": "",
+    "created_at": "2026-04-22T16:18:39",
+    "updated_at": "2026-04-22T16:18:39",
+    "nacional": false
+  },
+  {
+    "id": "C-0002",
+    "nome": "Solar - Paraná",
+    "nicho": "Painel Solar",
+    "cidade": "Maringa",
+    "cliente_destino": "joao",
+    "query": "painel solar",
+    "plataformas": [
+      "google",
+      "instagram",
+      "tiktok",
+      "twitter"
+    ],
+    "status": "ativa",
+    "notes": "pessoas interessadas em comprar painel solar",
+    "created_at": "2026-04-22T17:00:02",
+    "updated_at": "2026-04-29T18:03:54",
+    "nacional": false,
+    "last_exported_at": "2026-04-29T18:03:54",
+    "last_exported_format": "csv",
+    "last_exported_count": 57
+  },
+  {
+    "id": "C-0003",
+    "nome": "Apostas Esportivas - Brasil",
+    "nicho": "apostas esportivas",
+    "cidade": "",
+    "cliente_destino": "",
+    "query": "aposta esportiva dicas",
+    "plataformas": [
+      "tiktok",
+      "x"
+    ],
+    "nacional": true,
+    "status": "ativa",
+    "notes": "Pilot SeuBet",
+    "created_at": "2026-04-22T18:39:18",
+    "updated_at": "2026-04-29T18:04:34",
+    "last_exported_at": "2026-04-29T18:04:34",
+    "last_exported_format": "xlsx",
+    "last_exported_count": 6
+  },
+  {
+    "id": "C-0004",
+    "nome": "credito rural",
+    "nicho": "credito rural",
+    "cidade": "",
+    "cliente_destino": "serpabraz - advogados",
+    "query": "credito rural",
+    "plataformas": [
+      "google",
+      "instagram",
+      "tiktok",
+      "twitter",
+      "youtube"
+    ],
+    "nacional": false,
+    "status": "ativa",
+    "notes": "",
+    "created_at": "2026-04-29T15:48:21",
+    "updated_at": "2026-05-06T19:26:27",
+    "last_exported_at": "2026-05-06T19:26:27",
+    "last_exported_format": "csv",
+    "last_exported_count": 153
+  },
+  {
+    "id": "C-0005",
+    "nome": "Botox Maringá",
+    "nicho": "harmonizacao facial",
+    "cidade": "Maringa-PR",
+    "cliente_destino": "",
+    "query": "botox",
+    "plataformas": [
+      "instagram"
+    ],
+    "nacional": false,
+    "status": "ativa",
+    "notes": "Discovery via Google: 6 perfis locais. Validacao da fase 1+2 do scraper regional.",
+    "created_at": "2026-04-29T18:14:55",
+    "updated_at": "2026-04-29T18:14:55"
+  },
+  {
+    "id": "C-0006",
+    "nome": "implante dental",
+    "nicho": "facetas de porcelana",
+    "cidade": "Governador Valadares-MG",
+    "cliente_destino": "amigo do dudu",
+    "query": "implante dental",
+    "plataformas": [
+      "google",
+      "instagram",
+      "tiktok"
+    ],
+    "nacional": false,
+    "status": "arquivada",
+    "notes": "",
+    "created_at": "2026-04-30T12:43:05",
+    "updated_at": "2026-04-30T13:24:18"
+  },
+  {
+    "id": "C-0007",
+    "nome": "botox harmonização - gv",
+    "nicho": "botox harmonização facial",
+    "cidade": "governador Valadares - MG",
+    "cliente_destino": "clinica dudu",
+    "query": "botox harmonização facial",
+    "plataformas": [
+      "instagram"
+    ],
+    "nacional": false,
+    "status": "ativa",
+    "notes": "",
+    "created_at": "2026-04-30T13:25:21",
+    "updated_at": "2026-04-30T13:25:21"
+  },
+  {
+    "id": "C-0008",
+    "nome": "botox — Umuarama-PR",
+    "nicho": "botox",
+    "cidade": "Umuarama-PR",
+    "cliente_destino": "",
+    "query": "botox",
+    "plataformas": [
+      "instagram",
+      "tiktok"
+    ],
+    "nacional": false,
+    "status": "ativa",
+    "notes": "",
+    "created_at": "2026-04-30T13:38:01",
+    "updated_at": "2026-04-30T13:38:01"
+  },
+  {
+    "id": "C-0009",
+    "nome": "divida bancária",
+    "nicho": "dívidas em banco",
+    "cidade": "",
+    "cliente_destino": "advogados",
+    "query": "dívida bancária",
+    "plataformas": [
+      "instagram",
+      "tiktok"
+    ],
+    "nacional": true,
+    "status": "ativa",
+    "notes": "",
+    "created_at": "2026-04-30T14:51:51",
+    "updated_at": "2026-04-30T14:51:51"
+  },
+  {
+    "id": "C-0010",
+    "nome": "Divida rural - Brasil TikTok YouTube",
+    "nicho": "divida rural",
+    "cidade": "",
+    "cliente_destino": "",
+    "query": "divida rural",
+    "plataformas": [
+      "tiktok",
+      "youtube"
+    ],
+    "nacional": true,
+    "status": "ativa",
+    "notes": "Query social fixa: 1 query curta por execucao. Plano de rodadas: divida rural, credito rural, renegociacao divida rural, pronaf divida, alongamento divida rural.",
+    "created_at": "2026-04-30T15:08:59",
+    "updated_at": "2026-04-30T15:34:09"
+  },
+  {
+    "id": "C-0011",
+    "nome": "Divida Rural - Brasil",
+    "nicho": "divida rural",
+    "cidade": "",
+    "cliente_destino": "",
+    "query": "pronaf divida",
+    "plataformas": [
+      "tiktok"
+    ],
+    "nacional": true,
+    "status": "ativa",
+    "notes": "Usar queries sociais curtas: divida rural, credito rural, renegociacao divida rural, pronaf divida, alongamento divida rural.",
+    "created_at": "2026-04-30T16:03:37",
+    "updated_at": "2026-04-30T16:03:37"
+  },
+  {
+    "id": "C-0012",
+    "nome": "Harmonização Facial — Balneário Camboriú -SC",
+    "nicho": "harmonizacao facial",
+    "cidade": "Balneário Camboriú - SC",
+    "cliente_destino": "",
+    "query": "harmonizacao facial botox",
+    "plataformas": [
+      "instagram",
+      "tiktok"
+    ],
+    "nacional": false,
+    "status": "ativa",
+    "notes": "",
+    "created_at": "2026-04-30T16:15:44",
+    "updated_at": "2026-04-30T16:15:44"
+  },
+  {
+    "id": "C-0013",
+    "nome": "harmonizaçao facial botox na cidade de Balneário Camborií-SC , rodar apenas — Brasil",
+    "nicho": "harmonizaçao facial botox na cidade de Balneário Camborií-SC , rodar apenas",
+    "cidade": "Brasil",
+    "cliente_destino": "",
+    "query": "harmonizaçao facial botox na cidade de Balneário Camborií-SC , rodar apenas",
+    "plataformas": [
+      "instagram"
+    ],
+    "nacional": false,
+    "status": "arquivada",
+    "notes": "",
+    "created_at": "2026-04-30T16:31:22",
+    "updated_at": "2026-04-30T16:33:47"
+  },
+  {
+    "id": "C-0014",
+    "nome": "consórcios",
+    "nicho": "consórcio",
+    "cidade": "",
+    "cliente_destino": "cotafacil",
+    "query": "consórcio",
+    "plataformas": [
+      "tiktok"
+    ],
+    "nacional": false,
+    "status": "ativa",
+    "notes": "",
+    "created_at": "2026-04-30T16:36:09",
+    "updated_at": "2026-04-30T16:36:09"
+  },
+  {
+    "id": "C-0015",
+    "nome": "apostas casino bets esportivas",
+    "nicho": "BETS",
+    "cidade": "",
+    "cliente_destino": "H2",
+    "query": "apostas esportivas cassino",
+    "plataformas": [
+      "tiktok"
+    ],
+    "nacional": false,
+    "status": "ativa",
+    "notes": "",
+    "created_at": "2026-05-06T10:24:19",
+    "updated_at": "2026-05-06T10:24:19"
+  },
+  {
+    "id": "C-0016",
+    "nome": "energia solar vale a pena — Brasil",
+    "nicho": "energia solar vale a pena",
+    "cidade": "Brasil",
+    "cliente_destino": "",
+    "query": "energia solar vale a pena",
+    "plataformas": [
+      "instagram",
+      "tiktok"
+    ],
+    "nacional": false,
+    "status": "ativa",
+    "notes": "",
+    "created_at": "2026-05-06T10:35:08",
+    "updated_at": "2026-05-06T10:35:08"
+  },
+  {
+    "id": "C-0017",
+    "nome": "Implante Dentário - Brasil",
+    "nicho": "Dentistas",
+    "cidade": "Brasil",
+    "cliente_destino": "",
+    "query": "implante dentario valor",
+    "plataformas": [
+      "google",
+      "instagram",
+      "tiktok"
+    ],
+    "nacional": false,
+    "status": "ativa",
+    "notes": "",
+    "created_at": "2026-05-06T11:41:37",
+    "updated_at": "2026-05-06T11:41:37"
+  },
+  {
+    "id": "C-0018",
+    "nome": "Ozempic Emagrecimento - Brasil",
+    "nicho": "emagrecimento",
+    "cidade": "",
+    "cliente_destino": "",
+    "query": "emagrecimento ozempic",
+    "plataformas": [
+      "google",
+      "instagram",
+      "tiktok"
+    ],
+    "nacional": true,
+    "status": "ativa",
+    "notes": "Campanha demo: TikTok ~270 leads, Google Maps ~14 clinicas",
+    "created_at": "2026-05-06T12:30:13",
+    "updated_at": "2026-05-22T12:04:53",
+    "last_exported_format": "csv",
+    "last_exported_at": "2026-05-22T12:04:53",
+    "last_exported_count": 234
+  },
+  {
+    "id": "C-0019",
+    "nome": "peptideos",
+    "nicho": "emacrecimento",
+    "cidade": "",
+    "cliente_destino": "",
+    "query": "peptideos",
+    "plataformas": [
+      "tiktok"
+    ],
+    "nacional": true,
+    "status": "ativa",
+    "notes": "",
+    "created_at": "2026-05-06T17:06:28",
+    "updated_at": "2026-05-22T12:10:55",
+    "last_exported_format": "csv",
+    "last_exported_at": "2026-05-22T12:10:55",
+    "last_exported_count": 239
+  },
+  {
+    "id": "C-0020",
+    "nome": "haus",
+    "nicho": "mesa posta",
+    "cidade": "",
+    "cliente_destino": "haus",
+    "query": "le creuset",
+    "plataformas": [
+      "instagram",
+      "tiktok",
+      "youtube"
+    ],
+    "nacional": true,
+    "status": "ativa",
+    "notes": "B2C produto. Variantes: 'le creuset preco', 'panela le creuset', 'le creuset vale a pena', 'onde comprar le creuset'.",
+    "created_at": "2026-05-18T09:51:52",
+    "updated_at": "2026-05-18T12:48:04",
+    "last_exported_at": "2026-05-18T12:48:04",
+    "last_exported_format": "csv",
+    "last_exported_count": 124
+  },
+  {
+    "id": "C-0021",
+    "nome": "Optimus Pharma - Clinicas Esteticas Profissionais BR",
+    "nicho": "estetica avancada injetaveis harmonizacao emagrecimento",
+    "cidade": "",
+    "cliente_destino": "Optimus Pharma",
+    "query": "clinica estetica avancada harmonizacao orofacial gordura localizada",
+    "plataformas": [
+      "google",
+      "instagram"
+    ],
+    "nacional": true,
+    "status": "ativa",
+    "notes": "ICP B2B: clinicas e profissionais habilitados que atuam com estetica avancada, harmonizacao orofacial, dermatologia estetica, biomedicina estetica, emagrecimento, gordura localizada, celulite, skinbooster e capilar. Priorizar leads com WhatsApp, site, Instagram e evidencia publica de procedimentos/protocolos. Produtos Optimus confirmados em fontes publicas: injetaveis estereis, Tripeptideo-41, desoxicolato, skinboosters, papada, alopecia e dermocosmeticos. Nao tratar Ozempic/semaglutida como produto confirmado; usar apenas como contexto de mercado se aparecer.",
+    "created_at": "2026-05-22T12:30:40",
+    "updated_at": "2026-05-22T12:36:43",
+    "last_exported_at": "2026-05-22T12:36:43",
+    "last_exported_format": "csv",
+    "last_exported_count": 17
+  }
+]

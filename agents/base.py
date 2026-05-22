@@ -22,6 +22,43 @@ LEADS_DIR = BASE_DIR / "leads-export"
 LEADS_DB_PATH = LEADS_DIR / "leads-db.json"
 LOGS_DIR = LEADS_DIR
 
+# ── Deteccao de idioma (heuristica) ──
+# Blocos Unicode de scripts nao-latinos (cirilico, CJK, arabe, hebraico, grego, coreano)
+_NON_LATIN_SCRIPT = re.compile(
+    r"[Ѐ-ԯ一-鿿぀-ゟ゠-ヿ"
+    r"؀-ۿ֐-׿Ͱ-Ͽ가-힯]"
+)
+
+# Palavras inglesas que praticamente nao aparecem em portugues (rejeitar se >=2)
+_EN_ONLY_WORDS = {
+    "the", "this", "that", "those", "these", "how", "what", "when",
+    "where", "why", "would", "could", "should", "must", "need",
+    "sign", "wtf", "omg", "omgosh", "amazing", "gorgeous", "expensive",
+    "cheap", "cost", "price", "help", "looking", "searching", "finding",
+    "love", "beautiful", "pretty", "wow", "yeah", "please", "thanks",
+    "thank", "hello", "hi", "there", "here", "really", "very", "much",
+    "many", "great", "awesome", "nice", "good", "bad", "best", "worst",
+    "going", "doing", "making", "getting", "taking",
+}
+
+# Palavras que so existem (ou sao esmagadoramente frequentes) em portugues.
+# Basta 1 hit pra confirmar que o texto e PT.
+_PT_SIGNAL_WORDS = {
+    "quero", "queria", "quanto", "valor", "preco", "preço", "custa",
+    "onde", "ficou", "ficam", "fica", "nao", "não", "voce", "você",
+    "vc", "vcs", "voces", "você", "eu", "meu", "minha", "seu", "sua",
+    "muito", "também", "tambem", "obrigado", "obrigada", "obrigad",
+    "por", "para", "pra", "pq", "porque", "que", "porra", "nossa",
+    "caramba", "linda", "lindo", "perfeito", "perfeita", "incrivel",
+    "incrível", "amei", "adorei", "show", "demais", "demas", "tipo",
+    "aqui", "ali", "agora", "hoje", "ontem", "amanha", "amanhã",
+    "agendar", "marcar", "consulta", "consulto", "atendimento",
+    "doutora", "doutor", "dra", "dr", "bom", "boa", "tudo", "nada",
+    "faz", "fazer", "fiz", "fiquei", "ficar", "então", "entao",
+    "gente", "eu q", "sonho", "cidade", "brasil",
+}
+
+
 # ── Keywords ──
 INTEREST_KEYWORDS = [
     "quero", "quanto custa", "preco", "valor", "agenda", "agendar",
@@ -33,10 +70,21 @@ INTEREST_KEYWORDS = [
 ]
 
 BOT_KEYWORDS = [
+    # Spam generico (ads de agencias, gurus)
     "solucao", "crescimento", "perfil", "seguidores", "direct com uma",
     "ajudar no crescimento", "agencia", "marketing digital", "impulsionar",
     "link na bio", "mande uma mensagem", "confira", "sigam", "siga",
     "ganhe dinheiro", "renda extra", "trabalhe de casa", "oportunidade",
+
+    # Tipsters e afiliados de apostas (concorrencia disfarcada)
+    "canal telegram", "canal no telegram", "sala vip", "sala de vip",
+    "tipster certificado", "tipster profissional", "mentoria apostas",
+    "mentoria de apostas", "grupo de apostas", "grupo vip", "sala paga",
+    "entra no meu grupo", "entra no meu canal", "metodo", "metodologia propria",
+    "opera comigo", "opere conosco", "pix liberado pra vc", "deposita que eu",
+    "clique no link da bio", "aff link", "link afiliado",
+    "operacional de apostas", "scalper", "surebet", "arbitragem",
+    "robô de aposta", "robo de aposta", "ia de aposta",
 ]
 
 
@@ -45,15 +93,24 @@ BOT_KEYWORDS = [
 # ════════════════════════════════════════
 
 def load_env() -> dict:
-    """Carrega variaveis do .env e merge com os.environ (os.environ tem prioridade)."""
-    env = {}
+    """Carrega variaveis do .env, exporta para os.environ (sem sobrescrever
+    o que ja existe la), e devolve dict completo (env file merged com os.environ).
+    """
+    env_file = {}
     if ENV_PATH.exists():
         for line in ENV_PATH.read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
                 k, v = line.split("=", 1)
-                env[k.strip()] = v.strip()
-    # OS env vars (set by Paperclip) override .env file
+                env_file[k.strip()] = v.strip()
+
+    # Exporta pra os.environ (modulos como classifier.py leem de la),
+    # sem sobrescrever vars ja setadas por quem invocou (Paperclip/runner).
+    for k, v in env_file.items():
+        os.environ.setdefault(k, v)
+
+    # Dict de retorno: tudo merged (os.environ tem prioridade)
+    env = dict(env_file)
     for k, v in os.environ.items():
         env[k] = v
     return env
@@ -217,6 +274,22 @@ def migrate_lead(lead: dict) -> dict:
     plat = lead.get("plataforma", "instagram")
     auto_tipo = "empresa" if plat == "google" else "pessoa"
 
+    # Auto-gerar author_url pra leads antigos baseado no user + plataforma
+    u = (lead.get("user", "") or "").lstrip("@")
+    p = lead.get("plataforma", "instagram")
+    auto_author_url = ""
+    if u:
+        if p == "instagram":
+            auto_author_url = f"https://www.instagram.com/{u}/"
+        elif p == "tiktok":
+            auto_author_url = f"https://www.tiktok.com/@{u}"
+        elif p == "facebook":
+            auto_author_url = f"https://www.facebook.com/{u}"
+        elif p in ("x", "twitter"):
+            auto_author_url = f"https://x.com/{u}"
+        elif p == "youtube":
+            auto_author_url = f"https://www.youtube.com/@{u}"
+
     # Preencher campos que faltam sem sobrescrever existentes
     defaults = {
         "tipo": auto_tipo,
@@ -224,6 +297,8 @@ def migrate_lead(lead: dict) -> dict:
         "user": lead.get("user", ""),
         "plataforma": "instagram",
         "perfil": f"@{lead.get('user', '')}" if lead.get("user") else "",
+        "author_url": auto_author_url,
+        "campaign_id": "C-LEGACY",
         "evidencia": build_evidencia(lead.get("text", "")),
         "texto_original": lead.get("text", ""),
         "url": lead.get("post_url", ""),
@@ -274,11 +349,13 @@ def create_lead(
     nicho: str = "",
     post_owner: str = "",
     nome: str = "",
+    author_url: str = "",
     score: int = 0,
     temp: str = "",
     email=None,
     telefone=None,
     tipo: str = "",
+    campaign_id: str = "",
     extra: dict = None,
 ) -> dict:
     """Factory para criar lead no formato unificado. ID e atribuido no merge."""
@@ -296,12 +373,31 @@ def create_lead(
             tipo = "pessoa"
 
     # Prefixo de perfil depende da plataforma
-    if plataforma in ("instagram", "x", "tiktok", "twitter"):
+    if plataforma in ("instagram", "x", "tiktok", "twitter", "youtube"):
         perfil = f"@{user}" if not user.startswith("@") else user
     else:
         perfil = user
 
     now = datetime.now()
+
+    # Fallback: se nao foi fornecido explicitamente, gera pelo user+plataforma
+    if not author_url and user:
+        u = user.lstrip("@")
+        if plataforma == "instagram":
+            author_url = f"https://www.instagram.com/{u}/"
+        elif plataforma == "tiktok":
+            author_url = f"https://www.tiktok.com/@{u}"
+        elif plataforma == "facebook":
+            author_url = f"https://www.facebook.com/{u}"
+        elif plataforma in ("x", "twitter"):
+            author_url = f"https://x.com/{u}"
+        elif plataforma == "youtube":
+            author_url = f"https://www.youtube.com/@{u}"
+
+    # campaign_id vem do env CAMPAIGN_ID (setado pela Central de Comando)
+    # ou default pra "C-LEGACY" se nao fornecido (compat com fluxo antigo)
+    if not campaign_id:
+        campaign_id = os.environ.get("CAMPAIGN_ID", "").strip() or "C-LEGACY"
 
     lead = {
         "id": "",  # Atribuido no merge
@@ -310,6 +406,8 @@ def create_lead(
         "user": user.lstrip("@"),
         "plataforma": plataforma,
         "perfil": perfil,
+        "author_url": author_url,
+        "campaign_id": campaign_id,
         "evidencia": build_evidencia(texto, nicho),
         "texto_original": texto,
         "url": url,
@@ -344,6 +442,38 @@ def is_bot(text: str) -> bool:
     """Verifica se texto e bot/spam."""
     txt = text.lower()
     return any(bk in txt for bk in BOT_KEYWORDS)
+
+
+def is_brazilian_portuguese(text: str) -> bool:
+    """
+    Heuristica simples de idioma. True se o texto e provavelmente pt-BR.
+
+    Regras (curta-caminho):
+      - Vazio -> False
+      - Tem cirilico/CJK/arabe/hebraico -> False (nao-latino)
+      - Tem 1+ palavra tipicamente PT -> True
+      - Tem 2+ palavras tipicamente EN-only -> False
+      - Muito curto (<=2 palavras) sem evidencia -> True (duvida beneficia o BR)
+      - Caso contrario -> True
+    """
+    if not text or not text.strip():
+        return False
+    if _NON_LATIN_SCRIPT.search(text):
+        return False
+
+    # Normaliza pra palavras lowercase
+    words = set(re.findall(r"[\wÀ-ÿ']+", text.lower()))
+    if not words:
+        return False
+
+    if words & _PT_SIGNAL_WORDS:
+        return True
+
+    en_hits = len(words & _EN_ONLY_WORDS)
+    if en_hits >= 2:
+        return False
+
+    return True
 
 
 def calculate_score(text: str, city_match: bool = False) -> int:

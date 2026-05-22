@@ -727,7 +727,7 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
         <div>
           <span style="font-family:var(--font-sans);font-size:15px;font-weight:600">Buscas Salvas</span>
-          <p style="font-size:11px;color:var(--text-tertiary);margin-top:4px">O runner automatico executa essas buscas no intervalo definido. Leads quentes → Telegram.</p>
+          <p style="font-size:11px;color:var(--text-tertiary);margin-top:4px">O runner automatico executa essas buscas no intervalo definido. TikTok/YouTube usam 1 query curta por execucao; para volume, rode as queries recomendadas em rodadas separadas.</p>
         </div>
         <button class="btn primary" onclick="openBuscaModal()">+ Nova Busca</button>
       </div>
@@ -769,7 +769,7 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
 
 <!-- MODAL NOVA BUSCA -->
 <div class="modal-overlay" id="busca-modal" style="display:none">
-  <div class="modal" style="width:520px">
+  <div class="modal" style="width:640px">
     <div class="modal-header">
       <span id="busca-modal-title">Nova Busca</span>
       <span style="cursor:pointer;color:var(--text-tertiary)" onclick="closeBuscaModal()">&times;</span>
@@ -782,7 +782,8 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
       </div>
       <div class="form-group">
         <label class="form-label">Query (o que buscar)</label>
-        <input class="form-input" id="busca-query" placeholder="Ex: dentista implante, harmonizacao facial" />
+        <input class="form-input" id="busca-query" placeholder="Ex: divida rural, credito rural, botox" />
+        <div id="busca-query-plan" style="margin-top:8px;font-size:11px;color:var(--text-tertiary);line-height:1.5"></div>
       </div>
       <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div>
@@ -837,6 +838,7 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
       <!-- Presets rápidos -->
       <div class="form-group" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
         <span style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;align-self:center;margin-right:4px">Presets:</span>
+        <button type="button" class="btn" style="font-size:10px;padding:4px 10px" onclick="applyCampaignPreset('rural')">Rural</button>
         <button type="button" class="btn" style="font-size:10px;padding:4px 10px" onclick="applyCampaignPreset('apostas')">🎰 Apostas Esportivas</button>
         <button type="button" class="btn" style="font-size:10px;padding:4px 10px" onclick="applyCampaignPreset('estetica')">💉 Estética local</button>
         <button type="button" class="btn" style="font-size:10px;padding:4px 10px" onclick="applyCampaignPreset('solar')">☀️ Solar nacional</button>
@@ -874,6 +876,7 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
       <div class="form-group">
         <label class="form-label">Query padrão (usada ao executar busca associada)</label>
         <input class="form-input" id="campaign-query" placeholder="Ex: harmonizacao facial" />
+        <div id="campaign-query-plan" style="margin-top:8px;font-size:11px;color:var(--text-tertiary);line-height:1.5"></div>
       </div>
       <div class="form-group">
         <label class="form-label">Plataformas da campanha</label>
@@ -1054,7 +1057,7 @@ async function pollRunStatus(runId, agentId, callback){
         return;
       }
     }catch(e){}
-    if(attempts<60) setTimeout(check,2000); // Poll a cada 2s, max 2 min
+    if(attempts<600) setTimeout(check,2000); // Poll a cada 2s, max 20 min
     else callback({status:'failed',exitCode:-1}); // Timeout
   };
   setTimeout(check,2000);
@@ -1081,6 +1084,68 @@ setTimeout(()=>{syncAgentsFromAPI();syncLeadsFromAPI();syncBuscasFromAPI();fetch
 // BUSCAS SALVAS (CRUD + RENDER)
 // ════════════════════════════════════════
 let BUSCAS=[];
+
+const SOCIAL_QUERY_STOPWORDS=new Set([
+  'a','o','as','os','de','da','do','das','dos','em','no','na','nos','nas',
+  'para','pra','por','com','e','ou','que','quem','como','onde','quando',
+  'preciso','leads','lead','pessoas','clientes','interessadas','interessados',
+  'buscar','encontrar','brasil','nacional'
+]);
+
+function normalizeSocialText(text){
+  return (text||'').toString().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function uniqueQueryList(items){
+  const seen=new Set();
+  const out=[];
+  for(const item of items){
+    const q=normalizeSocialText(item);
+    if(q&&!seen.has(q)){seen.add(q);out.push(q)}
+  }
+  return out;
+}
+
+function socialQueryVariants(query,nicho='',platforms=[]){
+  const hasSocial=(platforms||[]).some(p=>['tiktok','youtube','instagram'].includes((p||'').toLowerCase()));
+  const original=normalizeSocialText(query||nicho);
+  if(!hasSocial) return original?[original]:[];
+
+  const combined=normalizeSocialText(`${query||''} ${nicho||''}`);
+  if(['credito rural','divida rural','pronaf','custeio agricola'].some(k=>combined.includes(k))){
+    return uniqueQueryList([
+      'divida rural',
+      'credito rural',
+      'renegociacao divida rural',
+      'pronaf divida',
+      'alongamento divida rural'
+    ]);
+  }
+
+  const words=(combined.match(/[a-z0-9]{3,}/g)||[]).filter(w=>!SOCIAL_QUERY_STOPWORDS.has(w));
+  const variants=[];
+  if(original.split(/\s+/).length<=3) variants.push(original);
+  if(words.length) variants.push(words.slice(0,3).join(' '));
+  if(words.length>=2) variants.push(words.slice(0,2).join(' '));
+  if(words.length>=4) variants.push(words.slice(1,4).join(' '));
+  if(words.length>=5) variants.push(words.slice(2,5).join(' '));
+  return uniqueQueryList(variants).slice(0,5);
+}
+
+function renderSocialQueryPlan(targetId,query,nicho,platforms){
+  const el=document.getElementById(targetId);
+  if(!el) return;
+  const plan=socialQueryVariants(query,nicho,platforms);
+  const hasSocial=(platforms||[]).some(p=>['tiktok','youtube','instagram'].includes((p||'').toLowerCase()));
+  if(!hasSocial||!plan.length){
+    el.innerHTML='';
+    return;
+  }
+  el.innerHTML=`<strong style="color:var(--accent)">Plano social:</strong> ${plan.map(q=>`<code>${escapeHtml(q)}</code>`).join(' + ')}<br><span>Regra fixa: cada execucao roda 1 query curta. Para volume, rode as queries do plano em rodadas separadas.</span>`;
+}
 
 async function syncBuscasFromAPI(){
   try{
@@ -1157,6 +1222,22 @@ function openBuscaModal(busca){
   document.querySelectorAll('#busca-platforms input').forEach(inp=>{
     inp.onchange=()=>inp.parentElement.classList.toggle('checked',inp.checked);
   });
+  const refreshPlan=()=>{
+    const plats=Array.from(document.querySelectorAll('#busca-platforms input:checked')).map(i=>i.value);
+    renderSocialQueryPlan(
+      'busca-query-plan',
+      document.getElementById('busca-query').value,
+      document.getElementById('busca-nicho').value,
+      plats
+    );
+  };
+  document.getElementById('busca-query').oninput=refreshPlan;
+  document.getElementById('busca-nicho').oninput=refreshPlan;
+  document.querySelectorAll('#busca-platforms input').forEach(inp=>{
+    const prev=inp.onchange;
+    inp.onchange=()=>{ if(prev) prev(); refreshPlan(); };
+  });
+  refreshPlan();
   document.getElementById('busca-modal').style.display='flex';
 }
 
@@ -1178,6 +1259,14 @@ function toggleCampaignNacional(){
 }
 
 const CAMPAIGN_PRESETS={
+  rural:{
+    nome:'Divida Rural - Brasil',
+    nicho:'divida rural',
+    query:'divida rural',
+    plataformas:['tiktok','youtube'],
+    nacional:true,
+    notes:'Usar queries sociais curtas em rodadas separadas: divida rural, credito rural, renegociacao divida rural, pronaf divida, alongamento divida rural.',
+  },
   apostas:{
     nome:'Apostas Esportivas — Brasil',
     nicho:'apostas esportivas',
@@ -1222,6 +1311,7 @@ function applyCampaignPreset(key){
   document.querySelectorAll('#campaign-platforms input').forEach(i=>{
     i.checked=(p.plataformas||[]).includes(i.value);
   });
+  renderSocialQueryPlan('campaign-query-plan',p.query,p.nicho,p.plataformas||[]);
   notify(`Preset aplicado: ${p.nome}`,'info');
 }
 
@@ -1245,6 +1335,19 @@ function openCampaignModal(mode){
   document.querySelectorAll('#campaign-platforms input').forEach(i=>{
     i.checked=c?(c.plataformas||[]).includes(i.value):false;
   });
+  const refreshPlan=()=>{
+    const plats=Array.from(document.querySelectorAll('#campaign-platforms input:checked')).map(i=>i.value);
+    renderSocialQueryPlan(
+      'campaign-query-plan',
+      document.getElementById('campaign-query').value,
+      document.getElementById('campaign-nicho').value,
+      plats
+    );
+  };
+  document.getElementById('campaign-query').oninput=refreshPlan;
+  document.getElementById('campaign-nicho').oninput=refreshPlan;
+  document.querySelectorAll('#campaign-platforms input').forEach(inp=>{inp.onchange=refreshPlan});
+  refreshPlan();
   archBtn.style.display=isEdit?'inline-flex':'none';
   modal.style.display='flex';
 }
@@ -1445,9 +1548,24 @@ async function executeCommandReal(parsed){
 
   // Se a campanha resolvida e NACIONAL, ignora cidade (empresa atende Brasil todo).
   const campObj=campaignsCache.find(c=>c.id===campaignId);
-  const isNacional=campObj&&campObj.nacional;
+  const _nacWords=['brasil','br','nacional','todo brasil','brazil'];
+  const isNacional=(campObj&&campObj.nacional)||_nacWords.includes((parsed.cidade||'').toLowerCase().trim());
   if(isNacional){
-    parsed.cidade='';  // zera pra nao filtrar
+    parsed.cidade='Brasil';  // sinaliza nacional pros agents
+  }
+
+  // Usa plataformas da campanha quando o comando nao mencionou nenhuma explicitamente
+  if(campObj && campObj.plataformas && campObj.plataformas.length){
+    const cmdText=(parsed._rawText||'').toLowerCase();
+    const explicitlyMentioned=['instagram','google','tiktok','youtube','reddit','linkedin'].some(p=>cmdText.includes(p));
+    if(!explicitlyMentioned){
+      parsed.plataformas=[...new Set([...parsed.plataformas,...campObj.plataformas.filter(p=>platformMap[p])])];
+    }
+  }
+
+  // Usa query da campanha se o parsed.nicho ficou generico demais
+  if(campObj && campObj.query && (!parsed.nicho || parsed.nicho.length<3)){
+    parsed.nicho=campObj.query;
   }
 
   addActivity('info','CEO processando',`Nicho: ${parsed.nicho} | Cidade: ${parsed.cidade||'(nacional)'} | Plataformas: ${parsed.plataformas.join(', ')} | Campanha: ${campaignId}`);
@@ -1683,7 +1801,7 @@ function parseCommand(text){
   if(nicho.length>80) nicho=nicho.slice(0,80);
   if(!nicho) nicho='servico local';
 
-  return{nicho,cidade,plataformas};
+  return{nicho,cidade,plataformas,_rawText:text};
 }
 
 const firstNames=['Ana','Maria','Joao','Carlos','Fernanda','Lucas','Juliana','Pedro','Camila','Rafael','Beatriz','Gabriel','Larissa','Matheus','Amanda','Thiago','Patricia','Diego','Mariana','Bruno','Leticia','Felipe','Vanessa','Rodrigo','Isabela','Gustavo','Daniela','Leonardo','Natalia','Eduardo'];

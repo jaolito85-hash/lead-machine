@@ -29,39 +29,81 @@ Um sistema onde voce digita um comando em linguagem natural e seus agentes IA sa
 ```
 C:/projetos/paperclip/
 │
-├── paperclip/                    # Repo Paperclip (backend, upstream)
-│   ├── server/                   # API REST + orquestracao
-│   ├── ui/                       # Frontend React original
-│   ├── packages/                 # DB, shared, adapters, plugins
-│   ├── cli/                      # CLI onboarding
-│   └── doc/                      # Docs do projeto
+├── paperclip/                    # Backend Node upstream (uso reduzido —
+│                                 # so 5 endpoints sao usados pela UI)
+│
+├── agents/                       # Scrapers + runner + classifier
+│   ├── agent_instagram.py
+│   ├── agent_tiktok.py
+│   ├── agent_google_maps.py
+│   ├── agent_youtube.py
+│   ├── agent_qualifier.py
+│   ├── agent_enricher.py
+│   ├── runner.py                 # cron das buscas salvas
+│   ├── searches.py               # CRUD buscas
+│   ├── campaigns.py              # CRUD campanhas
+│   ├── exports.py                # CSV/XLSX exports
+│   ├── profile_discovery.py      # SerpAPI -> perfis locais
+│   ├── telegram_notifier.py      # alerta de lead quente
+│   ├── base.py                   # helpers compartilhados
+│   └── comment_collector/        # coleta + classifier de comentarios
+│
+├── prompts/                      # Prompts do classifier por nicho
 │
 ├── dashboard/
-│   └── index.html                # NOSSO FRONTEND — Lead Machine
+│   └── index.html                # Frontend Lead Machine (Glassmorphism)
 │
-├── SCRAPER-ORCHESTRATION-GUIDE.md  # Guia de orquestracao para leads
-├── FERRAMENTAS.md                  # Comparativo completo de ferramentas e APIs
-├── .env.example                    # Todas as API keys necessarias
-└── PROGRESSO.md                    # << ESTE ARQUIVO
+├── leads-export/                 # Estado local: leads-db.json,
+│                                 # comments.db, campaigns.json, exports/
+│
+├── archive/                      # Side-quests arquivadas
+│   ├── FERRAMENTAS.md
+│   ├── SCRAPER-ORCHESTRATION-GUIDE.md
+│   ├── LEADS-HARMONIZACAO-MARINGA.md
+│   ├── AUTOMACAO-CONTATO.md
+│   ├── DEPLOY-COOLIFY.md
+│   ├── BETS-EXPORT.md
+│   ├── apresentacao-rede-pne.html
+│   ├── estrategia/               # 5 MDs de nicho
+│   └── video-lancamento/         # MP4 + narracoes (gitignored)
+│
+├── serve.py                      # Server Python: dashboard + proxy API
+├── start.bat / stop.bat
+├── .env / .env.example
+└── progresso.md                  # << ESTE ARQUIVO
 ```
 
 ---
 
 ## Seus Agentes (Funcionarios)
 
-| Agente | Funcao | Adapter | Status |
-|--------|--------|---------|--------|
-| **CEO** | Interpreta seus comandos, distribui tarefas | claude_local | Implementado no frontend |
-| **CTO** | Monitora scrapers, detecta falhas | claude_local | Implementado no frontend |
-| **Agent Instagram** | Busca hashtags, posts, perfis | process | Implementado no frontend |
-| **Agent X/Twitter** | Busca tweets, replies, conversas | process | Implementado no frontend |
-| **Agent Google** | Google Search + Maps, negocios locais | process | Implementado no frontend |
-| **Agent Reddit** | Subreddits, posts, indicacoes | process | Implementado no frontend |
-| **Agent LinkedIn** | Profissionais, empresas, decisores | process | Implementado no frontend |
-| **Agent Facebook** | Grupos, paginas, comentarios | process | Implementado no frontend |
-| **Agent TikTok** | Videos, comentarios, perfis | process | Implementado no frontend |
-| **Qualificador** | Classifica leads quente/morno/frio | claude_local | Implementado no frontend |
-| **Enriquecedor** | Busca email, telefone, WhatsApp | process | Implementado no frontend |
+### Scrapers ATIVOS (produzem leads)
+| Agente | Funcao | Status real | Leads no DB |
+|--------|--------|-------------|-------------|
+| **Agent Instagram** | Hashtags + perfis locais (com login) | Funcional + autenticado | 314 |
+| **Agent TikTok** | Videos + comentarios | Funcional | 251 |
+| **Agent Google Maps** | Negocios locais via SerpAPI | Funcional | 168 |
+| **Agent YouTube** | Videos + comentarios | Funcional | 3 (recente) |
+
+### Suporte
+| Agente | Funcao | Adapter |
+|--------|--------|---------|
+| **CEO** | Interpreta comandos, distribui tarefas | claude_local |
+| **CTO** | Monitora scrapers, detecta falhas | claude_local |
+| **Qualificador** | Classifica leads quente/morno/frio | claude_local |
+| **Enriquecedor** | Busca email, telefone, WhatsApp | process |
+| **Profile Discovery** | SerpAPI -> perfis locais antes de scraping | helper |
+| **Comment Collector** | Coleta + classifica comentarios IG/TT/YT | pipeline |
+| **Runner** | Cron das buscas salvas (searches.json) | loop |
+| **Telegram Notifier** | Alerta de lead quente em tempo real | helper |
+
+### Removidos por nao produzirem lead
+- ~~Agent X/Twitter~~ — Apify scraper FRAGIL, 0 leads em 3 execucoes (deletado 30/04)
+- ~~Agent Facebook~~ — facebook-pages-scraper retorna 1 pagina, 0 leads em 5 execucoes (deletado 30/04)
+
+### Apenas UI (sem backend)
+- **Agent Reddit** — card no dashboard, sem `agent_reddit.py`
+- **Agent LinkedIn** — card no dashboard, sem `agent_linkedin.py`
 
 ---
 
@@ -570,4 +612,258 @@ Proximas direcoes possiveis (quando fizer sentido):
 
 ---
 
-*Ultima atualizacao: 18/04/2026 — Dia 3 (Fase 9 COMPLETA: start.bat + Telegram + Runner + UI Buscas)*
+---
+
+## Dia 4 — 21/04/2026 — Migracao Tracking SeuBet pro lead_system + Limpeza Paperclip
+
+### Contexto
+
+Continuacao do pilot SeuBet. Comecei testando o fluxo end-to-end dos
+`agents-apostas` do Paperclip e terminei migrando TODO o tracking afiliado pro
+projeto externo `lead_system` (ja em producao em `leads.visualizemais.com.br`),
+deixando o Paperclip limpo de codigo redundante.
+
+### 1. Teste end-to-end dos agents-apostas (Paperclip)
+
+- **TikTok scraper:** OK — 40 leads coletados em 3 queries (Apify free actor
+  `clockworks/free-tiktok-scraper`, ~15s por query).
+- **Twitter:** bloqueado — actor `apidojo/tweet-scraper` exige plano PAGO do Apify,
+  retorna 10 itens vazios no free tier.
+- **Instagram:** bloqueado — actor `apify/instagram-scraper` retorna erro silencioso
+  (Instagram anti-scraping sem cookies de sessao).
+- **Bug corrigido:** `base_apostas.py:load_env()` nao populava `os.environ`,
+  resultando em `affiliate_url` vazio em todos os leads. Fix: `os.environ.setdefault(k, v)`.
+
+### 2. Enrichment offline (free, sem API paga)
+
+- `agent_tiktok.py` passou a salvar `bio` (de `authorMeta.signature`) e `bio_link`.
+- `agent_enricher.py` ganhou `enrich_from_bio()` — extrai Telegram/WhatsApp/email
+  direto da bio sem chamar Apollo/Firecrawl.
+- Regex Telegram endurecida: exige `t.me/X`, `telegram: @X`, `tg: @X` — elimina
+  falsos positivos como "Telegram gratuito video fixado".
+- Runner Windows-safe: emojis `✓⚠✗` trocados por `[OK]/[WARN]/[ERR]` (cp1252
+  quebrava o runner com `UnicodeEncodeError`).
+
+### 3. Descoberta do projeto externo `lead_system` (o game-changer)
+
+- Caminho local: `C:/Users/Joao Marcos/lead_system/`
+- Producao: `leads.visualizemais.com.br` (deploy Coolify + GitHub auto-deploy).
+- Stack: Flask + SQLAlchemy + SQLite + OpenAI GPT-4.1-mini + Apify.
+- **Numeros REAIS ja coletados:** 557 leads classificados, **174 QUENTES**,
+  1036 audience profiles prontos pra Meta Ads.
+- Muito mais maduro que `agents-apostas`: classifier GPT real, enricher com
+  `suggested_message`, bot Telegram DM, Meta Ads export, scheduler.
+
+### 4. Bridge temporario Paperclip → lead_system
+
+- `agents-apostas/lead_system_bridge.py`: le `leads.db` read-only, converte schema,
+  aplica `affiliate_url` + UTMs SeuBet on-the-fly.
+- `serve.py` ganhou `/leads-apostas.json` combinando leads proprios + bridge.
+- **Total servido: 644 leads unificados** (557 do bridge + 87 proprios TikTok).
+- Decisao posterior: bridge ficou redundante apos migrar o tracking pro lead_system.
+
+### 5. Migracao do tracking pro lead_system (decisao correta)
+
+Em vez de ter tracking no Paperclip local, movi tudo pro `lead_system` onde ja
+vive o dashboard publico. Apenas **4 arquivos tocados**, graceful degradation
+total:
+
+- `utils/affiliate.py` (NOVO): `build_affiliate_url`, `lead_affiliate_id(B-NNNNN)`,
+  eligibilidade por temperature (`hot`/`warm`). Fallback pra `AFFILIATE_LINK` legado
+  (compatibilidade com bot Telegram).
+- `database/models.py`: `Lead.to_dict()` inclui `affiliate_url` + `affiliate_id`
+  calculados on-the-fly. Sem env vars → campos vazios (zero impacto no comportamento
+  atual).
+- `templates/index.html`: badge verde `🔗 B-00XXX` ao lado do autor na tabela +
+  card destacado "LINK AFILIADO SEUBET" no modal com botoes copiar/abrir.
+- `.env.example` (NOVO): documenta todas as vars SeuBet.
+
+**Env vars configuradas no Coolify (6 total):**
+
+| Var | Uso |
+|-----|-----|
+| `COMPANY_NAME` (existia) | Bot Telegram + GPT enricher |
+| `AFFILIATE_LINK` (existia) | Bot Telegram (fallback legado) |
+| `BONUS_OFFER` (existia) | Bot Telegram |
+| `APOSTAS_AFFILIATE_URL` (novo) | `https://www.seu.bet.br/affiliates/?btag=2709913` |
+| `APOSTAS_UTM_CAMPAIGN` (novo) | `seubet_br_pilot` |
+| `APOSTAS_CLIENTE` (novo) | `seubet` |
+
+**Resultado:** commit `7fde0ec` + push master → Coolify deploy automatico →
+174 leads quentes em `leads.visualizemais.com.br` agora tem link rastreavel
+`utm_content=B-<id>` unico por lead.
+
+**Formato final do link gerado:**
+```
+https://www.seu.bet.br/affiliates/?btag=2709913
+  &utm_source=<youtube|tiktok|reddit|telegram|...>
+  &utm_medium=outreach
+  &utm_campaign=seubet_br_pilot
+  &utm_content=B-<id:05d>
+```
+
+### 6. Seguranca — rotacao total de credenciais
+
+- **Problema descoberto:** PAT `ghp_j9Hy47...` exposto no `.git/config` do
+  `lead_system` local (visivel em `git remote -v`).
+- **Rotacao:** gerado novo PAT temporario, migrado repo remote, testado push,
+  deletados os 3 PATs antigos no GitHub (`anatigravity`, `claude`, `claudecodemaringa`).
+- **Migracao final para SSH:** chave `ed25519` gerada (`~/.ssh/id_ed25519`),
+  adicionada no GitHub, remote trocado em **ambos os repos** (`lead_system` e
+  `paperclip`).
+- **Estado final:** zero PAT em uso, zero credencial em URL, tudo via SSH.
+
+### 7. Limpeza do Paperclip (agents-apostas ficou redundante)
+
+Como `lead_system` passou a fazer TODO o tracking + classificacao + enrichment
+melhor que os `agents-apostas` que construimos no Paperclip, fizemos cleanup:
+
+- **Removido do filesystem:** `agents-apostas/`, `leads-apostas/`, `tests/`,
+  `APOSTAS-GUIDE.md` (nunca foram committados).
+- **Revertido:** `serve.py` (sem import `lead_system_bridge`, sem endpoints
+  `/leads-apostas.json`), `.env`/`.env.example` (sem `LEAD_SYSTEM_DB_PATH`).
+- **Desligado (mas mantido):** `start.bat` com `START_APOSTAS_RUNNER=0` — codigo
+  preservado caso queira retomar.
+- **Preservado:** `paperclip/` core, `estrategia/`, `dashboard/` (nicho original),
+  `agents/` (nicho original), `stop.bat` (melhorias legitimas).
+- Commit `776cabe` → push `origin/main`.
+
+### Arquitetura final (pos-sessao)
+
+```
+┌─ lead_system (PRODUCAO - leads.visualizemais.com.br) ─┐
+│  Scrapers Apify (YouTube, Reddit, TikTok, Telegram,    │
+│    Twitch)                                             │
+│  Classifier GPT-4.1-mini (hot/warm/cold)               │
+│  Enricher (suggested_message, contact_info)            │
+│  Bot Telegram DM automatica                            │
+│  Scheduler                                             │
+│  Meta Ads export (1036 profiles)                       │
+│  Affiliate tracking SeuBet (NOVO HOJE — btag +         │
+│    utm_content=B-NNNNN por lead)                       │
+│  Deploy: Coolify + GitHub auto-deploy (SSH)            │
+└─────────────────────────────────────────────────────────┘
+
+┌─ Paperclip (C:/projetos/paperclip — LOCAL, hibernando) ┐
+│  Backend Node.js (governance, companies, agents)       │
+│  Frontend dashboard/ (nicho original: harmonizacao)    │
+│  serve.py (dashboard local + proxy Paperclip API)      │
+│  Status: hibernando. Retomar quando virar SaaS multi-  │
+│    cliente ou multi-nicho.                             │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Status para reuniao SeuBet (em dias)
+
+- **174 leads QUENTES** com link afiliado unico rastreavel em producao
+- **1036 audience profiles** prontos pra Meta Ads custom audience
+- Dashboard publico live em `leads.visualizemais.com.br` (basta logar e mostrar)
+- Compliance: operator **H2 LICENSED LTDA**, auth **SPA/MF 253/2025**,
+  campaign `seubet_br_pilot`, btag preservado
+- Seguranca: zero credencial exposta, SSH everywhere
+- Narrativa pra reuniao: "cada lead tem link unico rastreavel — quando alguem
+  se cadastrar, voce sabe exatamente qual lead converteu"
+
+### Commits desta sessao
+
+| Repo | Commit | Descricao |
+|------|--------|-----------|
+| `lead-system` | `7fde0ec` | Add SeuBet affiliate tracking per lead (btag + UTMs) |
+| `lead-system` | `b5c6824` | test SSH auth (empty commit) |
+| `lead-machine` (Paperclip) | `776cabe` | chore: remove unused apostas agents |
+
+---
+
+### DIA 5 — 30/04/2026 (Validacao IG autenticado + Faxina senior do projeto)
+
+#### Manha — Validacao do fluxo IG logado
+
+- **Login IG via `INSTAGRAM_SESSIONID`** (cookie do browser) ja estava implementado em
+  `agents/comment_collector/instagram_collector.py`. Roteamento automatico:
+  - sem sessionid -> `apify/instagram-comment-scraper` (publico, ~15 comments/post)
+  - com sessionid -> `omissive_zen/instagram-comment-scraper` (autenticado, ate 100%)
+- **Run de 29/04 20:51** confirmou ganho real:
+  - 60 posts coletados, **923 comentarios** (vs ~15 sem login)
+  - Post `DHv3w_NsIT3` (botox + @dr.viniciuslonghini): **90 comments** (vs 15 antes)
+  - Post `DE5ncGbPkk2` (@dragabrielamsd): **79 comments**
+- **Lead super quente que escapou**: `@karla_krystyny_` comentou `"Valor?"` + `"6g"` no
+  perfil da @dragabrielamsd e a doutora respondeu `"te respondi no direct"`. Esta no
+  `comments.db` mas **nao virou lead** — classifier deu score < 60 num texto curto.
+  Tunar quando voltar a cota Apify.
+
+#### Manha — Frontend caido
+
+- `start.bat` rodou as 10:01:42, subiu backend `:3100` mas ficou preso no loop
+  `:waitpaperclip` esperando `/api/health`. Nunca avancou pra etapa [3/4] de subir
+  o `serve.py`.
+- Workaround: `python serve.py &` direto. `:8081` voltou em 2s.
+- Diagnostico: `MAX_TRIES=120` (linha 12 do `start.bat`) ficou curto, backend Node
+  demorou mais que 120s pra responder healthy. Pra arrumar de verdade: aumentar
+  pra 300 ou apontar health check pra endpoint mais leve.
+
+#### Tarde — Rerun do agent_instagram falhou
+
+- `python agents/agent_instagram.py --query "botox" --city "Maringa-PR"` retornou
+  0 leads em 5.8s. Causa: **conta Apify estourou cota mensal**.
+  ```
+  [WARNING] erro listando perfil @royalface.maringa: Monthly usage hard limit exceeded
+  ... (todos os 8 perfis)
+  ```
+- A run autenticada de 29/04 (60 posts via omissive_zen + 8 perfis via instagram-
+  scraper) queimou o que sobrava do free tier de $5/mes.
+- **Nao e bug, e limite de plataforma.** Espera o reset mensal, compra creditos
+  ou troca o `APIFY_TOKEN`.
+
+#### Tarde — Auditoria senior do projeto + Faxina
+
+Revisao com olhar de "dev senior 20 anos" identificou **4 categorias de risco**:
+
+1. **Risco 1**: `paperclip/` (backend Node upstream) — pasta enorme com `node_modules`,
+   `packages/`, `cli/`, etc. Frontend so usa **5 endpoints** dela (status de agentes
+   + heartbeat). Substituir por ~30 linhas Python apaga 500MB. **Decisao adiada**
+   pra outro dia.
+2. **Risco 2**: Codigo morto disfarcado — `agents/lead_machine.py` (220 linhas
+   monoliticas obsoletas), `agent_twitter.py`/`agent_facebook.py` (nunca produziram
+   lead).
+3. **Risco 3**: Lastro de side-quests — 9 itens no root (decks, MDs de planejamento,
+   estrategia/, video-lancamento/) que pertencem a fases passadas.
+4. **Risco 4**: Blobs versionados (`ig_posts.json` 7.3 MB) e `.gitignore` furado
+   (sem `__pycache__`, `.venv`, `*.tmp`, `comments.db`, etc).
+
+**5 commits de faxina** aplicados e pushed pra `origin/main`:
+
+| Commit | Descricao | Impacto |
+|--------|-----------|---------|
+| `2909b23` | arquivar side-quests em `archive/` | Root limpo (9 itens fora) |
+| `1f57e04` | untrack `ig_*.json` + reforca `.gitignore` | -86998 linhas tracked, +12 regras de ignore |
+| `b8613de` | remove `lead_machine.py` + HTMLs orfaos | -625 linhas de codigo morto |
+| `34f1b97` | remove `agent_twitter.py` + `agent_facebook.py` + dict do runner.py | -387 linhas, runner so chama scrapers que funcionam |
+| `d0d9ddb` | feat(dashboard): redesign Kanban com Glassmorphism | +1167 linhas (tokens glass, Inter+Manrope, Material Symbols, glow gradientes) |
+| `6934330` | remove twitter/facebook do dashboard | UI reflete os 4 scrapers reais |
+
+**Saldo total**: ~88 mil linhas removidas do tracking, root sem side-quests, agentes
+mortos fora, `.gitignore` decente, redesign Kanban preservado.
+
+#### Estado atual (final do dia)
+
+- **Scrapers ativos**: Instagram (autenticado), TikTok, Google Maps, YouTube
+- **Frontend**: redesign Kanban Glassmorphism vivo em `:8081`
+- **Backend Node** (`paperclip/`): hibernando, so serve 5 endpoints de UI status
+- **DB**: 736 leads (instagram 314, tiktok 251, google 168, youtube 3)
+- **Pendencias**: cota Apify, tunar classifier pra textos curtos (caso Karla),
+  decisao sobre faxina #5 (deletar `paperclip/` Node)
+
+### Commits da sessao 30/04
+
+| Repo | Commit | Descricao |
+|------|--------|-----------|
+| `lead-machine` | `2909b23` | chore: arquivar side-quests em archive/ |
+| `lead-machine` | `1f57e04` | chore: untrack snapshots antigos e reforca .gitignore |
+| `lead-machine` | `b8613de` | chore: remove codigo morto (lead_machine.py + HTMLs orfaos) |
+| `lead-machine` | `34f1b97` | chore: remove agents twitter/facebook |
+| `lead-machine` | `d0d9ddb` | feat(dashboard): redesign Kanban Glassmorphism |
+| `lead-machine` | `6934330` | chore: remove twitter/facebook do dashboard |
+
+---
+
+*Ultima atualizacao: 30/04/2026 — Dia 5 (Validacao IG autenticado + Faxina senior do projeto)*

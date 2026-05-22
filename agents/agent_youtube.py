@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-LEAD MACHINE — Agent TikTok
+LEAD MACHINE - Agent YouTube
 
-Busca videos por keyword/cidade, baixa comentarios, filtra quem tem intencao
-de compra (buscando_atendimento, perguntando_preco, perguntando_local) e
+Busca videos por keyword, baixa comentarios, filtra quem tem intencao de
+compra/dor (buscando_atendimento, perguntando_preco, perguntando_local) e
 grava como lead em leads-db.json.
 
-NAO cria lead do autor do video — autor ja fez / e divulgador.
+NAO cria lead do dono do canal — dono e advogado/influencer/divulgador.
 
 Uso:
-  python agents/agent_tiktok.py --query "harmonizacao facial" --city "Maringa-PR"
+  python agents/agent_youtube.py --query "renegociacao divida rural" --city "Brasil"
 
 Env vars (Paperclip):
   SEARCH_QUERY, CITY, NICHO, LIMIT, APIFY_TOKEN,
-  TIKTOK_MAX_VIDEOS (default 15), TIKTOK_MAX_COMMENTS_PER_VIDEO (default 300),
-  TIKTOK_MIN_SCORE (default 60)
+  YOUTUBE_MAX_VIDEOS (default 10), YOUTUBE_MAX_COMMENTS_PER_VIDEO (default 300),
+  YOUTUBE_MIN_SCORE (default 60)
 """
 
 import sys
@@ -30,19 +30,20 @@ from query_strategy import social_query_run_plan, social_query_variants
 
 
 def _should_skip_city(comment: dict, wanted_city: str) -> bool:
-    """Se cidade foi pedida e o classifier detectou OUTRA cidade, descarta."""
     if not wanted_city:
         return False
     detected = (comment.get("city") or "").lower().strip()
     if not detected:
-        return False  # sem cidade detectada = nao descarta (pode ser local)
+        return False
     wanted_core = wanted_city.lower().split("-")[0].strip()
+    # Cidade vazia ou "Brasil" = busca nacional, nao filtra por cidade
+    if wanted_core in ("brasil", "br", ""):
+        return False
     return wanted_core not in detected and detected not in wanted_core
 
 
 def comments_to_leads(comments: list, query: str, city: str, nicho: str,
                       min_score: int, logger) -> list:
-    """Converte comentarios 'hot' (ja classificados) em leads unificados."""
     leads = []
     skipped_city = 0
     skipped_score = 0
@@ -62,7 +63,6 @@ def comments_to_leads(comments: list, query: str, city: str, nicho: str,
         if is_bot(text):
             skipped_bot += 1
             continue
-        # Filtro de idioma: so aceita pt-BR (evita comentarios russos, ingleses, etc)
         if not is_brazilian_portuguese(text):
             skipped_lang += 1
             continue
@@ -76,13 +76,16 @@ def comments_to_leads(comments: list, query: str, city: str, nicho: str,
             skipped_city += 1
             continue
 
-        # Cidade HONESTA: so preenche se o classifier detectou no texto.
-        # Nao herda a cidade da query (evitar marcar russo como "Maringa-PR").
         detected_city = (c.get("city") or "").strip()
         lead_cidade = detected_city.title() if detected_city else ""
 
+        author_url = c.get("author_url") or ""
+        if not author_url and author:
+            # Fallback: usa handle do YouTube
+            author_url = f"https://www.youtube.com/@{author}"
+
         lead = create_lead(
-            plataforma="tiktok",
+            plataforma="youtube",
             user=author,
             texto=text,
             url=c.get("video_url") or "",
@@ -90,7 +93,7 @@ def comments_to_leads(comments: list, query: str, city: str, nicho: str,
             nicho=nicho or query,
             post_owner=c.get("video_owner") or "",
             nome=c.get("author_fullname") or "",
-            author_url=c.get("author_url") or (f"https://www.tiktok.com/@{author}" if author else ""),
+            author_url=author_url,
             score=min(100, max(0, score)),
             temp=classify_temp(score),
             tipo="pessoa",
@@ -113,41 +116,40 @@ def comments_to_leads(comments: list, query: str, city: str, nicho: str,
 
 
 def main():
-    parser = build_arg_parser("tiktok", "Scraper TikTok via Apify (comentarios)")
+    parser = build_arg_parser("youtube", "Scraper YouTube via Apify (comentarios)")
     args = parser.parse_args()
 
     env = load_env()
-    logger = setup_logger("tiktok", verbose=args.verbose)
+    logger = setup_logger("youtube", verbose=args.verbose)
 
     query = resolve_param(args, "query", "SEARCH_QUERY", "")
     city = resolve_param(args, "city", "CITY", "")
     nicho = resolve_param(args, "nicho", "NICHO", "")
-    limit = int(resolve_param(args, "limit", "LIMIT", "20"))
     apify_token = env.get("APIFY_TOKEN", "")
 
-    max_videos = int(env.get("TIKTOK_MAX_VIDEOS", "15"))
-    max_comments = int(env.get("TIKTOK_MAX_COMMENTS_PER_VIDEO", "300"))
-    min_score = int(env.get("TIKTOK_MIN_SCORE", "60"))
+    max_videos = int(env.get("YOUTUBE_MAX_VIDEOS", "10"))
+    max_comments = int(env.get("YOUTUBE_MAX_COMMENTS_PER_VIDEO", "300"))
+    min_score = int(env.get("YOUTUBE_MIN_SCORE", "60"))
 
     if not apify_token:
         logger.error("APIFY_TOKEN nao configurado")
-        output_result(make_result("tiktok", status="error",
+        output_result(make_result("youtube", status="error",
                                   errors=["APIFY_TOKEN nao configurado"]))
         sys.exit(1)
 
     if not query:
         query = nicho or "servico local"
 
-    query_plan = social_query_variants(query, nicho, platform="tiktok")
+    query_plan = social_query_variants(query, nicho, platform="youtube")
     if not query_plan:
         query_plan = [query]
     run_plan = social_query_run_plan(query_plan, env)
 
     logger.info(f"Query original: {query} | Cidade: {city} | min_score: {min_score}")
-    logger.info(f"Plano social TikTok: {query_plan}")
+    logger.info(f"Plano social YouTube: {query_plan}")
     if run_plan != query_plan:
         logger.info(
-            f"Execucao TikTok desta rodada: {run_plan} "
+            f"Execucao YouTube desta rodada: {run_plan} "
             f"(1 query curta por execucao para evitar timeout)"
         )
 
@@ -158,11 +160,11 @@ def main():
     successful_queries = 0
 
     for q in run_plan:
-        logger.info(f"Rodando query curta TikTok: '{q}'")
+        logger.info(f"Rodando query curta YouTube: '{q}'")
         try:
             result = pipeline.collect_by_query(
                 apify_token=apify_token,
-                platform="tiktok",
+                platform="youtube",
                 query=q,
                 city=city,
                 max_videos=max_videos,
@@ -172,7 +174,7 @@ def main():
         except Exception as e:
             msg = f"{q}: {e}"
             errors.append(msg)
-            logger.error(f"Falha no pipeline TikTok ({q}): {e}", exc_info=True)
+            logger.error(f"Falha no pipeline YouTube ({q}): {e}", exc_info=True)
             continue
 
         successful_queries += 1
@@ -189,7 +191,7 @@ def main():
         leads.extend(comments_to_leads(hot_comments, q, city, nicho, min_score, logger))
 
     if successful_queries == 0:
-        output_result(make_result("tiktok", status="error", errors=errors or ["nenhuma query rodou"],
+        output_result(make_result("youtube", status="error", errors=errors or ["nenhuma query rodou"],
                                   query=query, city=city))
         sys.exit(1)
 
@@ -208,7 +210,7 @@ def main():
     logger.info(f"Concluido em {duration}s — {new_count} novos, {total} total")
 
     output_result(make_result(
-        agent="tiktok",
+        agent="youtube",
         leads_found=len(leads),
         leads_new=new_count,
         leads_total=total,

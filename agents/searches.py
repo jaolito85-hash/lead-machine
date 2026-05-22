@@ -34,7 +34,7 @@ BASE_DIR = Path(__file__).parent.parent
 SEARCHES_PATH = BASE_DIR / "leads-export" / "searches.json"
 
 # Plataformas validas (correspondem aos agent_*.py)
-VALID_PLATFORMS = {"google", "instagram", "facebook", "tiktok", "twitter"}
+VALID_PLATFORMS = {"google", "instagram", "facebook", "tiktok", "twitter", "youtube"}
 
 
 def _now_iso() -> str:

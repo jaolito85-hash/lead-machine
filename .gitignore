@@ -16,6 +16,11 @@ leads-export/comments.db
 leads-export/serve.out
 leads-export/*.backup-*.json
 leads-export/exports/
+leads-export/leads-db.json
+leads-export/discovered_profiles.json
+leads-export/leads-*.txt
+outputs/
+local-*.log
 
 # Snapshots de scrape antigos (lixo de 15/04, ja nao usados)
 ig_posts.json
