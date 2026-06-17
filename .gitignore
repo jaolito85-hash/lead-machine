@@ -10,6 +10,7 @@ leads-export/*.log
 start.log
 start_boot.out
 leads-export/searches.json
+leads-export/campaigns.json
 
 # Cache local + backups ad-hoc (nao versionar)
 leads-export/comments.db
