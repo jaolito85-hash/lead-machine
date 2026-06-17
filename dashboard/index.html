@@ -895,7 +895,8 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
     <div class="modal-footer">
       <button class="btn" id="campaign-archive-btn" onclick="archiveCampaign()" style="display:none;margin-right:auto;color:#ff6b6b">Arquivar</button>
       <button class="btn" onclick="closeCampaignModal()">Cancelar</button>
-      <button class="btn primary" onclick="saveCampaign()">Salvar</button>
+      <button class="btn" onclick="saveCampaign()">Salvar</button>
+      <button class="btn primary" onclick="saveAndRunCampaign()">&#9654; Salvar e Rodar</button>
     </div>
   </div>
 </div>
@@ -1366,8 +1367,10 @@ async function saveCampaign(){
     nacional:nacional,
     notes:document.getElementById('campaign-notes').value.trim(),
   };
-  if(!payload.nome){notify('Nome da campanha é obrigatório','err');return}
+  if(!payload.nome){notify('Nome da campanha é obrigatório','err');return null}
   const id=document.getElementById('campaign-id').value;
+  // keepOpen: usado pelo "Salvar e Rodar" (não fecha modal/não troca pra Kanban)
+  const keepOpen=arguments[0]&&arguments[0].keepOpen;
   try{
     let r;
     if(id){
@@ -1378,17 +1381,66 @@ async function saveCampaign(){
     if(!r.ok){const err=await r.json();throw new Error(err.error||'falha ao salvar')}
     const saved=await r.json();
     notify(`Campanha ${id?'atualizada':'criada'}: ${saved.nome}`,'ok');
-    closeCampaignModal();
     await fetchCampaigns();
-    // Se acabou de criar, seleciona automaticamente
-    if(!id&&saved.id){
-      kanbanCampaign=saved.id;
-      document.getElementById('kanban-campaign-sel').value=saved.id;
-      setKanbanCampaign(saved.id);
+    if(!keepOpen){
+      closeCampaignModal();
+      // Se acabou de criar, seleciona automaticamente
+      if(!id&&saved.id){
+        kanbanCampaign=saved.id;
+        document.getElementById('kanban-campaign-sel').value=saved.id;
+        setKanbanCampaign(saved.id);
+      }
     }
+    return saved;
   }catch(e){
     notify('Erro ao salvar: '+e.message,'err');
+    return null;
   }
+}
+
+// Salva a campanha e dispara a execução REAL usando os campos do formulário
+// (query/nicho/cidade/plataformas) — sem passar pela Central de Comando nem
+// pelo parseCommand. Funciona tanto pra campanha nova quanto pra edição.
+async function saveAndRunCampaign(){
+  // 1) Valida plataformas ANTES de salvar (só as suportadas pelos agentes)
+  const plats=Array.from(document.querySelectorAll('#campaign-platforms input:checked'))
+    .map(i=>i.value).filter(p=>platformMap[p]);
+  if(!plats.length){notify('Marque pelo menos 1 plataforma pra rodar a campanha','err');return}
+
+  // 2) Define o termo de busca: Query padrão tem prioridade, senão o Nicho
+  const nacional=document.getElementById('campaign-nacional').checked;
+  const query=document.getElementById('campaign-query').value.trim();
+  const nicho=document.getElementById('campaign-nicho').value.trim();
+  const termo=query||nicho;
+  if(!termo){notify('Preencha a "Query padrão" ou o "Nicho" pra rodar','err');return}
+  const cidade=nacional?'Brasil':(document.getElementById('campaign-cidade').value.trim()||'Brasil');
+
+  // 3) Salva a campanha (mantém o modal aberto até disparar)
+  const saved=await saveCampaign({keepOpen:true});
+  if(!saved){return} // erro já notificado por saveCampaign
+
+  // 4) Seleciona a campanha salva (resolveCommandCampaign usa kanbanCampaign)
+  kanbanCampaign=saved.id;
+  const sel=document.getElementById('kanban-campaign-sel');
+  if(sel) sel.value=saved.id;
+
+  // 5) Monta o `parsed` direto dos campos — mesma forma que parseCommand devolve
+  const parsed={nicho:termo, cidade, plataformas:plats, _rawText:''};
+  S.commands.unshift({text:`▶ ${saved.nome}: ${termo}${nacional?' (nacional)':' em '+cidade}`,time:now(),status:'executando',parsed});
+  addActivity('ok','Rodando campanha',`"${saved.nome}" — ${termo} | ${plats.map(p=>platformLabels[p]||p).join(', ')}`);
+
+  // 6) Fecha modal, vai pra Central de Comando pra acompanhar e dispara
+  closeCampaignModal();
+  const navCmd=document.querySelector('.nav-item[data-page="command"]');
+  if(navCmd) navCmd.click();
+
+  if(paperclipOnline){
+    executeCommandReal(parsed);
+  }else{
+    notify('Paperclip offline — rodando em modo simulado','err');
+    executeCommandSimulated(parsed);
+  }
+  renderAll();
 }
 
 async function archiveCampaign(){
