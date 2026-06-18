@@ -133,16 +133,31 @@ BUY = ["recommend", "what should i", "looking for", "where to buy", "worth it",
        "onde compro", "onde comprar", "qual link", "quanto custa", "tem link", "quero um"]
 SAFETY = ["eating disorder", "anorexi", "bulimi", "16 year", "underage", "pregnan",
           "my doctor", "prescribed", "transtorno alimentar", "menor de idade"]
+# Sinais de quem VENDE (loja/marca/revendedor), nao de quem quer comprar
+SELLER = ["atacado", "varejo", "frete", "link na bio", "linkna bio", "disponivel",
+          "disponível", "compre ja", "compre já", "adquira", "promocao", "promoção",
+          "a venda", "à venda", "encomenda", "pedidos", "catalogo", "catálogo",
+          "coleção", "colecao", "tamanhos", "tam:", "tam ", "r$", "pix", "entrego",
+          "entregamos", "vendo", "shop", ".store", "loja ", "oficial", "atacarejo",
+          "drop ", "wholesale", "shipping", "dm to order", "order now", "in stock",
+          "available now", "shop now", "buy now", "use o cupom", "cupom"]
+
+
+def _is_seller(text: str) -> bool:
+    t = text.lower()
+    return any(s in t for s in SELLER)
 
 
 def classify_heuristic(text: str) -> dict:
     t = text.lower()
     drop = any(s in t for s in SAFETY)
+    seller = _is_seller(text)
     hits = sum(1 for s in BUY if s in t)
     score = min(1.0, 0.4 + hits * 0.2) if hits else 0.1
     itype = "buying" if score >= 0.8 else "researching" if score >= 0.5 else "noise"
     return {"intent_type": itype, "score": round(score, 2), "desired_category": "",
-            "safety_drop": drop, "safety_reason": "heuristic" if drop else ""}
+            "safety_drop": drop, "safety_reason": "heuristic" if drop else "",
+            "is_seller": seller}
 
 
 def classify_llm(items, model, api_key, exclusions, product):
@@ -156,13 +171,19 @@ For each numbered item, judge the person's intent to BUY {target}.
 
 intent_type: "buying" (wants to buy / asking where to buy / asking for a link or rec),
 "researching" (comparing, asking if it's worth it), "frustrated" (unhappy with current
-option), or "noise" (no purchase intent / selling / off-topic).
+option), or "noise" (no purchase intent / off-topic).
 score: 0.0-1.0 likelihood of buying soon.
 desired_category: short tag, or "".
+is_seller: true if the comment is from someone SELLING/advertising the product (a shop,
+brand or reseller) instead of someone who wants to buy. Sellers use AD language:
+"available/disponivel", "wholesale/atacado/varejo", "shipping/frete", "link in bio",
+shop names, prices (R$), discount coupons, "DM to order", catalog, call-to-action.
+A BUYER asks to get it ("where can I buy?", "quero um", "como faço pra comprar");
+a SELLER offers it. When in doubt about an ad-like comment, mark is_seller true.
 safety_drop: true if the item shows any of these (NEVER target): {exclusions}.
 Items may be in English or Portuguese.
 
-Return ONLY JSON: {{"results":[{{"i":0,"intent_type":"...","score":0.0,"desired_category":"...","safety_drop":false,"safety_reason":""}}]}}
+Return ONLY JSON: {{"results":[{{"i":0,"intent_type":"...","score":0.0,"desired_category":"...","is_seller":false,"safety_drop":false,"safety_reason":""}}]}}
 
 ITEMS:
 {blob}
@@ -248,28 +269,36 @@ def main():
             use_llm = False
     for i, it in enumerate(items):
         it.update(llm_map.get(i) if use_llm else classify_heuristic(it["text"]))
+        it.setdefault("is_seller", False)
+        # rede de seguranca: se o LLM nao marcou, a heuristica pega vendedor obvio
+        if not it.get("is_seller") and _is_seller(it["text"]):
+            it["is_seller"] = True
         it["query"] = product or "(nicho)"
         it["market"] = args.market
 
-    # 3) GUARD-RAILS + ranking
+    # 3) GUARD-RAILS + separa COMPRADOR de VENDEDOR
     safe = [it for it in items if not it.get("safety_drop")]
     dropped = len(items) - len(safe)
-    safe.sort(key=lambda x: x.get("score", 0), reverse=True)
-    buying = sum(1 for it in safe if it.get("intent_type") == "buying")
+    sellers = [it for it in safe if it.get("is_seller")]
+    buyers = [it for it in safe if not it.get("is_seller")]
+    buyers.sort(key=lambda x: x.get("score", 0), reverse=True)
+    sellers.sort(key=lambda x: x.get("score", 0), reverse=True)
+    buying = sum(1 for it in buyers if it.get("intent_type") in ("buying", "comprando"))
+    ordered = buyers + sellers  # compradores primeiro, lojas depois (flag is_seller)
 
     # 4) SALVA + RESUMO
     out = aff_dir / "intent_signals.json"
-    out.write_text(json.dumps(safe, ensure_ascii=False, indent=2), encoding="utf-8")
+    out.write_text(json.dumps(ordered, ensure_ascii=False, indent=2), encoding="utf-8")
     by_plat = {}
-    for it in safe:
+    for it in ordered:
         by_plat[it["platform"]] = by_plat.get(it["platform"], 0) + 1
     print("=" * 56)
-    print(f"  alvo            : {product or '(nicho)'}")
-    print(f"  por plataforma  : {by_plat}")
-    print(f"  itens uteis     : {len(items)} | safety dropped: {dropped}")
-    print(f"  COMPRANDO       : {buying}")
-    print(f"  salvo em        : {out.relative_to(ROOT)}")
-    for it in safe[:5]:
+    print(f"  alvo               : {product or '(nicho)'}")
+    print(f"  por plataforma     : {by_plat}")
+    print(f"  uteis: {len(items)} | safety: {dropped} | VENDEDORES filtrados: {len(sellers)}")
+    print(f"  COMPRADORES        : {len(buyers)} (comprando agora: {buying})")
+    print(f"  salvo em           : {out.relative_to(ROOT)}")
+    for it in buyers[:5]:
         print(f"  [{it.get('intent_type')} {it.get('score')}] {it['platform']}:{it.get('source')} "
               f"{it['text'][:80].replace(chr(10), ' ')}")
     print("[busca] fim.")

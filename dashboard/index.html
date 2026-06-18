@@ -1579,11 +1579,13 @@ async function renderAfiliados(market){
     const offers=(offData&&offData.offers)||[];
     const sigArr=Array.isArray(signals)?signals:[];
     affilCache[market]=sigArr;
-    const buying=sigArr.filter(s=>s.intent_type==='buying'||s.intent_type==='comprando').length;
+    const buyers=sigArr.filter(s=>!s.is_seller);
+    const sellers=sigArr.filter(s=>s.is_seller);
+    const buying=buyers.filter(s=>s.intent_type==='buying'||s.intent_type==='comprando').length;
 
-    // badge na sidebar = nº de sinais
+    // badge na sidebar = nº de COMPRADORES (lojas nao contam)
     const badge=document.getElementById(`afil-${market}-badge`);
-    if(badge) badge.textContent=sigArr.length;
+    if(badge) badge.textContent=buyers.length;
 
     // Cards de ofertas
     const offHtml=offers.map(o=>{
@@ -1607,8 +1609,8 @@ async function renderAfiliados(market){
       </div>`;
     }).join('') || `<div style="color:var(--text-muted);padding:12px">Nenhuma oferta cadastrada. Edite <code>agents/affiliate_${market}/offers.json</code>.</div>`;
 
-    // Sinais de intent
-    const sigHtml=sigArr.map(s=>{
+    // Renderiza um cartao de sinal (reusado por compradores e lojas)
+    const renderSig=(s)=>{
       const sn=escHtml((s.text||'').replace(/\n/g,' ').slice(0,180));
       const it=s.intent_type||'?';
       const color=(it==='buying'||it==='comprando')?'var(--accent)':(it==='researching'||it==='pesquisando')?'#e0a800':'var(--text-muted)';
@@ -1625,7 +1627,9 @@ async function renderAfiliados(market){
         <div style="font-size:12px;margin-top:5px;color:var(--text-secondary)">"${sn}"</div>
         ${s.url?`<a href="${escHtml(s.url)}" target="_blank" style="font-size:10px;color:var(--accent)">ver original &#8599;</a>`:''}
       </div>`;
-    }).join('') || `<div style="color:var(--text-muted);padding:12px">Nenhum sinal coletado ainda. Rode o spike de coleta (<code>spike_collect.py</code>).</div>`;
+    };
+    const buyersHtml=buyers.map(renderSig).join('') || `<div style="color:var(--text-muted);padding:12px">Nenhum comprador ainda. Rode uma busca num produto acima.</div>`;
+    const sellersHtml=sellers.map(renderSig).join('');
 
     el.innerHTML=`
       <div class="aff-add">
@@ -1637,15 +1641,17 @@ async function renderAfiliados(market){
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:18px">
         <div class="aff-stats" style="margin-bottom:0">
           <div class="aff-stat"><strong>${offers.length}</strong><span>ofertas</span></div>
-          <div class="aff-stat"><strong>${sigArr.length}</strong><span>sinais</span></div>
+          <div class="aff-stat"><strong>${buyers.length}</strong><span>compradores</span></div>
           <div class="aff-stat"><strong>${buying}</strong><span>comprando</span></div>
+          <div class="aff-stat"><strong>${sellers.length}</strong><span>lojas</span></div>
         </div>
-        <button class="btn primary" onclick="exportAffiliateContacts('${market}')"${sigArr.length?'':' disabled'}>&#11015; Exportar @s (CSV)</button>
+        <button class="btn primary" onclick="exportAffiliateContacts('${market}')"${buyers.length?'':' disabled'}>&#11015; Exportar @s (CSV)</button>
       </div>
       <div class="aff-sec-title">Ofertas (${offers.length})</div>
       <div class="aff-grid">${offHtml}</div>
-      <div class="aff-sec-title">Sinais de Intent (${sigArr.length})</div>
-      <div>${sigHtml}</div>
+      <div class="aff-sec-title">&#128717; Compradores (${buyers.length})</div>
+      <div>${buyersHtml}</div>
+      ${sellers.length?`<div class="aff-sec-title">&#127978; Concorrentes / lojas (${sellers.length}) <span style="font-weight:400;color:var(--text-tertiary);font-size:11px">— filtrados do outreach</span></div><div style="opacity:.65">${sellersHtml}</div>`:''}
     `;
   }catch(e){
     el.innerHTML='<div style="color:var(--warm);padding:20px">Erro ao carregar: '+escHtml(e.message)+'</div>';
@@ -1681,12 +1687,13 @@ async function searchAffiliateBuyers(market,query,platform){
 function exportAffiliateContacts(market){
   const rows=affilCache[market]||[];
   if(!rows.length){notify('Nada pra exportar — rode uma busca antes','err');return}
-  const head=['arroba','perfil_url','plataforma','intencao','score','produto','comentario','link_post'];
+  const head=['arroba','tipo','perfil_url','plataforma','intencao','score','produto','comentario','link_post'];
   const esc=v=>'"'+String(v==null?'':v).replace(/"/g,'""').replace(/\r?\n/g,' ')+'"';
   const lines=[head.join(',')];
   rows.forEach(s=>{
     const at=(s.author&&s.author!=='?')?('@'+String(s.author).replace(/^@/,'')):'';
-    lines.push([at,affilProfileUrl(s),s.platform||'',s.intent_type||'',s.score??'',s.query||'',s.text||'',s.url||''].map(esc).join(','));
+    const tipo=s.is_seller?'vendedor':'comprador';
+    lines.push([at,tipo,affilProfileUrl(s),s.platform||'',s.intent_type||'',s.score??'',s.query||'',s.text||'',s.url||''].map(esc).join(','));
   });
   const csv=String.fromCharCode(0xFEFF)+lines.join('\r\n'); // BOM = Excel abre acentos certo
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
