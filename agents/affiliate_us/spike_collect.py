@@ -13,6 +13,7 @@ Uso:
 import argparse
 import json
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -99,6 +100,32 @@ def collect_tiktok(token, query, max_videos, max_comments, log):
     return items
 
 
+def collect_instagram(token, query, max_posts, max_comments, log):
+    """Busca posts por hashtag do produto e coleta os comentarios."""
+    sys.path.insert(0, str(ROOT / "agents" / "comment_collector"))
+    import instagram_collector as ig
+    posts = ig.search_posts_by_query(token, query, limit=max_posts, logger=log)
+    urls = [p["video_url"] for p in posts if p.get("video_url")][:max_posts]
+    if not urls:
+        log.info("[instagram] nenhum post encontrado")
+        return []
+    comments = ig.fetch_comments(token, urls, max_comments_per_post=max_comments, logger=log)
+    items = []
+    for c in comments:
+        text = (c.get("text") or "").strip()
+        if len(text) < 8:
+            continue
+        author = c.get("author_username") or "?"
+        items.append({
+            "platform": "instagram", "kind": "comment", "text": text,
+            "author": author, "source": f"@{author}",
+            "url": c.get("video_url") or c.get("author_url") or "",
+            "upvotes": c.get("like_count", 0),
+        })
+    log.info(f"[instagram] {len(comments)} comentarios -> {len(items)} uteis")
+    return items
+
+
 # ─────────────────────── CLASSIFICACAO ───────────────────────
 
 BUY = ["recommend", "what should i", "looking for", "where to buy", "worth it",
@@ -153,11 +180,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--market", choices=["us", "br"], default="us")
     ap.add_argument("--product", default="", help="palavra-chave do produto afiliado")
-    ap.add_argument("--platform", choices=["reddit", "tiktok", "both"], default="reddit")
+    ap.add_argument("--platform", choices=["reddit", "tiktok", "instagram", "all"], default="reddit")
     ap.add_argument("--max-queries", type=int, default=2)
     ap.add_argument("--max-items", type=int, default=15)
     ap.add_argument("--tt-videos", type=int, default=5)
     ap.add_argument("--tt-comments", type=int, default=30)
+    ap.add_argument("--ig-posts", type=int, default=8)
+    ap.add_argument("--ig-comments", type=int, default=15)
     ap.add_argument("--no-llm", action="store_true")
     args = ap.parse_args()
 
@@ -166,6 +195,11 @@ def main():
 
     aff_dir = ROOT / "agents" / f"affiliate_{args.market}"
     env = load_env()
+    # propaga .env pro ambiente — coletores (ex: Instagram) leem INSTAGRAM_SESSIONID
+    # e IG_COMMENTS_MODE direto de os.environ
+    for k, v in env.items():
+        if v:
+            os.environ[k] = v
     token = env.get("APIFY_TOKEN")
     if not token:
         print("ERRO: APIFY_TOKEN ausente no .env")
@@ -180,16 +214,21 @@ def main():
 
     # 1) COLETA
     items = []
-    if args.platform in ("reddit", "both"):
+    if args.platform in ("reddit", "all"):
         try:
             items += collect_reddit(token, queries, args.max_items, log)
         except Exception as e:
             log.info(f"[reddit] falhou: {e}")
-    if args.platform in ("tiktok", "both") and tt_query:
+    if args.platform in ("tiktok", "all") and tt_query:
         try:
             items += collect_tiktok(token, tt_query, args.tt_videos, args.tt_comments, log)
         except Exception as e:
             log.info(f"[tiktok] falhou: {e}")
+    if args.platform in ("instagram", "all") and tt_query:
+        try:
+            items += collect_instagram(token, tt_query, args.ig_posts, args.ig_comments, log)
+        except Exception as e:
+            log.info(f"[instagram] falhou: {e}")
 
     if not items:
         (aff_dir / "intent_signals.json").write_text("[]", encoding="utf-8")

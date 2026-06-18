@@ -1563,7 +1563,7 @@ document.querySelectorAll('.nav-item').forEach(el=>{
 // ─── AFILIADOS (US / BR) ───
 const affilCache={us:[],br:[]};
 function escHtml(s){return (s||'').toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
-function affilProfileUrl(s){const a=(s.author||'').replace(/^@/,'');if(!a||a==='?')return '';return (s.platform==='tiktok')?('https://www.tiktok.com/@'+a):('https://www.reddit.com/user/'+a)}
+function affilProfileUrl(s){const a=(s.author||'').replace(/^@/,'');if(!a||a==='?')return '';if(s.platform==='tiktok')return 'https://www.tiktok.com/@'+a;if(s.platform==='instagram')return 'https://www.instagram.com/'+a+'/';return 'https://www.reddit.com/user/'+a}
 
 async function renderAfiliados(market){
   const el=document.getElementById(`afiliados-${market}-content`);
@@ -1599,9 +1599,10 @@ async function renderAfiliados(market){
           ${linkOk?'&#10003; link configurado':'&#9888; link pendente (cadastre-se na rede)'}
         </div>
         <div style="font-size:9px;color:var(--text-tertiary);margin-top:8px;text-transform:uppercase;letter-spacing:.5px">&#128269; Buscar compradores em</div>
-        <div style="display:flex;gap:4px;margin-top:4px">
+        <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">
           <button class="btn" style="font-size:10px;flex:1" onclick='searchAffiliateBuyers("${market}",${JSON.stringify(o.product)},"reddit")'>Reddit</button>
           <button class="btn" style="font-size:10px;flex:1" onclick='searchAffiliateBuyers("${market}",${JSON.stringify(o.product)},"tiktok")'>&#127925; TikTok</button>
+          <button class="btn" style="font-size:10px;flex:1" onclick='searchAffiliateBuyers("${market}",${JSON.stringify(o.product)},"instagram")'>&#128247; Instagram</button>
         </div>
       </div>`;
     }).join('') || `<div style="color:var(--text-muted);padding:12px">Nenhuma oferta cadastrada. Edite <code>agents/affiliate_${market}/offers.json</code>.</div>`;
@@ -1611,7 +1612,7 @@ async function renderAfiliados(market){
       const sn=escHtml((s.text||'').replace(/\n/g,' ').slice(0,180));
       const it=s.intent_type||'?';
       const color=(it==='buying'||it==='comprando')?'var(--accent)':(it==='researching'||it==='pesquisando')?'#e0a800':'var(--text-muted)';
-      const plat=(s.platform||'reddit')==='tiktok'?'TikTok':'Reddit';
+      const plat=s.platform==='tiktok'?'TikTok':s.platform==='instagram'?'Instagram':'Reddit';
       const src=s.source||(s.subreddit?('r/'+s.subreddit):'?');
       return `<div class="aff-signal">
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1667,7 +1668,7 @@ async function saveAffiliateOffer(market){
 
 async function searchAffiliateBuyers(market,query,platform){
   platform=platform||'reddit';
-  const nomes={reddit:'Reddit',tiktok:'TikTok',both:'Reddit + TikTok'};
+  const nomes={reddit:'Reddit',tiktok:'TikTok',instagram:'Instagram',all:'Reddit + TikTok + Instagram'};
   if(!confirm(`Buscar compradores de "${query}" no ${nomes[platform]}?\n\nUsa a Apify (~US$ 0,40-0,65 do seu crédito) e leva 1-3 min.`)) return;
   try{
     const r=await fetch(`/api/local/affiliate/${market}/search`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query,platform})});

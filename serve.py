@@ -373,7 +373,7 @@ class LeadMachineHandler(SimpleHTTPRequestHandler):
         if not query:
             return self._send_json(400, {"error": "query obrigatoria"})
         platform = (payload.get("platform") or "reddit").strip()
-        if platform not in ("reddit", "tiktok", "both"):
+        if platform not in ("reddit", "tiktok", "instagram", "all"):
             platform = "reddit"
         script = BASE_DIR / "agents" / "affiliate_us" / "spike_collect.py"
         logf = BASE_DIR / "agents" / f"affiliate_{market}" / "last_search.log"
