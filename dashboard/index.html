@@ -1561,7 +1561,9 @@ document.querySelectorAll('.nav-item').forEach(el=>{
 });
 
 // ─── AFILIADOS (US / BR) ───
+const affilCache={us:[],br:[]};
 function escHtml(s){return (s||'').toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function affilProfileUrl(s){const a=(s.author||'').replace(/^@/,'');if(!a||a==='?')return '';return (s.platform==='tiktok')?('https://www.tiktok.com/@'+a):('https://www.reddit.com/user/'+a)}
 
 async function renderAfiliados(market){
   const el=document.getElementById(`afiliados-${market}-content`);
@@ -1576,6 +1578,7 @@ async function renderAfiliados(market){
     const signals=await sigRes.json();
     const offers=(offData&&offData.offers)||[];
     const sigArr=Array.isArray(signals)?signals:[];
+    affilCache[market]=sigArr;
     const buying=sigArr.filter(s=>s.intent_type==='buying'||s.intent_type==='comprando').length;
 
     // badge na sidebar = nº de sinais
@@ -1614,7 +1617,8 @@ async function renderAfiliados(market){
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <span style="color:${color};font-weight:600;font-size:11px;text-transform:uppercase">${escHtml(it)} ${s.score??''}</span>
           <span class="badge">${plat}</span>
-          <span style="font-size:11px;color:var(--text-tertiary)">${escHtml(src)} &middot; u/${escHtml(s.author||'?')}</span>
+          ${(()=>{const u=affilProfileUrl(s);const at='@'+escHtml((s.author||'?').replace(/^@/,''));return u?`<a href="${escHtml(u)}" target="_blank" style="font-size:12px;color:var(--accent);font-weight:600">${at}</a>`:`<span style="font-size:12px;color:var(--text-secondary)">${at}</span>`})()}
+          <span style="font-size:11px;color:var(--text-tertiary)">${escHtml(src)}</span>
           ${s.desired_category?`<span class="badge">${escHtml(s.desired_category)}</span>`:''}
         </div>
         <div style="font-size:12px;margin-top:5px;color:var(--text-secondary)">"${sn}"</div>
@@ -1629,10 +1633,13 @@ async function renderAfiliados(market){
         <input class="form-input" id="aff-${market}-network" style="flex:1;min-width:100px" placeholder="Rede (Amazon, AliExpress...)" />
         <button class="btn primary" onclick="saveAffiliateOffer('${market}')">+ Adicionar</button>
       </div>
-      <div class="aff-stats">
-        <div class="aff-stat"><strong>${offers.length}</strong><span>ofertas</span></div>
-        <div class="aff-stat"><strong>${sigArr.length}</strong><span>sinais</span></div>
-        <div class="aff-stat"><strong>${buying}</strong><span>comprando</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:18px">
+        <div class="aff-stats" style="margin-bottom:0">
+          <div class="aff-stat"><strong>${offers.length}</strong><span>ofertas</span></div>
+          <div class="aff-stat"><strong>${sigArr.length}</strong><span>sinais</span></div>
+          <div class="aff-stat"><strong>${buying}</strong><span>comprando</span></div>
+        </div>
+        <button class="btn primary" onclick="exportAffiliateContacts('${market}')"${sigArr.length?'':' disabled'}>&#11015; Exportar @s (CSV)</button>
       </div>
       <div class="aff-sec-title">Ofertas (${offers.length})</div>
       <div class="aff-grid">${offHtml}</div>
@@ -1667,6 +1674,27 @@ async function searchAffiliateBuyers(market,query,platform){
     if(!r.ok){const e=await r.json();throw new Error(e.error||'falha')}
     notify(`Buscando "${query}" no ${nomes[platform]}... recarregue a aba em 2-3 min`,'info');
   }catch(e){notify('Erro: '+e.message,'err')}
+}
+
+// Exporta os @s dos compradores num CSV (pronto pra outreach/análise de tráfego)
+function exportAffiliateContacts(market){
+  const rows=affilCache[market]||[];
+  if(!rows.length){notify('Nada pra exportar — rode uma busca antes','err');return}
+  const head=['arroba','perfil_url','plataforma','intencao','score','produto','comentario','link_post'];
+  const esc=v=>'"'+String(v==null?'':v).replace(/"/g,'""').replace(/\r?\n/g,' ')+'"';
+  const lines=[head.join(',')];
+  rows.forEach(s=>{
+    const at=(s.author&&s.author!=='?')?('@'+String(s.author).replace(/^@/,'')):'';
+    lines.push([at,affilProfileUrl(s),s.platform||'',s.intent_type||'',s.score??'',s.query||'',s.text||'',s.url||''].map(esc).join(','));
+  });
+  const csv=String.fromCharCode(0xFEFF)+lines.join('\r\n'); // BOM = Excel abre acentos certo
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`contatos_afiliado_${market}_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  notify(`${rows.length} contatos exportados (CSV)`,'ok');
 }
 
 // ─── COMMAND EXECUTION ───
