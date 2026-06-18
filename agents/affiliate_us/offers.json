@@ -1,0 +1,43 @@
+{
+  "niche": "weight_loss",
+  "market": "US",
+  "_comment": "Catalogo de ofertas que voce e afiliado. O pipeline casa a dor do lead com a oferta certa e gera a mensagem. PREENCHA affiliate_link depois de ser aprovado na rede.",
+
+  "compliance": {
+    "disclosure_required": "#ad — affiliate link, I may earn a commission",
+    "no_health_claims": true,
+    "banned_phrases": ["cure", "guaranteed results", "lose X pounds in", "miracle", "FDA approved", "treats", "clinically proven to"],
+    "_note": "Saude e zona FTC/FDA. Sem promessa de resultado, sem claim medico. Disclosure SEMPRE."
+  },
+
+  "networks_to_join": {
+    "_comment": "Onde se cadastrar. Amazon NAO permite link em DM/mensagem — so serve pra conteudo (site/YouTube).",
+    "allows_dm_or_social": ["ShareASale", "ClickBank", "Digistore24", "brand_direct (Refersion/GoAffPro)", "iHerb"],
+    "content_only_no_dm": ["Amazon Associates"]
+  },
+
+  "offers": [
+    {
+      "id": "OFF-001",
+      "product": "<nome do produto>",
+      "category": "appetite_control",
+      "format": "physical",
+      "network": "ShareASale",
+      "affiliate_link": "PLACEHOLDER_REPLACE_AFTER_APPROVAL",
+      "commission": "",
+      "allows_social_dm": true,
+      "reputation_notes": "preferir marca conhecida, evitar 'diet pill' generica (chargeback/reputacao)"
+    },
+    {
+      "id": "OFF-002",
+      "product": "<nome do produto>",
+      "category": "protein_meal_replacement",
+      "format": "physical",
+      "network": "brand_direct",
+      "affiliate_link": "PLACEHOLDER_REPLACE_AFTER_APPROVAL",
+      "commission": "",
+      "allows_social_dm": true,
+      "reputation_notes": ""
+    }
+  ]
+}

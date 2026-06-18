@@ -73,6 +73,8 @@ class LeadMachineHandler(SimpleHTTPRequestHandler):
             return self.serve_campaign_get(cid)
         if path == "/api/local/exports":
             return self.serve_export()
+        if path.startswith("/api/local/affiliate/"):
+            return self.serve_affiliate(path)
         if path.startswith("/api/"):
             return self.proxy_to_paperclip("GET")
         if path in ("/", "/index.html"):
@@ -282,6 +284,32 @@ class LeadMachineHandler(SimpleHTTPRequestHandler):
         if not ok:
             return self._send_json(404, {"error": "campanha nao encontrada ou protegida"})
         self._send_json(200, {"archived" if not hard else "deleted": cid})
+
+    # ── Afiliados (US / BR) ─────────────────────────────────────
+
+    def serve_affiliate(self, path):
+        """GET /api/local/affiliate/{market}/{kind} -> le agents/affiliate_{market}/{file}.
+
+        market: us | br    kind: offers | signals | discovery
+        Arquivo ausente devolve vazio (BR ainda sem coleta, etc.) em vez de erro.
+        """
+        parts = path.strip("/").split("/")  # api/local/affiliate/us/offers
+        if len(parts) != 5:
+            return self._send_json(404, {"error": "rota invalida"})
+        market, kind = parts[3], parts[4]
+        if market not in ("us", "br"):
+            return self._send_json(404, {"error": f"mercado invalido: {market}"})
+        fname = {"offers": "offers.json", "signals": "intent_signals.json",
+                 "discovery": "discovery.json"}.get(kind)
+        if not fname:
+            return self._send_json(404, {"error": f"recurso invalido: {kind}"})
+        fpath = BASE_DIR / "agents" / f"affiliate_{market}" / fname
+        if not fpath.exists():
+            return self._send_json(200, [] if kind == "signals" else {})
+        try:
+            self._send_json(200, json.loads(fpath.read_text(encoding="utf-8")))
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
 
     # ── Exports ─────────────────────────────────────────────────
 

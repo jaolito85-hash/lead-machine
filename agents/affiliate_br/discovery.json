@@ -1,0 +1,48 @@
+{
+  "niche": "emagrecimento",
+  "market": "BR",
+  "language": "pt",
+  "_comment": "Config de DESCOBERTA de intent (Brasil). Obs: no BR o Reddit e mais fraco que TikTok/Instagram/grupos de Facebook pra esse nicho. Use como ponto de partida e migre o canal conforme o resultado.",
+
+  "subreddits": [
+    "emagrecer",
+    "fitnessbr",
+    "brasil",
+    "desabafos"
+  ],
+
+  "intent_queries": [
+    "como emagrecer de vez",
+    "melhor suplemento pra emagrecer",
+    "o que funcionou pra voce emagrecer",
+    "quero emagrecer mas nada funciona",
+    "remedio natural pra emagrecer",
+    "shake pra emagrecer recomendacao",
+    "produto pra perder barriga"
+  ],
+
+  "intent_rubric": {
+    "_scale": "0.0 (ruido) a 1.0 (comprando agora)",
+    "comprando":   { "min_score": 0.80, "signals": ["pedindo recomendacao de produto", "o que comprar", "disposto a pagar", "procurando suplemento"] },
+    "pesquisando": { "min_score": 0.50, "signals": ["comparando opcoes", "X funciona mesmo", "vale a pena", "alguem ja usou"] },
+    "frustrado":   { "min_score": 0.30, "signals": ["nada funciona", "ja tentei de tudo", "produto atual parou de fazer efeito"] },
+    "ruido":       { "max_score": 0.20, "signals": ["off-topic", "desabafo sem intencao de compra", "vendendo algo"] }
+  },
+
+  "safety_exclusions": {
+    "_comment": "NUNCA gerar outreach pra estes casos — etica + risco (CDC/Anvisa/Procon).",
+    "drop_if": [
+      "sinais_de_transtorno_alimentar",
+      "menor_de_18",
+      "gravidez_ou_amamentacao",
+      "condicao_medica_ou_medicamento_citado",
+      "pediu_pra_nao_receber_dm"
+    ]
+  },
+
+  "limits": {
+    "max_posts_per_query": 25,
+    "max_comments_per_post": 50,
+    "max_signals_per_run": 100
+  }
+}

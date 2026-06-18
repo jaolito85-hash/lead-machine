@@ -1,0 +1,43 @@
+{
+  "niche": "emagrecimento",
+  "market": "BR",
+  "_comment": "Catalogo de ofertas que voce e afiliado (Brasil). PREENCHA affiliate_link depois de ser aprovado na rede.",
+
+  "compliance": {
+    "disclosure_required": "#publi — link de afiliado, posso receber comissao",
+    "no_health_claims": true,
+    "banned_phrases": ["cura", "garantido", "emagreca X kg", "milagroso", "aprovado pela Anvisa", "trata", "comprovado clinicamente"],
+    "_note": "Saude no BR = atencao CDC/Procon/Anvisa. Sem promessa de resultado, sem claim medico. Disclosure (#publi) SEMPRE."
+  },
+
+  "networks_to_join": {
+    "_comment": "Redes BR de infoproduto/nutra. Hotmart/Monetizze/Eduzz dominam emagrecimento. Permitem divulgacao em social com disclosure.",
+    "allows_dm_or_social": ["Hotmart", "Monetizze", "Eduzz", "Braip"],
+    "marketplace_fisico": ["Amazon BR (so conteudo, nao DM)", "Magalu Parceiro", "Shopee Afiliados"]
+  },
+
+  "offers": [
+    {
+      "id": "OFF-BR-001",
+      "product": "<nome do produto>",
+      "category": "termogenico",
+      "format": "physical",
+      "network": "Monetizze",
+      "affiliate_link": "PLACEHOLDER_TROCAR_APOS_APROVACAO",
+      "commission": "",
+      "allows_social_dm": true,
+      "reputation_notes": "preferir produto com reputacao, evitar promessa milagrosa (reclamacao/chargeback)"
+    },
+    {
+      "id": "OFF-BR-002",
+      "product": "<nome do produto>",
+      "category": "shake_substituto",
+      "format": "physical",
+      "network": "Hotmart",
+      "affiliate_link": "PLACEHOLDER_TROCAR_APOS_APROVACAO",
+      "commission": "",
+      "allows_social_dm": true,
+      "reputation_notes": ""
+    }
+  ]
+}

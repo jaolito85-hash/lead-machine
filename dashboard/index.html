@@ -567,6 +567,9 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
     <div class="nav-label">Operacao</div>
     <div class="nav-item" data-page="agents">&#9881; Agentes</div>
     <div class="nav-item" data-page="buscas">&#9202; Buscas Salvas <span class="badge" id="buscas-badge">0</span></div>
+    <div class="nav-label">Afiliados</div>
+    <div class="nav-item" data-page="afiliados-us">&#127482;&#127480; Afiliados EUA <span class="badge" id="afil-us-badge">0</span></div>
+    <div class="nav-item" data-page="afiliados-br">&#127463;&#127479; Afiliados Brasil <span class="badge" id="afil-br-badge">0</span></div>
     <div class="nav-label">Sistema</div>
     <div class="nav-item" data-page="activity">&#9776; Atividades</div>
     <div class="nav-item" data-page="settings">&#9881; Config</div>
@@ -733,6 +736,38 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
       </div>
       <div id="buscas-status" style="margin-bottom:12px;font-size:11px;color:var(--text-tertiary)"></div>
       <div id="buscas-list"></div>
+    </div>
+
+    <!-- ═══ AFILIADOS PAGES ═══ -->
+    <style>
+      .aff-stats{display:flex;gap:10px;margin-bottom:18px}
+      .aff-stat{background:var(--bg-elevated,#1a1a1a);border:1px solid var(--border-subtle);border-radius:8px;padding:10px 16px;min-width:90px}
+      .aff-stat strong{display:block;font-size:20px;font-family:var(--font-sans)}
+      .aff-stat span{font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px}
+      .aff-sec-title{font-family:var(--font-sans);font-size:14px;font-weight:600;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border-subtle)}
+      .aff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+      .aff-card{background:var(--bg-elevated,#1a1a1a);border:1px solid var(--border-subtle);border-radius:8px;padding:12px}
+      .aff-signal{background:var(--bg-elevated,#1a1a1a);border:1px solid var(--border-subtle);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+    </style>
+    <div class="page" id="page-afiliados-us">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div>
+          <span style="font-family:var(--font-sans);font-size:15px;font-weight:600">&#127482;&#127480; Afiliados &mdash; EUA</span>
+          <p style="font-size:11px;color:var(--text-tertiary);margin-top:4px">Pipeline de afilia&ccedil;&atilde;o (produto f&iacute;sico, mercado US). Ofertas que voc&ecirc; promove + sinais de intent coletados. Config em <code>agents/affiliate_us/</code>.</p>
+        </div>
+        <button class="btn" onclick="renderAfiliados('us')">&#x21bb; Recarregar</button>
+      </div>
+      <div id="afiliados-us-content"></div>
+    </div>
+    <div class="page" id="page-afiliados-br">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div>
+          <span style="font-family:var(--font-sans);font-size:15px;font-weight:600">&#127463;&#127479; Afiliados &mdash; Brasil</span>
+          <p style="font-size:11px;color:var(--text-tertiary);margin-top:4px">Pipeline de afilia&ccedil;&atilde;o (produto f&iacute;sico, mercado BR). Redes Hotmart/Monetizze/Eduzz. Config em <code>agents/affiliate_br/</code>.</p>
+        </div>
+        <button class="btn" onclick="renderAfiliados('br')">&#x21bb; Recarregar</button>
+      </div>
+      <div id="afiliados-br-content"></div>
     </div>
 
     <!-- ═══ ACTIVITY PAGE ═══ -->
@@ -1515,12 +1550,84 @@ document.querySelectorAll('.nav-item').forEach(el=>{
     const p=el.dataset.page;if(!p)return;
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');
     document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('active'));document.getElementById('page-'+p).classList.add('active');
-    const titles={command:['Central de Comando','Voce da a ordem. Agentes executam.'],kanban:['Pipeline','Arraste os cards entre as etapas do funil'],leads:['Pessoas','Pessoas que demonstraram interesse no servico'],empresas:['Empresas','Negocios encontrados no Google Maps'],entregas:['Entregas','Exportar leads de uma campanha pra entregar ao cliente'],agents:['Agentes','Seus funcionarios especializados'],buscas:['Buscas Salvas','Buscas executadas automaticamente em loop'],activity:['Atividades','Log do sistema'],settings:['Configuracao','API keys, proxies, plataformas']};
+    const titles={command:['Central de Comando','Voce da a ordem. Agentes executam.'],kanban:['Pipeline','Arraste os cards entre as etapas do funil'],leads:['Pessoas','Pessoas que demonstraram interesse no servico'],empresas:['Empresas','Negocios encontrados no Google Maps'],entregas:['Entregas','Exportar leads de uma campanha pra entregar ao cliente'],agents:['Agentes','Seus funcionarios especializados'],buscas:['Buscas Salvas','Buscas executadas automaticamente em loop'],activity:['Atividades','Log do sistema'],settings:['Configuracao','API keys, proxies, plataformas'],'afiliados-us':['Afiliados - EUA','Ofertas e sinais de intent do mercado americano'],'afiliados-br':['Afiliados - Brasil','Ofertas e sinais de intent do mercado brasileiro']};
     if(p==='entregas') renderEntregas();
+    if(p==='afiliados-us') renderAfiliados('us');
+    if(p==='afiliados-br') renderAfiliados('br');
     document.getElementById('pg-title').textContent=titles[p][0];
     document.getElementById('pg-sub').textContent=titles[p][1];
   });
 });
+
+// ─── AFILIADOS (US / BR) ───
+function escHtml(s){return (s||'').toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+async function renderAfiliados(market){
+  const el=document.getElementById(`afiliados-${market}-content`);
+  if(!el) return;
+  el.innerHTML='<div style="color:var(--text-muted);padding:20px">Carregando...</div>';
+  try{
+    const [offRes,sigRes]=await Promise.all([
+      fetch(`/api/local/affiliate/${market}/offers`),
+      fetch(`/api/local/affiliate/${market}/signals`)
+    ]);
+    const offData=await offRes.json();
+    const signals=await sigRes.json();
+    const offers=(offData&&offData.offers)||[];
+    const sigArr=Array.isArray(signals)?signals:[];
+    const buying=sigArr.filter(s=>s.intent_type==='buying'||s.intent_type==='comprando').length;
+
+    // badge na sidebar = nº de sinais
+    const badge=document.getElementById(`afil-${market}-badge`);
+    if(badge) badge.textContent=sigArr.length;
+
+    // Cards de ofertas
+    const offHtml=offers.map(o=>{
+      const link=o.affiliate_link||'';
+      const linkOk=link && !link.startsWith('PLACEHOLDER');
+      return `<div class="aff-card">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">
+          <strong style="font-size:13px">${escHtml(o.product||'(sem nome)')}</strong>
+          <span class="badge">${escHtml(o.network||'')}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-tertiary);margin-top:6px">cat: ${escHtml(o.category||'-')}${o.commission?' &middot; '+escHtml(o.commission):''}</div>
+        <div style="font-size:11px;margin-top:8px;color:${linkOk?'var(--accent)':'var(--warm)'}">
+          ${linkOk?'&#10003; link configurado':'&#9888; link pendente (cadastre-se na rede)'}
+        </div>
+      </div>`;
+    }).join('') || `<div style="color:var(--text-muted);padding:12px">Nenhuma oferta cadastrada. Edite <code>agents/affiliate_${market}/offers.json</code>.</div>`;
+
+    // Sinais de intent
+    const sigHtml=sigArr.map(s=>{
+      const sn=escHtml((s.text||'').replace(/\n/g,' ').slice(0,180));
+      const it=s.intent_type||'?';
+      const color=(it==='buying'||it==='comprando')?'var(--accent)':(it==='researching'||it==='pesquisando')?'#e0a800':'var(--text-muted)';
+      return `<div class="aff-signal">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span style="color:${color};font-weight:600;font-size:11px;text-transform:uppercase">${escHtml(it)} ${s.score??''}</span>
+          <span style="font-size:11px;color:var(--text-tertiary)">r/${escHtml(s.subreddit||'?')} &middot; u/${escHtml(s.author||'?')}</span>
+          ${s.desired_category?`<span class="badge">${escHtml(s.desired_category)}</span>`:''}
+        </div>
+        <div style="font-size:12px;margin-top:5px;color:var(--text-secondary)">"${sn}"</div>
+        ${s.url?`<a href="${escHtml(s.url)}" target="_blank" style="font-size:10px;color:var(--accent)">ver original &#8599;</a>`:''}
+      </div>`;
+    }).join('') || `<div style="color:var(--text-muted);padding:12px">Nenhum sinal coletado ainda. Rode o spike de coleta (<code>spike_collect.py</code>).</div>`;
+
+    el.innerHTML=`
+      <div class="aff-stats">
+        <div class="aff-stat"><strong>${offers.length}</strong><span>ofertas</span></div>
+        <div class="aff-stat"><strong>${sigArr.length}</strong><span>sinais</span></div>
+        <div class="aff-stat"><strong>${buying}</strong><span>comprando</span></div>
+      </div>
+      <div class="aff-sec-title">Ofertas (${offers.length})</div>
+      <div class="aff-grid">${offHtml}</div>
+      <div class="aff-sec-title">Sinais de Intent (${sigArr.length})</div>
+      <div>${sigHtml}</div>
+    `;
+  }catch(e){
+    el.innerHTML='<div style="color:var(--warm);padding:20px">Erro ao carregar: '+escHtml(e.message)+'</div>';
+  }
+}
 
 // ─── COMMAND EXECUTION ───
 function executeCommand(){
