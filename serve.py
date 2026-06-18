@@ -94,6 +94,8 @@ class LeadMachineHandler(SimpleHTTPRequestHandler):
             return self.serve_affiliate_offer_create(path)
         if path.startswith("/api/local/affiliate/") and path.endswith("/search"):
             return self.serve_affiliate_search(path)
+        if path.startswith("/api/local/affiliate/") and path.endswith("/draft"):
+            return self.serve_affiliate_draft(path)
         if path.startswith("/api/"):
             return self.proxy_to_paperclip("POST")
         self.send_response(404)
@@ -389,6 +391,24 @@ class LeadMachineHandler(SimpleHTTPRequestHandler):
             )
             self._send_json(202, {"started": True, "query": query,
                                   "market": market, "platform": platform})
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def serve_affiliate_draft(self, path):
+        """POST /api/local/affiliate/{market}/draft — gera a DM de outreach pra um sinal."""
+        parts = path.strip("/").split("/")
+        market = parts[3] if len(parts) >= 5 else ""
+        if market not in ("us", "br"):
+            return self._send_json(404, {"error": "mercado invalido"})
+        payload = self._read_json()
+        if payload is None:
+            return
+        signal = payload.get("signal") or {}
+        try:
+            import importlib
+            sys.path.insert(0, str(BASE_DIR / "agents" / "affiliate_us"))
+            outreach = importlib.import_module("outreach")
+            self._send_json(200, outreach.generate_dm(market, signal))
         except Exception as e:
             self._send_json(500, {"error": str(e)})
 

@@ -1562,6 +1562,7 @@ document.querySelectorAll('.nav-item').forEach(el=>{
 
 // ─── AFILIADOS (US / BR) ───
 const affilCache={us:[],br:[]};
+const affilProductFilter={us:'all',br:'all'};
 function escHtml(s){return (s||'').toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function affilProfileUrl(s){const a=(s.author||'').replace(/^@/,'');if(!a||a==='?')return '';if(s.platform==='tiktok')return 'https://www.tiktok.com/@'+a;if(s.platform==='instagram')return 'https://www.instagram.com/'+a+'/';return 'https://www.reddit.com/user/'+a}
 
@@ -1578,9 +1579,13 @@ async function renderAfiliados(market){
     const signals=await sigRes.json();
     const offers=(offData&&offData.offers)||[];
     const sigArr=Array.isArray(signals)?signals:[];
+    sigArr.forEach((s,i)=>{s._i=i});
     affilCache[market]=sigArr;
-    const buyers=sigArr.filter(s=>!s.is_seller);
-    const sellers=sigArr.filter(s=>s.is_seller);
+    const products=[...new Set(sigArr.map(s=>s.query).filter(q=>q&&q!=='(nicho)'))];
+    const pf=affilProductFilter[market]||'all';
+    const inF=s=>pf==='all'||s.query===pf;
+    const buyers=sigArr.filter(s=>!s.is_seller&&inF(s));
+    const sellers=sigArr.filter(s=>s.is_seller&&inF(s));
     const buying=buyers.filter(s=>s.intent_type==='buying'||s.intent_type==='comprando').length;
 
     // badge na sidebar = nº de COMPRADORES (lojas nao contam)
@@ -1623,9 +1628,11 @@ async function renderAfiliados(market){
           ${(()=>{const u=affilProfileUrl(s);const at='@'+escHtml((s.author||'?').replace(/^@/,''));return u?`<a href="${escHtml(u)}" target="_blank" style="font-size:12px;color:var(--accent);font-weight:600">${at}</a>`:`<span style="font-size:12px;color:var(--text-secondary)">${at}</span>`})()}
           <span style="font-size:11px;color:var(--text-tertiary)">${escHtml(src)}</span>
           ${s.desired_category?`<span class="badge">${escHtml(s.desired_category)}</span>`:''}
+          ${s.query&&s.query!=='(nicho)'?`<span class="badge" style="background:var(--accent);color:#000">${escHtml(s.query)}</span>`:''}
         </div>
         <div style="font-size:12px;margin-top:5px;color:var(--text-secondary)">"${sn}"</div>
         ${s.url?`<a href="${escHtml(s.url)}" target="_blank" style="font-size:10px;color:var(--accent)">ver original &#8599;</a>`:''}
+        ${!s.is_seller?`<div style="margin-top:6px"><button class="btn" style="font-size:10px" onclick="generateDM('${market}',${s._i})">&#9997; Gerar DM</button></div><div id="dm-${market}-${s._i}" style="display:none;margin-top:8px"></div>`:''}
       </div>`;
     };
     const buyersHtml=buyers.map(renderSig).join('') || `<div style="color:var(--text-muted);padding:12px">Nenhum comprador ainda. Rode uma busca num produto acima.</div>`;
@@ -1645,7 +1652,13 @@ async function renderAfiliados(market){
           <div class="aff-stat"><strong>${buying}</strong><span>comprando</span></div>
           <div class="aff-stat"><strong>${sellers.length}</strong><span>lojas</span></div>
         </div>
-        <button class="btn primary" onclick="exportAffiliateContacts('${market}')"${buyers.length?'':' disabled'}>&#11015; Exportar @s (CSV)</button>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          ${products.length>1?`<select onchange="setAffilProduct('${market}',this.value)" style="background:var(--bg-elevated,#1a1a1a);color:var(--text-secondary);border:1px solid var(--border-subtle);border-radius:6px;padding:6px 8px;font-size:11px">
+            <option value="all"${pf==='all'?' selected':''}>Todos os produtos (${products.length})</option>
+            ${products.map(p=>`<option value="${escHtml(p)}"${pf===p?' selected':''}>${escHtml(p)}</option>`).join('')}
+          </select>`:''}
+          <button class="btn primary" onclick="exportAffiliateContacts('${market}')"${buyers.length?'':' disabled'}>&#11015; Exportar @s (CSV)</button>
+        </div>
       </div>
       <div class="aff-sec-title">Ofertas (${offers.length})</div>
       <div class="aff-grid">${offHtml}</div>
@@ -1703,6 +1716,39 @@ function exportAffiliateContacts(market){
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
   notify(`${rows.length} contatos exportados (CSV)`,'ok');
+}
+
+function setAffilProduct(market,val){affilProductFilter[market]=val;renderAfiliados(market)}
+
+// Gera a DM de outreach pra um comprador (LLM + link + disclosure)
+async function generateDM(market,idx){
+  const s=affilCache[market][idx];
+  const box=document.getElementById(`dm-${market}-${idx}`);
+  if(!s||!box) return;
+  if(box.style.display==='block'){box.style.display='none';return}
+  box.style.display='block';
+  box.innerHTML='<div style="color:var(--text-muted);font-size:11px;padding:6px">Gerando mensagem...</div>';
+  try{
+    const r=await fetch(`/api/local/affiliate/${market}/draft`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({signal:s})});
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.error||'falha');
+    const prof=affilProfileUrl(s);
+    const at=escHtml((s.author||'').replace(/^@/,''));
+    box.innerHTML=`
+      <textarea class="form-input" id="dmtext-${market}-${idx}" style="width:100%;min-height:84px;font-size:12px">${escHtml(d.message)}</textarea>
+      ${d.has_link?'':'<div style="color:var(--warm);font-size:10px;margin-top:3px">&#9888; Sem link de afiliado pra este produto &mdash; cadastre o link na oferta (usando placeholder).</div>'}
+      <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center">
+        <button class="btn" style="font-size:10px" onclick="copyDM('${market}',${idx})">Copiar</button>
+        ${prof?`<a class="btn" style="font-size:10px;text-decoration:none" href="${escHtml(prof)}" target="_blank">Abrir @${at} &#8599;</a>`:''}
+        <span style="font-size:9px;color:var(--text-tertiary)">${escHtml(d.engine||'')}</span>
+      </div>`;
+  }catch(e){box.innerHTML='<div style="color:var(--warm);font-size:11px;padding:6px">Erro: '+escHtml(e.message)+'</div>'}
+}
+
+function copyDM(market,idx){
+  const ta=document.getElementById(`dmtext-${market}-${idx}`);
+  if(!ta) return;
+  navigator.clipboard.writeText(ta.value).then(()=>notify('Mensagem copiada','ok'),()=>notify('Nao consegui copiar','err'));
 }
 
 // ─── COMMAND EXECUTION ───

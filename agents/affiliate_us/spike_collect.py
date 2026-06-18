@@ -332,9 +332,20 @@ def main():
     buying = sum(1 for it in buyers if it.get("intent_type") in ("buying", "comprando"))
     ordered = buyers + sellers  # compradores primeiro, lojas depois (flag is_seller)
 
-    # 4) SALVA + RESUMO
+    # 4) SALVA (merge por produto) + RESUMO
     out = aff_dir / "intent_signals.json"
-    out.write_text(json.dumps(ordered, ensure_ascii=False, indent=2), encoding="utf-8")
+    # mantem sinais de OUTROS produtos; substitui so os deste produto (mesma query)
+    existing = []
+    if out.exists():
+        try:
+            prev = json.loads(out.read_text(encoding="utf-8"))
+            existing = prev if isinstance(prev, list) else []
+        except Exception:
+            existing = []
+    this_q = product or "(nicho)"
+    kept_others = [s for s in existing if s.get("query") != this_q]
+    merged = ordered + kept_others
+    out.write_text(json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")
     by_plat = {}
     for it in ordered:
         by_plat[it["platform"]] = by_plat.get(it["platform"], 0) + 1
