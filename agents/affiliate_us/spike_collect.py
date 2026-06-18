@@ -15,6 +15,7 @@ import json
 import logging
 import os
 import sys
+import unicodedata
 from pathlib import Path
 
 try:
@@ -143,13 +144,51 @@ SELLER = ["atacado", "varejo", "frete", "link na bio", "linkna bio", "disponivel
           "available now", "shop now", "buy now", "use o cupom", "cupom"]
 
 
+def _norm(text: str) -> str:
+    """lower + NFC — comentarios do IG vem decompostos (NFD), quebrando o match de acento."""
+    return unicodedata.normalize("NFC", (text or "").lower())
+
+
 def _is_seller(text: str) -> bool:
-    t = text.lower()
+    t = _norm(text)
     return any(s in t for s in SELLER)
 
 
+# Marcadores de idioma (fallback heuristico — o LLM e o detector primario)
+PT_MARKERS = ["ção", "ções", "õe", "você", "vc ", "não", "nao ", "muito", " pra ",
+              " né", "kkk", " mano", "queria", "alguém", "alguem", " onde", " vou ",
+              " amei", " tá ", " cara ", "obrigad", " eh "]
+ES_MARKERS = ["ñ", "¿", "¡", " muy ", " pero ", "quiero", "dónde", "comprarl",
+              "cómpr", "hermos", " hola", "gracias", " qué ", "chéver", "chiler",
+              " también", " tambien", " eso ", " los ", " las ", " muchas"]
+EN_MARKERS = [" the ", " you ", " is ", " are ", " this ", " where ", " buy ",
+              " love ", " want ", "how much", " link", " my ", " for ", " please",
+              "need one", " i want"]
+
+
+def _detect_lang(text: str) -> str:
+    """Detecta pt/en/es de forma grosseira. '' = indeterminado (nao descarta)."""
+    t = " " + _norm(text) + " "
+    if "ñ" in t or "¿" in t or "¡" in t:
+        return "es"
+    # sinais FORTES de portugues (caracteres/palavras que ES e EN nao tem)
+    if any(c in t for c in ("ã", "õ", "ç")) or "você" in t or "não" in t or " nao " in t:
+        return "pt"
+    pt = sum(1 for m in PT_MARKERS if m in t)
+    es = sum(1 for m in ES_MARKERS if m in t)
+    en = sum(1 for m in EN_MARKERS if m in t)
+    best = max(pt, es, en)
+    if best == 0:
+        return ""
+    if pt == best:
+        return "pt"
+    if en == best:
+        return "en"
+    return "es"
+
+
 def classify_heuristic(text: str) -> dict:
-    t = text.lower()
+    t = _norm(text)
     drop = any(s in t for s in SAFETY)
     seller = _is_seller(text)
     hits = sum(1 for s in BUY if s in t)
@@ -157,7 +196,7 @@ def classify_heuristic(text: str) -> dict:
     itype = "buying" if score >= 0.8 else "researching" if score >= 0.5 else "noise"
     return {"intent_type": itype, "score": round(score, 2), "desired_category": "",
             "safety_drop": drop, "safety_reason": "heuristic" if drop else "",
-            "is_seller": seller}
+            "is_seller": seller, "lang": _detect_lang(text)}
 
 
 def classify_llm(items, model, api_key, exclusions, product):
@@ -181,9 +220,10 @@ shop names, prices (R$), discount coupons, "DM to order", catalog, call-to-actio
 A BUYER asks to get it ("where can I buy?", "quero um", "como faço pra comprar");
 a SELLER offers it. When in doubt about an ad-like comment, mark is_seller true.
 safety_drop: true if the item shows any of these (NEVER target): {exclusions}.
-Items may be in English or Portuguese.
+lang: main language of the comment as ISO code ("pt", "en", "es", or "other").
+Items may be in Portuguese, English or Spanish.
 
-Return ONLY JSON: {{"results":[{{"i":0,"intent_type":"...","score":0.0,"desired_category":"...","is_seller":false,"safety_drop":false,"safety_reason":""}}]}}
+Return ONLY JSON: {{"results":[{{"i":0,"intent_type":"...","score":0.0,"desired_category":"...","is_seller":false,"lang":"pt","safety_drop":false,"safety_reason":""}}]}}
 
 ITEMS:
 {blob}
@@ -228,6 +268,7 @@ def main():
 
     disc = json.loads((aff_dir / "discovery.json").read_text(encoding="utf-8"))
     exclusions = disc.get("safety_exclusions", {}).get("drop_if", [])
+    target_lang = (disc.get("language") or "").lower()  # 'pt' (BR) ou 'en' (US)
     product = args.product.strip()
     queries = [product] if product else disc["intent_queries"][: args.max_queries]
     tt_query = product or (queries[0] if queries else "")
@@ -273,12 +314,17 @@ def main():
         # rede de seguranca: se o LLM nao marcou, a heuristica pega vendedor obvio
         if not it.get("is_seller") and _is_seller(it["text"]):
             it["is_seller"] = True
+        # idioma: LLM tem prioridade, heuristica reforca; descarta se != alvo do mercado
+        lang = (it.get("lang") or "").lower() or _detect_lang(it["text"])
+        it["lang"] = lang
+        it["lang_drop"] = bool(target_lang and lang and lang != target_lang)
         it["query"] = product or "(nicho)"
         it["market"] = args.market
 
-    # 3) GUARD-RAILS + separa COMPRADOR de VENDEDOR
-    safe = [it for it in items if not it.get("safety_drop")]
-    dropped = len(items) - len(safe)
+    # 3) GUARD-RAILS (safety + idioma) + separa COMPRADOR de VENDEDOR
+    safe = [it for it in items if not it.get("safety_drop") and not it.get("lang_drop")]
+    dropped = sum(1 for it in items if it.get("safety_drop"))
+    lang_dropped = sum(1 for it in items if it.get("lang_drop") and not it.get("safety_drop"))
     sellers = [it for it in safe if it.get("is_seller")]
     buyers = [it for it in safe if not it.get("is_seller")]
     buyers.sort(key=lambda x: x.get("score", 0), reverse=True)
@@ -295,7 +341,7 @@ def main():
     print("=" * 56)
     print(f"  alvo               : {product or '(nicho)'}")
     print(f"  por plataforma     : {by_plat}")
-    print(f"  uteis: {len(items)} | safety: {dropped} | VENDEDORES filtrados: {len(sellers)}")
+    print(f"  uteis: {len(items)} | safety: {dropped} | idioma!={target_lang or '-'}: {lang_dropped} | VENDEDORES: {len(sellers)}")
     print(f"  COMPRADORES        : {len(buyers)} (comprando agora: {buying})")
     print(f"  salvo em           : {out.relative_to(ROOT)}")
     for it in buyers[:5]:
