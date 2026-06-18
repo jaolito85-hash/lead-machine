@@ -372,6 +372,9 @@ class LeadMachineHandler(SimpleHTTPRequestHandler):
         query = (payload.get("query") or "").strip()
         if not query:
             return self._send_json(400, {"error": "query obrigatoria"})
+        platform = (payload.get("platform") or "reddit").strip()
+        if platform not in ("reddit", "tiktok", "both"):
+            platform = "reddit"
         script = BASE_DIR / "agents" / "affiliate_us" / "spike_collect.py"
         logf = BASE_DIR / "agents" / f"affiliate_{market}" / "last_search.log"
         try:
@@ -381,10 +384,11 @@ class LeadMachineHandler(SimpleHTTPRequestHandler):
             max_items = str(int(payload.get("max_items", 12)))
             subprocess.Popen(
                 [sys.executable, str(script), "--market", market,
-                 "--product", query, "--max-items", max_items],
+                 "--product", query, "--platform", platform, "--max-items", max_items],
                 stdout=fh, stderr=subprocess.STDOUT, cwd=str(BASE_DIR),
             )
-            self._send_json(202, {"started": True, "query": query, "market": market})
+            self._send_json(202, {"started": True, "query": query,
+                                  "market": market, "platform": platform})
         except Exception as e:
             self._send_json(500, {"error": str(e)})
 

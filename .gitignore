@@ -11,7 +11,8 @@ start.log
 start_boot.out
 leads-export/searches.json
 leads-export/campaigns.json
-agents/affiliate_us/intent_signals.json
+agents/affiliate_*/intent_signals.json
+agents/affiliate_*/last_search.log
 
 # Cache local + backups ad-hoc (nao versionar)
 leads-export/comments.db
