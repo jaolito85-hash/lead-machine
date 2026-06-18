@@ -1,29 +1,30 @@
 #!/usr/bin/env python3
 """
-SPIKE — valida que existe INTENT PESCAVEL de emagrecimento (US) no Reddit.
+Coleta de INTENT por PRODUTO (ou nicho) — Reddit via Apify + classificacao gpt-4o.
 
-Coleta posts/comentarios via Apify (trudax/reddit-scraper-lite), classifica a
-intencao com gpt-4o e aplica os guard-rails de seguranca do discovery.json.
-NAO faz outreach. So prova que da pra encontrar gente com intencao de compra.
+Acha pessoas com intencao de comprar um produto especifico, aplica os
+guard-rails de seguranca e salva em agents/affiliate_{market}/intent_signals.json.
+NAO faz outreach. So encontra os compradores.
 
 Uso:
-  py agents/affiliate_us/spike_collect.py                 # 2 queries, 15 itens
-  py agents/affiliate_us/spike_collect.py --max-queries 3 --max-items 20
-  py agents/affiliate_us/spike_collect.py --no-llm        # sem OpenAI (heuristica)
+  # busca por PRODUTO especifico (o que a aba do dashboard dispara)
+  py agents/affiliate_us/spike_collect.py --market us --product "stanley cup"
+  py agents/affiliate_us/spike_collect.py --market br --product "copo stanley"
+
+  # ou roda as queries de nicho do discovery.json daquele mercado
+  py agents/affiliate_us/spike_collect.py --market us --max-queries 2
 """
 import argparse
 import json
 import sys
 from pathlib import Path
 
-# Evita UnicodeEncodeError no console do Windows (cp1252)
 try:
     sys.stdout.reconfigure(encoding="utf-8")
 except Exception:
     pass
 
-HERE = Path(__file__).parent
-ROOT = HERE.parent.parent
+ROOT = Path(__file__).parent.parent.parent
 
 
 def load_env() -> dict:
@@ -40,7 +41,6 @@ def load_env() -> dict:
 
 
 def normalize(it: dict) -> dict:
-    """Achata um item do actor (post ou comentario) num formato unico."""
     title = it.get("title") or ""
     body = it.get("body") or it.get("text") or it.get("content") or it.get("comment") or ""
     text = (title + "\n" + body).strip()
@@ -56,10 +56,9 @@ def normalize(it: dict) -> dict:
     }
 
 
-# ---- Classificacao heuristica (fallback se OpenAI falhar) ----
-BUY = ["recommend", "what should i", "looking for", "anyone tried", "worth it",
-       "where to buy", "willing to pay", "suggestions", "best supplement",
-       "what helped", "what worked", "anything that"]
+BUY = ["recommend", "what should i", "looking for", "where to buy", "worth it",
+       "willing to pay", "suggestions", "best", "what helped", "what worked",
+       "anything that", "link?", "where did you", "want one", "thinking of buying"]
 SAFETY = ["eating disorder", "anorexi", "bulimi", "purg", "16 year", "15 year",
           "17 year", "underage", "pregnan", "breastfeed", "my doctor", "prescribed"]
 
@@ -75,23 +74,23 @@ def classify_heuristic(text: str) -> dict:
             "safety_reason": "heuristic safety match" if drop else ""}
 
 
-def classify_llm(items, model, api_key, exclusions):
-    """Classifica todos os itens numa unica chamada gpt-4o (barato)."""
+def classify_llm(items, model, api_key, exclusions, product):
     from openai import OpenAI
     client = OpenAI(api_key=api_key)
+    target = f'the product "{product}"' if product else "a weight-loss product"
     blob = "\n".join(f"[{i}] ({it['kind']} r/{it['subreddit']}) {it['text'][:400]}"
                      for i, it in enumerate(items))
-    prompt = f"""You are a lead-intent classifier for a WEIGHT-LOSS affiliate (US market).
-For each numbered item, judge the person's intent to BUY a weight-loss product.
+    prompt = f"""You are a buyer-intent classifier for an affiliate marketer.
+For each numbered item, judge the person's intent to BUY {target}.
 
-intent_type: "buying" (asking for product rec / wants to buy), "researching"
-(comparing, asking if X works), "frustrated" (tried everything, nothing works),
-or "noise" (no purchase intent / selling / off-topic).
+intent_type: "buying" (wants to buy / asking where to buy / asking for rec),
+"researching" (comparing, asking if it's worth it), "frustrated" (unhappy with
+current option), or "noise" (no purchase intent / selling / off-topic).
 score: 0.0-1.0 likelihood of buying soon.
-desired_category: short tag (e.g. appetite_control, protein_shake, fat_burner, sleep_aid) or "".
-safety_drop: true if the item shows any of these (NEVER target these): {exclusions}.
+desired_category: short tag for what they want, or "".
+safety_drop: true if the item shows any of these (NEVER target): {exclusions}.
 
-Return ONLY a JSON object: {{"results":[{{"i":0,"intent_type":"...","score":0.0,"desired_category":"...","safety_drop":false,"safety_reason":""}}]}}
+Return ONLY JSON: {{"results":[{{"i":0,"intent_type":"...","score":0.0,"desired_category":"...","safety_drop":false,"safety_reason":""}}]}}
 
 ITEMS:
 {blob}
@@ -103,30 +102,32 @@ ITEMS:
         temperature=0,
     )
     data = json.loads(resp.choices[0].message.content)
-    by_i = {r["i"]: r for r in data.get("results", [])}
-    return by_i
+    return {r["i"]: r for r in data.get("results", [])}
 
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--market", choices=["us", "br"], default="us")
+    ap.add_argument("--product", default="", help="palavra-chave do produto afiliado")
     ap.add_argument("--max-queries", type=int, default=2)
     ap.add_argument("--max-items", type=int, default=15)
     ap.add_argument("--no-llm", action="store_true")
     args = ap.parse_args()
 
+    aff_dir = ROOT / "agents" / f"affiliate_{args.market}"
     env = load_env()
     token = env.get("APIFY_TOKEN")
     if not token:
         print("ERRO: APIFY_TOKEN ausente no .env")
         sys.exit(1)
 
-    disc = json.loads((HERE / "discovery.json").read_text(encoding="utf-8"))
-    queries = disc["intent_queries"][: args.max_queries]
+    disc = json.loads((aff_dir / "discovery.json").read_text(encoding="utf-8"))
     exclusions = disc.get("safety_exclusions", {}).get("drop_if", [])
-    print(f"[spike] nicho={disc['niche']} | mercado={disc['market']}")
-    print(f"[spike] {len(queries)} queries: {queries}")
+    product = args.product.strip()
+    queries = [product] if product else disc["intent_queries"][: args.max_queries]
+    print(f"[busca] mercado={args.market} | alvo={product or '(nicho)'} | queries={queries}")
 
-    # 1) COLETA via Apify
+    # 1) COLETA
     from apify_client import ApifyClient
     client = ApifyClient(token)
     run_input = {
@@ -141,13 +142,14 @@ def main():
         "includeNSFW": False,
         "proxy": {"useApifyProxy": True},
     }
-    print("[spike] rodando actor trudax/reddit-scraper-lite ... (1-3 min)")
+    print("[busca] rodando trudax/reddit-scraper-lite ... (1-3 min)")
     run = client.actor("trudax/reddit-scraper-lite").call(run_input=run_input, timeout_secs=240)
     raw = list(client.dataset(run["defaultDatasetId"]).iterate_items())
     items = [n for n in (normalize(it) for it in raw) if len(n["text"]) > 20]
-    print(f"[spike] coletados {len(raw)} itens crus -> {len(items)} com texto util")
+    print(f"[busca] {len(raw)} itens crus -> {len(items)} com texto util")
     if not items:
-        print("[spike] nada coletado. Tente outras queries ou aumente --max-items.")
+        (aff_dir / "intent_signals.json").write_text("[]", encoding="utf-8")
+        print("[busca] nada encontrado pra esse termo.")
         sys.exit(0)
 
     # 2) CLASSIFICACAO
@@ -155,46 +157,36 @@ def main():
     model = env.get("OPENAI_MODEL", "gpt-4o")
     llm_map = {}
     if use_llm:
-        print(f"[spike] classificando intent com {model} ...")
+        print(f"[busca] classificando intent com {model} ...")
         try:
-            llm_map = classify_llm(items, model, env["OPENAI_API_KEY"], exclusions)
+            llm_map = classify_llm(items, model, env["OPENAI_API_KEY"], exclusions, product)
         except Exception as e:
-            print(f"[spike] OpenAI falhou ({e}); usando heuristica.")
+            print(f"[busca] OpenAI falhou ({e}); usando heuristica.")
             use_llm = False
-
     for i, it in enumerate(items):
-        c = llm_map.get(i) if use_llm else None
-        if not c:
-            c = classify_heuristic(it["text"])
-        it.update(c)
+        it.update(llm_map.get(i) if use_llm else classify_heuristic(it["text"]))
+        it["query"] = product or "(nicho)"
+        it["market"] = args.market
 
     # 3) GUARD-RAILS + ranking
     safe = [it for it in items if not it.get("safety_drop")]
     dropped = len(items) - len(safe)
     safe.sort(key=lambda x: x.get("score", 0), reverse=True)
-    buying = [it for it in safe if it.get("intent_type") == "buying"]
-    researching = [it for it in safe if it.get("intent_type") == "researching"]
+    buying = sum(1 for it in safe if it.get("intent_type") == "buying")
 
     # 4) SALVA + RESUMO
-    out = HERE / "intent_signals.json"
+    out = aff_dir / "intent_signals.json"
     out.write_text(json.dumps(safe, ensure_ascii=False, indent=2), encoding="utf-8")
-
-    print("\n" + "=" * 60)
-    print("RESULTADO DO SPIKE")
-    print("=" * 60)
-    print(f"  itens uteis coletados : {len(items)}")
-    print(f"  descartados (safety)  : {dropped}")
-    print(f"  COMPRANDO (buying)    : {len(buying)}")
-    print(f"  pesquisando           : {len(researching)}")
-    print(f"  salvo em              : {out.relative_to(ROOT)}")
-    print("\n--- TOP sinais com maior intencao ---")
-    for it in safe[:6]:
-        snippet = it["text"].replace("\n", " ")[:140]
-        print(f"\n  [{it.get('intent_type')} {it.get('score')}] r/{it['subreddit']} "
-              f"cat={it.get('desired_category') or '-'}")
-        print(f"  u/{it['author']} | {it['url']}")
-        print(f"  \"{snippet}\"")
-    print("\n[spike] fim.")
+    print("=" * 56)
+    print(f"  alvo            : {product or '(nicho)'}")
+    print(f"  itens uteis     : {len(items)}")
+    print(f"  safety dropped  : {dropped}")
+    print(f"  COMPRANDO       : {buying}")
+    print(f"  salvo em        : {out.relative_to(ROOT)}")
+    for it in safe[:5]:
+        print(f"  [{it.get('intent_type')} {it.get('score')}] r/{it['subreddit']}: "
+              f"{it['text'][:90].replace(chr(10),' ')}")
+    print("[busca] fim.")
 
 
 if __name__ == "__main__":

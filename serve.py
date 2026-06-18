@@ -90,6 +90,10 @@ class LeadMachineHandler(SimpleHTTPRequestHandler):
             return self.serve_search_trigger(sid)
         if path == "/api/local/campaigns":
             return self.serve_campaign_create()
+        if path.startswith("/api/local/affiliate/") and path.endswith("/offers"):
+            return self.serve_affiliate_offer_create(path)
+        if path.startswith("/api/local/affiliate/") and path.endswith("/search"):
+            return self.serve_affiliate_search(path)
         if path.startswith("/api/"):
             return self.proxy_to_paperclip("POST")
         self.send_response(404)
@@ -308,6 +312,79 @@ class LeadMachineHandler(SimpleHTTPRequestHandler):
             return self._send_json(200, [] if kind == "signals" else {})
         try:
             self._send_json(200, json.loads(fpath.read_text(encoding="utf-8")))
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def serve_affiliate_offer_create(self, path):
+        """POST /api/local/affiliate/{market}/offers — cadastra produto+link."""
+        parts = path.strip("/").split("/")
+        market = parts[3] if len(parts) >= 5 else ""
+        if market not in ("us", "br"):
+            return self._send_json(404, {"error": "mercado invalido"})
+        payload = self._read_json()
+        if payload is None:
+            return
+        product = (payload.get("product") or "").strip()
+        if not product:
+            return self._send_json(400, {"error": "produto obrigatorio"})
+        fpath = BASE_DIR / "agents" / f"affiliate_{market}" / "offers.json"
+        try:
+            data = json.loads(fpath.read_text(encoding="utf-8")) if fpath.exists() else {}
+        except Exception:
+            data = {}
+        if not isinstance(data, dict):
+            data = {}
+        offers = data.get("offers") or []
+        import re as _re
+        max_n = 0
+        for o in offers:
+            m = _re.search(r"(\d+)$", o.get("id", ""))
+            if m:
+                max_n = max(max_n, int(m.group(1)))
+        offer = {
+            "id": f"OFF-{market.upper()}-{max_n + 1:03d}",
+            "product": product,
+            "category": (payload.get("category") or "").strip(),
+            "network": (payload.get("network") or "").strip(),
+            "affiliate_link": (payload.get("affiliate_link") or "").strip() or "PLACEHOLDER_TROCAR_APOS_APROVACAO",
+            "commission": (payload.get("commission") or "").strip(),
+            "allows_social_dm": True,
+        }
+        offers.append(offer)
+        data["offers"] = offers
+        data.setdefault("market", market.upper())
+        try:
+            fpath.parent.mkdir(parents=True, exist_ok=True)
+            fpath.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+            self._send_json(201, offer)
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def serve_affiliate_search(self, path):
+        """POST /api/local/affiliate/{market}/search — dispara coleta por produto (background)."""
+        parts = path.strip("/").split("/")
+        market = parts[3] if len(parts) >= 5 else ""
+        if market not in ("us", "br"):
+            return self._send_json(404, {"error": "mercado invalido"})
+        payload = self._read_json()
+        if payload is None:
+            return
+        query = (payload.get("query") or "").strip()
+        if not query:
+            return self._send_json(400, {"error": "query obrigatoria"})
+        script = BASE_DIR / "agents" / "affiliate_us" / "spike_collect.py"
+        logf = BASE_DIR / "agents" / f"affiliate_{market}" / "last_search.log"
+        try:
+            import subprocess
+            logf.parent.mkdir(parents=True, exist_ok=True)
+            fh = open(logf, "w", encoding="utf-8")
+            max_items = str(int(payload.get("max_items", 12)))
+            subprocess.Popen(
+                [sys.executable, str(script), "--market", market,
+                 "--product", query, "--max-items", max_items],
+                stdout=fh, stderr=subprocess.STDOUT, cwd=str(BASE_DIR),
+            )
+            self._send_json(202, {"started": True, "query": query, "market": market})
         except Exception as e:
             self._send_json(500, {"error": str(e)})
 

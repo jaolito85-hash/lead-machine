@@ -748,6 +748,7 @@ body{font-family:var(--font-mono);background:var(--bg-void);color:var(--text-pri
       .aff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
       .aff-card{background:var(--bg-elevated,#1a1a1a);border:1px solid var(--border-subtle);border-radius:8px;padding:12px}
       .aff-signal{background:var(--bg-elevated,#1a1a1a);border:1px solid var(--border-subtle);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+      .aff-add{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:16px;padding:12px;background:var(--bg-elevated,#1a1a1a);border:1px solid var(--border-subtle);border-radius:8px}
     </style>
     <div class="page" id="page-afiliados-us">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -1594,6 +1595,7 @@ async function renderAfiliados(market){
         <div style="font-size:11px;margin-top:8px;color:${linkOk?'var(--accent)':'var(--warm)'}">
           ${linkOk?'&#10003; link configurado':'&#9888; link pendente (cadastre-se na rede)'}
         </div>
+        <button class="btn" style="font-size:10px;margin-top:8px;width:100%" onclick='searchAffiliateBuyers("${market}",${JSON.stringify(o.product)})'>&#128269; Buscar compradores</button>
       </div>`;
     }).join('') || `<div style="color:var(--text-muted);padding:12px">Nenhuma oferta cadastrada. Edite <code>agents/affiliate_${market}/offers.json</code>.</div>`;
 
@@ -1614,6 +1616,12 @@ async function renderAfiliados(market){
     }).join('') || `<div style="color:var(--text-muted);padding:12px">Nenhum sinal coletado ainda. Rode o spike de coleta (<code>spike_collect.py</code>).</div>`;
 
     el.innerHTML=`
+      <div class="aff-add">
+        <input class="form-input" id="aff-${market}-product" style="flex:2;min-width:150px" placeholder="Produto afiliado (ex: copo Stanley)" />
+        <input class="form-input" id="aff-${market}-link" style="flex:2;min-width:150px" placeholder="Seu link de afiliado" />
+        <input class="form-input" id="aff-${market}-network" style="flex:1;min-width:100px" placeholder="Rede (Amazon, AliExpress...)" />
+        <button class="btn primary" onclick="saveAffiliateOffer('${market}')">+ Adicionar</button>
+      </div>
       <div class="aff-stats">
         <div class="aff-stat"><strong>${offers.length}</strong><span>ofertas</span></div>
         <div class="aff-stat"><strong>${sigArr.length}</strong><span>sinais</span></div>
@@ -1627,6 +1635,29 @@ async function renderAfiliados(market){
   }catch(e){
     el.innerHTML='<div style="color:var(--warm);padding:20px">Erro ao carregar: '+escHtml(e.message)+'</div>';
   }
+}
+
+async function saveAffiliateOffer(market){
+  const product=document.getElementById(`aff-${market}-product`).value.trim();
+  const link=document.getElementById(`aff-${market}-link`).value.trim();
+  const network=document.getElementById(`aff-${market}-network`).value.trim();
+  if(!product){notify('Digite o produto que você afiliou','err');return}
+  if(/amazon/i.test(network)) notify('Amazon não permite link em DM — use esse link só pra tráfego pago/conteúdo','info');
+  try{
+    const r=await fetch(`/api/local/affiliate/${market}/offers`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product,affiliate_link:link,network})});
+    if(!r.ok){const e=await r.json();throw new Error(e.error||'falha')}
+    notify(`Produto adicionado: ${product}`,'ok');
+    renderAfiliados(market);
+  }catch(e){notify('Erro: '+e.message,'err')}
+}
+
+async function searchAffiliateBuyers(market,query){
+  if(!confirm(`Buscar compradores de "${query}" no Reddit?\n\nUsa a Apify (~US$ 0,40-0,65 do seu crédito) e leva 1-3 min.`)) return;
+  try{
+    const r=await fetch(`/api/local/affiliate/${market}/search`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query})});
+    if(!r.ok){const e=await r.json();throw new Error(e.error||'falha')}
+    notify(`Buscando compradores de "${query}"... recarregue a aba em 2-3 min`,'info');
+  }catch(e){notify('Erro: '+e.message,'err')}
 }
 
 // ─── COMMAND EXECUTION ───
