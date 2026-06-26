@@ -1,56 +1,125 @@
 {
-  "niche": "weight_loss",
+  "niche": "multi-niche",
   "market": "US",
-  "_comment": "Catalogo de ofertas que voce e afiliado. O pipeline casa a dor do lead com a oferta certa e gera a mensagem. PREENCHA affiliate_link depois de ser aprovado na rede.",
+  "_comment": "Catalogo de ofertas afiliado EUA. PREENCHA affiliate_link apos aprovacao na rede. O sistema casa a dor do lead com a oferta certa e gera a DM com disclosure.",
+
   "compliance": {
     "disclosure_required": "#ad — affiliate link, I may earn a commission",
     "no_health_claims": true,
     "banned_phrases": [
-      "cure",
-      "guaranteed results",
-      "lose X pounds in",
-      "miracle",
-      "FDA approved",
-      "treats",
-      "clinically proven to"
+      "cure", "guaranteed results", "lose X pounds in", "miracle",
+      "FDA approved", "treats", "clinically proven to"
     ],
     "_note": "Saude e zona FTC/FDA. Sem promessa de resultado, sem claim medico. Disclosure SEMPRE."
   },
+
   "networks_to_join": {
-    "_comment": "Onde se cadastrar. Amazon NAO permite link em DM/mensagem — so serve pra conteudo (site/YouTube).",
     "allows_dm_or_social": [
-      "ShareASale",
-      "ClickBank",
-      "Digistore24",
-      "brand_direct (Refersion/GoAffPro)",
-      "iHerb"
+      "ShareASale", "ClickBank", "Digistore24",
+      "brand_direct (Refersion/GoAffPro)", "iHerb"
     ],
-    "content_only_no_dm": [
-      "Amazon Associates"
-    ]
+    "content_only_no_dm": ["Amazon Associates"]
   },
+
   "offers": [
     {
-      "id": "OFF-001",
-      "product": "<nome do produto>",
-      "category": "appetite_control",
+      "id": "OFF-US-001",
+      "product": "GLP-1 Alternative Supplement",
+      "category": "weight loss",
+      "format": "physical",
+      "network": "ClickBank",
+      "affiliate_link": "PLACEHOLDER_REPLACE_AFTER_APPROVAL",
+      "commission": "50-75%",
+      "allows_social_dm": true,
+      "reputation_notes": "High gravity score, good reviews. Avoid generic 'diet pill' (chargeback/reputation)"
+    },
+    {
+      "id": "OFF-US-002",
+      "product": "Appetite Control Supplement",
+      "category": "appetite control",
       "format": "physical",
       "network": "ShareASale",
       "affiliate_link": "PLACEHOLDER_REPLACE_AFTER_APPROVAL",
-      "commission": "",
+      "commission": "20-40%",
       "allows_social_dm": true,
-      "reputation_notes": "preferir marca conhecida, evitar 'diet pill' generica (chargeback/reputacao)"
+      "reputation_notes": "Prefer known brand, avoid generic"
     },
     {
-      "id": "OFF-002",
-      "product": "<nome do produto>",
-      "category": "protein_meal_replacement",
+      "id": "OFF-US-003",
+      "product": "Whey Protein Isolate",
+      "category": "fitness supplements",
+      "format": "physical",
+      "network": "iHerb",
+      "affiliate_link": "PLACEHOLDER_REPLACE_AFTER_APPROVAL",
+      "commission": "10-25%",
+      "allows_social_dm": true,
+      "reputation_notes": "iHerb approves fast, good recurring commission"
+    },
+    {
+      "id": "OFF-US-004",
+      "product": "Creatine Monohydrate",
+      "category": "fitness supplements",
       "format": "physical",
       "network": "brand_direct",
       "affiliate_link": "PLACEHOLDER_REPLACE_AFTER_APPROVAL",
-      "commission": "",
+      "commission": "15-25%",
+      "allows_social_dm": true,
+      "reputation_notes": "Brand direct via Refersion/GoAffPro"
+    },
+    {
+      "id": "OFF-US-005",
+      "product": "Vitamin C Serum",
+      "category": "skincare",
+      "format": "physical",
+      "network": "ShareASale",
+      "affiliate_link": "PLACEHOLDER_REPLACE_AFTER_APPROVAL",
+      "commission": "15-30%",
+      "allows_social_dm": true,
+      "reputation_notes": "Popular skincare category"
+    },
+    {
+      "id": "OFF-US-006",
+      "product": "Anti-Aging Cream Retinol",
+      "category": "skincare",
+      "format": "physical",
+      "network": "iHerb",
+      "affiliate_link": "PLACEHOLDER_REPLACE_AFTER_APPROVAL",
+      "commission": "10-25%",
       "allows_social_dm": true,
       "reputation_notes": ""
+    },
+    {
+      "id": "OFF-US-007",
+      "product": "Stanley Tumbler 40oz",
+      "category": "home kitchen",
+      "format": "physical",
+      "network": "Amazon Associates",
+      "affiliate_link": "PLACEHOLDER_REPLACE_AFTER_APPROVAL",
+      "commission": "4-8%",
+      "allows_social_dm": false,
+      "reputation_notes": "Amazon so permite link em conteudo, nao DM"
+    },
+    {
+      "id": "OFF-US-008",
+      "product": "Air Fryer Pro",
+      "category": "home kitchen",
+      "format": "physical",
+      "network": "Amazon Associates",
+      "affiliate_link": "PLACEHOLDER_REPLACE_AFTER_APPROVAL",
+      "commission": "4-8%",
+      "allows_social_dm": false,
+      "reputation_notes": "High ticket, Amazon content only"
+    },
+    {
+      "id": "OFF-US-009",
+      "product": "Meal Replacement Shake",
+      "category": "weight loss",
+      "format": "physical",
+      "network": "Digistore24",
+      "affiliate_link": "PLACEHOLDER_REPLACE_AFTER_APPROVAL",
+      "commission": "40-75%",
+      "allows_social_dm": true,
+      "reputation_notes": "Digistore24 has high commission digital+physical products"
     }
   ]
 }

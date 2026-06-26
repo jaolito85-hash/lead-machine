@@ -1,8 +1,8 @@
 {
-  "niche": "weight_loss",
+  "niche": "multi-niche",
   "market": "US",
   "language": "en",
-  "_comment": "Config de DESCOBERTA de intent. O agente de coleta usa isto pra saber onde procurar, o que procurar e como pontuar a intencao. Edite livremente.",
+  "_comment": "Config de DESCOBERTA de intent (US). Multi-niche: weight loss, fitness, skincare, home/kitchen.",
 
   "subreddits": [
     "loseit",
@@ -12,7 +12,9 @@
     "CICO",
     "xxfitness",
     "PCOS",
-    "Supplements"
+    "Supplements",
+    "SkincareAddiction",
+    "AsianBeauty"
   ],
 
   "intent_queries": [
@@ -24,11 +26,17 @@
     "over the counter GLP-1 alternative",
     "metabolism booster recommendations",
     "what protein shake do you recommend",
-    "any product that helped you stay full"
+    "any product that helped you stay full",
+    "best vitamin c serum",
+    "retinol for beginners recommendations",
+    "skincare routine for acne",
+    "best air fryer",
+    "stanley cup worth it",
+    "best kitchen gadgets"
   ],
 
   "intent_rubric": {
-    "_scale": "0.0 (ruido) a 1.0 (comprando agora)",
+    "_scale": "0.0 (noise) to 1.0 (buying now)",
     "buying":      { "min_score": 0.80, "signals": ["asking for product recommendation", "what should I buy", "willing to pay", "looking for a product/supplement"] },
     "researching": { "min_score": 0.50, "signals": ["comparing options", "does X actually work", "any reviews", "is X worth it"] },
     "frustrated":  { "min_score": 0.30, "signals": ["nothing works", "tried everything", "current product stopped working"] },
@@ -36,7 +44,7 @@
   },
 
   "safety_exclusions": {
-    "_comment": "NUNCA gerar outreach pra estes casos — etica + risco legal. O classificador marca e descarta.",
+    "_comment": "NEVER generate outreach for these cases — ethics + legal risk (FTC/FDA).",
     "drop_if": [
       "eating_disorder_signals",
       "minor_or_under_18",

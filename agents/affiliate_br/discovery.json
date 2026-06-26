@@ -1,14 +1,15 @@
 {
-  "niche": "emagrecimento",
+  "niche": "multi-nicho",
   "market": "BR",
   "language": "pt",
-  "_comment": "Config de DESCOBERTA de intent (Brasil). Obs: no BR o Reddit e mais fraco que TikTok/Instagram/grupos de Facebook pra esse nicho. Use como ponto de partida e migre o canal conforme o resultado.",
+  "_comment": "Config de DESCOBERTA de intent (Brasil). Multi-nicho: emagrecimento, skincare, harmonizacao facial, pets, nutricao, apostas.",
 
   "subreddits": [
     "emagrecer",
     "fitnessbr",
     "brasil",
-    "desabafos"
+    "desabafos",
+    "SkincareAddictionBR"
   ],
 
   "intent_queries": [
@@ -18,7 +19,15 @@
     "quero emagrecer mas nada funciona",
     "remedio natural pra emagrecer",
     "shake pra emagrecer recomendacao",
-    "produto pra perder barriga"
+    "produto pra perder barriga",
+    "melhor skincare rotina",
+    "serum vitamina c vale a pena",
+    "harmonizacao facial quanto custa",
+    "onde fazer harmonizacao facial",
+    "alguem fez harmonizacao facial",
+    "melhor racao pra cachorro",
+    "suplemento pro cachorro vale a pena",
+    "nutricionista emagrecimento"
   ],
 
   "intent_rubric": {
