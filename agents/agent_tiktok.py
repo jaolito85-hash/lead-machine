@@ -11,7 +11,7 @@ NAO cria lead do autor do video — autor ja fez / e divulgador.
 Uso:
   python agents/agent_tiktok.py --query "harmonizacao facial" --city "Maringa-PR"
 
-Env vars (Paperclip):
+Env vars (runner/serve.py):
   SEARCH_QUERY, CITY, NICHO, LIMIT, APIFY_TOKEN,
   TIKTOK_MAX_VIDEOS (default 15), TIKTOK_MAX_COMMENTS_PER_VIDEO (default 300),
   TIKTOK_MIN_SCORE (default 60)

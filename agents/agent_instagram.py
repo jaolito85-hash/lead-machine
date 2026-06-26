@@ -12,7 +12,7 @@ Uso:
   python agents/agent_instagram.py --query "harmonizacao facial" --city "Maringa-PR"
   python agents/agent_instagram.py --profiles "dracamilaguerreiro,royalface.maringa" --limit 30
 
-Env vars (Paperclip):
+Env vars (runner/serve.py):
   SEARCH_QUERY, CITY, NICHO, LIMIT, PROFILES, APIFY_TOKEN,
   IG_DISCOVERY_LIMIT (default 3), IG_MAX_VIDEOS_PER_PROFILE (default 3),
   IG_MAX_TOTAL_POSTS (default 9), IG_MAX_COMMENTS_PER_POST (default 40),

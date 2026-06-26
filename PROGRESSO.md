@@ -867,3 +867,58 @@ mortos fora, `.gitignore` decente, redesign Kanban preservado.
 ---
 
 *Ultima atualizacao: 30/04/2026 — Dia 5 (Validacao IG autenticado + Faxina senior do projeto)*
+
+---
+
+## 25/06/2026 — Remocao completa do Paperclip
+
+O projeto lead-machine nao depende mais do backend Paperclip (Node). Toda a
+orquestracao agora e feita pelo proprio `serve.py` via endpoint `POST /api/run`
+(on-demand) + `GET /api/run/:id` (status), e pelo `agents/runner.py` (loop de
+buscas salvas, via supervisord).
+
+### Mudancas aplicadas
+
+1. **serve.py (reescrito)**:
+   - Removido `proxy_to_paperclip` e toda referencia ao Paperclip (PAPERCLIP_URL,
+     PAPERCLIP_PORT, etc.).
+   - Adicionado `POST /api/run` que dispara agentes em paralelo
+     (ThreadPoolExecutor) e depois roda qualifier + enricher (subprocess).
+     Retorna um `run_id` imediatamente (background thread).
+   - Adicionado `GET /api/run/:id` que retorna status do run
+     (running/succeeded/failed + stats + log).
+   - Todos os endpoints locais existentes mantidos intactos
+     (`/leads.json`, `/api/local/searches`, `/api/local/campaigns`,
+     `/api/local/exports`, `/api/local/affiliate/*`).
+
+2. **dashboard/index.html (editado seletivamente)**:
+   - Removidas constantes `PAPERCLIP_API`, `COMPANY_ID`, `AGENT_IDS`.
+   - Removidas funcoes `triggerAgent`, `pollRunStatus` (antiga versao Paperclip),
+     `executeCommandReal`, `executeCommandSimulated`, `proxy_to_paperclip`.
+   - `syncAgentsFromAPI` agora e estatico (marca os 6 agentes — gg, ig, tk, yt,
+     qual, enrich — como active).
+   - `updateStatusIndicator` sempre mostra "Online".
+   - Unificada `executeCommand` em uma unica funcao que faz POST /api/run +
+     poll GET /api/run/:id (a cada 3s) e atualiza leads/agents/tasks no UI.
+   - Todas as demais funcoes intactas (parseCommand, renderKanban, campaigns,
+     exports, affiliate, etc).
+
+3. **Limpeza de referencias Paperclip**:
+   - Pasta `paperclip/` ja nao existia no repo (confirmado).
+   - `Dockerfile`: sem referencias ao Paperclip (mantido como esta).
+   - `deploy/supervisord.conf`: sem referencias ao Paperclip (mantido como esta;
+     roda `serve.py` + `agents/runner.py`).
+   - `agents/runner.py`: NAO mexido — continua funcionando via supervisord,
+     rodando buscas salvas em loop independentemente do /api/run on-demand.
+
+### Testes locais (curl)
+
+- `python serve.py` sobe na porta 8081 sem erros.
+- `GET /leads.json` retorna `[]` (ou o DB existente).
+- `POST /api/run` com payload `{query, cidade, nicho, plataformas, campaign_id}`
+  retorna `{"run_id":"R-...", "status":"running", ...}` imediatamente.
+- `GET /api/run/<run_id>` retorna status (`running` → `succeeded`/`failed`).
+
+*Nota: o `runner.py` e o `serve.py /api/run` compartilham os mesmos scripts em
+`agents/` mas sao independentes — um e loop (supervisord), outro e on-demand
+(HTTP). Ambos podem rodar em paralelo sem conflito.*

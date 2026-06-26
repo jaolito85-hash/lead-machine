@@ -105,7 +105,7 @@ def load_env() -> dict:
                 env_file[k.strip()] = v.strip()
 
     # Exporta pra os.environ (modulos como classifier.py leem de la),
-    # sem sobrescrever vars ja setadas por quem invocou (Paperclip/runner).
+    # sem sobrescrever vars ja setadas por quem invocou (runner/serve.py).
     for k, v in env_file.items():
         os.environ.setdefault(k, v)
 
@@ -148,7 +148,7 @@ def build_arg_parser(agent_name: str, description: str) -> argparse.ArgumentPars
 # ════════════════════════════════════════
 
 def setup_logger(agent_name: str, verbose: bool = False) -> logging.Logger:
-    """Logger que escreve em stderr (Paperclip captura) + arquivo .log."""
+    """Logger que escreve em stderr + arquivo .log."""
     logger = logging.getLogger(f"leadmachine.{agent_name}")
     logger.setLevel(logging.DEBUG if verbose else logging.INFO)
 
@@ -160,7 +160,7 @@ def setup_logger(agent_name: str, verbose: bool = False) -> logging.Logger:
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    # stderr handler (Paperclip captura stderr separado)
+    # stderr handler
     stderr_h = logging.StreamHandler(sys.stderr)
     stderr_h.setLevel(logging.DEBUG if verbose else logging.INFO)
     stderr_h.setFormatter(fmt)
@@ -576,12 +576,12 @@ def short_date() -> str:
 
 
 # ════════════════════════════════════════
-# SAIDA (stdout para Paperclip)
+# SAIDA (stdout para serve.py/runner)
 # ════════════════════════════════════════
 
 def output_result(summary: dict) -> None:
     """
-    Imprime JSON de resultado no stdout para Paperclip capturar.
+    Imprime JSON de resultado no stdout para serve.py/runner capturar.
     Chamado UMA VEZ no final de cada execucao de agente.
     """
     print(json.dumps(summary, ensure_ascii=False, indent=2))

@@ -11,7 +11,7 @@ NAO cria lead do dono do canal — dono e advogado/influencer/divulgador.
 Uso:
   python agents/agent_youtube.py --query "renegociacao divida rural" --city "Brasil"
 
-Env vars (Paperclip):
+Env vars (runner/serve.py):
   SEARCH_QUERY, CITY, NICHO, LIMIT, APIFY_TOKEN,
   YOUTUBE_MAX_VIDEOS (default 10), YOUTUBE_MAX_COMMENTS_PER_VIDEO (default 300),
   YOUTUBE_MIN_SCORE (default 60)

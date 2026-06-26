@@ -8,7 +8,7 @@ Uso:
   python agents/agent_google_maps.py --query "clinica harmonizacao facial" --city "Maringa-PR"
   python agents/agent_google_maps.py --query "dentista" --city "Londrina-PR" --limit 20
 
-Env vars (Paperclip):
+Env vars (runner/serve.py):
   SEARCH_QUERY, CITY, NICHO, LIMIT, GOOGLE_PLACES_API_KEY, SERPAPI_API_KEY, APIFY_TOKEN
 """
 

@@ -7,7 +7,7 @@ Uso:
   python agents/agent_enricher.py --limit 20
   python agents/agent_enricher.py --filter quente --limit 10
 
-Env vars (Paperclip):
+Env vars (runner/serve.py):
   LIMIT, FILTER, APOLLO_API_KEY, HUNTER_API_KEY, FIRECRAWL_API_KEY, APIFY_TOKEN
 """
 

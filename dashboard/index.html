@@ -984,23 +984,10 @@ const platformMap = {instagram:'ig',google:'gg',reddit:'rd',linkedin:'li',tiktok
 const platformLabels = {instagram:'Instagram',google:'Google',reddit:'Reddit',linkedin:'LinkedIn',tiktok:'TikTok',youtube:'YouTube'};
 const tempColors = {quente:'hot',morno:'warm',frio:'cold'};
 
-// ─── PAPERCLIP API CONFIG ───
-// Tudo passa pelo serve.py (proxy) — mesma origem, sem CORS
-const PAPERCLIP_API = '/api';
+// ─── CONFIG LOCAL (sem Paperclip) ───
+// Tudo passa pelo serve.py (mesma origem, sem CORS). O backend agora e o
+// proprio serve.py com endpoint POST /api/run (on-demand). Sem mais proxy.
 const LEADS_API = '';
-const COMPANY_ID = 'cdca3499-facb-45f8-84de-ae3814ba19cb';
-const AGENT_IDS = {
-  ceo:'ac264098-744b-4cad-87fd-0b6378a079fe',
-  cto:'d2b4a628-891a-41cb-bba2-dd9ad1d0f1d9',
-  ig:'394c02c8-e89c-4fc7-81ba-0bec324c3861',
-  gg:'70a6f714-b0d7-46fe-8f7d-60aa6c95a669',
-  fb:'22185f27-ca46-4673-9f37-905c68452854',
-  tk:'7f537fd8-a494-4e3b-bd57-8150e91af582',
-  tw:'5bcbe652-7b99-406c-871d-a5828cce85eb',
-  enrich:'28935c77-2906-4288-bc3d-87dd6feb30c4',
-  qual:'e2c97974-08e0-439a-9f9f-e8d19051f31b'
-};
-let paperclipOnline = false;
 let cmdTipo = 'pessoa'; // pessoa | empresa | ambos
 
 function setCmdTipo(tipo){
@@ -1014,18 +1001,16 @@ function setCmdTipo(tipo){
   else input.placeholder='Ex: Buscar advogados criminalistas em Maringa-PR. Instagram e Google.';
 }
 
-// ─── SYNC COM PAPERCLIP ───
-async function syncAgentsFromAPI(){
-  try{
-    const r=await fetch(`${PAPERCLIP_API}/companies/${COMPANY_ID}/agents`);
-    const agents=await r.json();
-    agents.forEach(a=>{
-      const local=S.agents.find(la=>AGENT_IDS[la.id]===a.id);
-      if(local) local.status = a.status==='idle'?'active':a.status;
-    });
-    paperclipOnline=true;
-    renderAll(true);
-  }catch(e){paperclipOnline=false}
+// ─── SYNC AGENTS (estatico, sem Paperclip) ───
+// Os 6 agentes sao sempre "active" (google, instagram, tiktok, youtube, qual, enrich).
+function syncAgentsFromAPI(){
+  const knownIds=['gg','ig','tk','yt','qual','enrich'];
+  S.agents.forEach(a=>{
+    if(knownIds.includes(a.id)){
+      a.status='active';
+    }
+  });
+  renderAll(true);
 }
 
 async function syncLeadsFromAPI(){
@@ -1044,72 +1029,12 @@ async function syncLeadsFromAPI(){
   }catch(e){}
 }
 
-async function triggerAgent(agentId, query, city, campaignId){
-  const uuid=AGENT_IDS[agentId];
-  if(!uuid)return null;
-  try{
-    // 1. Buscar config atual do agente
-    const agentResp=await fetch(`${PAPERCLIP_API}/agents/${uuid}`);
-    const agentData=await agentResp.json();
-    const currentConfig=agentData.adapterConfig||{};
-
-    // 2. Atualizar apenas o env com parametros de busca (manter command/args/cwd)
-    const newConfig={...currentConfig, env:{
-      ...(currentConfig.env||{}),
-      SEARCH_QUERY: query,
-      CITY: city,
-      NICHO: query,
-      LIMIT: '30',
-      CAMPAIGN_ID: campaignId || 'C-LEGACY'
-    }};
-
-    await fetch(`${PAPERCLIP_API}/agents/${uuid}`,{
-      method:'PATCH',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({adapterConfig:newConfig})
-    });
-
-    // 3. Disparar wakeup
-    const r=await fetch(`${PAPERCLIP_API}/agents/${uuid}/wakeup`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({source:'on_demand',triggerDetail:'manual',reason:`Buscar: ${query} em ${city}`})
-    });
-    const run=await r.json();
-    return run.id;
-  }catch(e){console.error('Wakeup failed:',e);return null}
-}
-
-async function pollRunStatus(runId, agentId, callback){
-  const uuid=AGENT_IDS[agentId];
-  let attempts=0;
-  const check=async()=>{
-    attempts++;
-    try{
-      const r=await fetch(`${PAPERCLIP_API}/companies/${COMPANY_ID}/heartbeat-runs?agentId=${uuid}&limit=1`);
-      const runs=await r.json();
-      const run=runs.find(r=>r.id===runId);
-      if(run && (run.status==='succeeded'||run.status==='failed')){
-        callback(run);
-        return;
-      }
-    }catch(e){}
-    if(attempts<600) setTimeout(check,2000); // Poll a cada 2s, max 20 min
-    else callback({status:'failed',exitCode:-1}); // Timeout
-  };
-  setTimeout(check,2000);
-}
-
-// Atualizar indicador de status
+// Atualizar indicador de status (sempre Online)
 function updateStatusIndicator(){
   const el=document.getElementById('api-status');
-  if(paperclipOnline){
-    el.innerHTML='<span class="pulse"></span> Paperclip Online';
-    el.style.color='var(--accent)';
-  } else {
-    el.innerHTML='<span class="pulse" style="background:var(--warm)"></span> Modo Offline';
-    el.style.color='var(--warm)';
-  }
+  if(!el) return;
+  el.innerHTML='<span class="pulse"></span> Online';
+  el.style.color='var(--accent)';
 }
 
 // Auto-sync a cada 10 segundos
@@ -1470,12 +1395,7 @@ async function saveAndRunCampaign(){
   const navCmd=document.querySelector('.nav-item[data-page="command"]');
   if(navCmd) navCmd.click();
 
-  if(paperclipOnline){
-    executeCommandReal(parsed);
-  }else{
-    notify('Paperclip offline — rodando em modo simulado','err');
-    executeCommandSimulated(parsed);
-  }
+  executeCommand(parsed);
   renderAll();
 }
 
@@ -1751,7 +1671,7 @@ function copyDM(market,idx){
   navigator.clipboard.writeText(ta.value).then(()=>notify('Mensagem copiada','ok'),()=>notify('Nao consegui copiar','err'));
 }
 
-// ─── COMMAND EXECUTION ───
+// ─── COMMAND EXECUTION (POST /api/run + poll GET /api/run/:id) ───
 function executeCommand(){
   const input=document.getElementById('cmd-input').value.trim();
   if(!input){notify('Digite um comando','err');return}
@@ -1761,16 +1681,12 @@ function executeCommand(){
   addActivity('ok','Comando recebido',`"${input.slice(0,80)}${input.length>80?'...':''}"`);
   document.getElementById('cmd-input').value='';
 
-  // Se Paperclip online → execucao REAL
-  if(paperclipOnline){
-    executeCommandReal(parsed);
-  } else {
-    executeCommandSimulated(parsed);
-  }
+  // Sempre execucao REAL via POST /api/run (backend local, sem Paperclip)
+  executeRun(parsed);
   renderAll();
 }
 
-// ─── EXECUCAO REAL (Paperclip API) ───
+// Resolve qual campaign_id usar (seletor kanban / match nicho+cidade / criar nova)
 async function resolveCommandCampaign(parsed){
   // 1) Se o Kanban tem campanha != "Todas"/"Legado" selecionada, usa ela
   if(kanbanCampaign!=='all'&&kanbanCampaign!=='C-LEGACY'){
@@ -1779,7 +1695,7 @@ async function resolveCommandCampaign(parsed){
   }
   // 2) Senão, procura campanha ativa que bata nicho+cidade (case/acento-insensitive, parcial)
   const norm=s=>(s||'').toString().toLowerCase()
-    .normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
   const nichoQ=norm(parsed.nicho);
   const cidadeQ=norm(parsed.cidade);
   const matches=campaignsCache.filter(c=>{
@@ -1823,7 +1739,29 @@ async function resolveCommandCampaign(parsed){
   }
 }
 
-async function executeCommandReal(parsed){
+// Poll de GET /api/run/:id a cada 3s, max 30 min (600 tentativas).
+// Quando succeeded/failed → chama callback(run).
+function pollRunStatus(runId, callback){
+  let attempts=0;
+  const check=async()=>{
+    attempts++;
+    try{
+      const r=await fetch(`/api/run/${encodeURIComponent(runId)}`);
+      const run=await r.json();
+      if(run && (run.status==='succeeded'||run.status==='failed')){
+        callback(run);
+        return;
+      }
+    }catch(e){}
+    if(attempts<600) setTimeout(check,3000); // 3s, max 30 min
+    else callback({status:'failed',error:'timeout'});
+  };
+  setTimeout(check,3000);
+}
+
+// Dispara um run on-demand no backend local (POST /api/run) e acompanha via
+// poll de GET /api/run/:id. Atualiza tasks no kanban + status dos agentes.
+async function executeRun(parsed){
   // Resolve campanha ANTES de disparar (via seletor/match/criação)
   const campaignId=await resolveCommandCampaign(parsed);
 
@@ -1852,132 +1790,93 @@ async function executeCommandReal(parsed){
   addActivity('info','CEO processando',`Nicho: ${parsed.nicho} | Cidade: ${parsed.cidade||'(nacional)'} | Plataformas: ${parsed.plataformas.join(', ')} | Campanha: ${campaignId}`);
   notify(`Executando: ${parsed.plataformas.length} agentes em paralelo (${isNacional?'nacional':parsed.cidade||'sem cidade'})...`,'info');
 
-  let completedCount = 0;
-  let totalNewLeads = 0;
-  const totalAgents = parsed.plataformas.length;
-  const leadsBefore = S.leads.length;
-
-  // Disparar todos os scrapers em paralelo
-  for(const plat of parsed.plataformas){
+  // Cria tasks no kanban para cada agente e marca agentes como running
+  parsed.plataformas.forEach(plat=>{
     const agentId=platformMap[plat.toLowerCase()];
     const agent=S.agents.find(a=>a.id===agentId);
-    if(!agent)continue;
-
+    if(!agent)return;
     const taskId='T-'+String(S.taskCounter++).padStart(3,'0');
     S.tasks.push({id:taskId,title:`${parsed.nicho} em ${parsed.cidade} — ${platformLabels[plat]||plat}`,platform:plat,agent:agentId,status:'in_progress',created:now()});
     agent.status='running';
     addActivity('info',`${agent.name} iniciado`,`${taskId}: buscando no ${platformLabels[plat]||plat} (${campaignId})`);
-    renderAll();
+  });
+  renderAll();
 
-    const runId = await triggerAgent(agentId, parsed.nicho, parsed.cidade, campaignId);
+  // Dispara POST /api/run (backend local)
+  const body={
+    query:parsed.nicho,
+    cidade:parsed.cidade,
+    nicho:parsed.nicho,
+    plataformas:parsed.plataformas,
+    campaign_id:campaignId,
+  };
 
-    if(runId){
-      pollRunStatus(runId, agentId, async (run)=>{
-        agent.status='active';
-        const task=S.tasks.find(t=>t.id===taskId);
-        if(task)task.status='done';
-
-        if(run.exitCode===0){
-          addActivity('ok',`${agent.name} concluiu`,`Scraping ${platformLabels[plat]||plat} finalizado`);
-        } else {
-          addActivity('err',`${agent.name} falhou`,`Exit code ${run.exitCode}`);
-        }
-
-        completedCount++;
-        renderAll();
-
-        // Quando todos scrapers terminarem → qualificar + enriquecer + sync
-        if(completedCount>=totalAgents){
-          // Sync leads imediato
-          await syncLeadsFromAPI();
-          const newCount = S.leads.length - leadsBefore;
-          addActivity('ok','Scraping concluido',`${newCount} novos leads coletados de ${totalAgents} plataformas`);
-
-          // Qualificador automatico
-          const qual=S.agents.find(a=>a.id==='qual');
-          qual.status='running';
-          addActivity('info','Qualificador iniciado','Classificando leads...');
-          renderAll();
-
-          const qualRunId = await triggerAgent('qual', '', '');
-          if(qualRunId){
-            pollRunStatus(qualRunId, 'qual', async (qRun)=>{
-              qual.status='active';
-              if(qRun.exitCode===0){
-                addActivity('ok','Qualificacao concluida','Leads classificados: quente/morno/frio');
-              }
-
-              // Enriquecedor automatico (top leads)
-              const enrich=S.agents.find(a=>a.id==='enrich');
-              enrich.status='running';
-              addActivity('info','Enriquecedor iniciado','Buscando emails e telefones...');
-              renderAll();
-
-              const enrichRunId = await triggerAgent('enrich', '', '');
-              if(enrichRunId){
-                pollRunStatus(enrichRunId, 'enrich', async (eRun)=>{
-                  enrich.status='active';
-                  if(eRun.exitCode===0){
-                    addActivity('ok','Enriquecimento concluido','Contatos encontrados');
-                  }
-
-                  // Sync final
-                  await syncLeadsFromAPI();
-                  S.commands[0].status='concluido';
-                  const hot=S.leads.filter(l=>l.temp==='quente').length;
-                  notify(`Concluido! ${S.leads.length} leads total, ${hot} quentes`);
-                  renderAll();
-                });
-              }
-              renderAll();
-            });
-          }
-          renderAll();
-        }
-      });
-    } else {
-      agent.status='active';
-      addActivity('err',`${agent.name} falhou`,`Nao conseguiu iniciar`);
-      completedCount++;
+  let runId=null;
+  try{
+    const r=await fetch('/api/run',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body),
+    });
+    const data=await r.json();
+    if(!r.ok||!data.run_id){
+      throw new Error(data.error||'falha ao disparar run');
     }
-  }
-}
-
-// ─── EXECUCAO SIMULADA (fallback offline) ───
-function executeCommandSimulated(parsed){
-  addActivity('info','CEO processando [SIMULADO]',`Nicho: ${parsed.nicho} | Cidade: ${parsed.cidade} | Plataformas: ${parsed.plataformas.join(', ')}`);
-
-  parsed.plataformas.forEach((plat,i)=>{
-    setTimeout(()=>{
+    runId=data.run_id;
+  }catch(e){
+    notify('Erro ao disparar: '+e.message,'err');
+    addActivity('err','Falha ao disparar run',e.message);
+    // Marca todos os agentes envolvidos como active de volta
+    parsed.plataformas.forEach(plat=>{
       const agentId=platformMap[plat.toLowerCase()];
       const agent=S.agents.find(a=>a.id===agentId);
-      if(!agent)return;
-
-      const taskId='T-'+String(S.taskCounter++).padStart(3,'0');
-      S.tasks.push({id:taskId,title:`Buscar leads: ${parsed.nicho} em ${parsed.cidade} — ${platformLabels[plat]||plat}`,platform:plat,agent:agentId,status:'in_progress',created:now()});
-      agent.status='running';
-      addActivity('info',`${agent.name} iniciado`,`${taskId}: buscando no ${platformLabels[plat]||plat}`);
-
-      setTimeout(()=>{
-        const count=Math.floor(Math.random()*40)+10;
-        generateLeads(count,plat,parsed);
-        agent.status='active';
-        const task=S.tasks.find(t=>t.id===taskId);
-        if(task)task.status='done';
-        addActivity('ok',`${agent.name} concluiu`,`${count} leads coletados do ${platformLabels[plat]||plat}`);
-        renderAll();
-      },2000+i*1500+Math.random()*2000);
-      renderAll();
-    },500+i*800);
-  });
-
-  setTimeout(()=>{
-    S.commands[0].status='concluido';
-    notify('Comando simulado concluido! '+S.leads.length+' leads.');
+      if(agent) agent.status='active';
+    });
+    S.commands[0].status='falhou';
     renderAll();
-  },parsed.plataformas.length*3000+5000);
+    return;
+  }
 
+  addActivity('info','Run disparado',`run_id=${runId} — acompanhando...`);
   renderAll();
+
+  // Poll de GET /api/run/:id a cada 3s
+  pollRunStatus(runId, async (run)=>{
+    // Finalizou: agentes voltam pra active, tasks -> done
+    parsed.plataformas.forEach(plat=>{
+      const agentId=platformMap[plat.toLowerCase()];
+      const agent=S.agents.find(a=>a.id===agentId);
+      if(agent) agent.status='active';
+    });
+    S.tasks.forEach(t=>{ if(t.status==='in_progress') t.status='done'; });
+
+    if(run.status==='succeeded'){
+      addActivity('ok','Scraping concluido','Run finalizado com sucesso');
+    }else{
+      addActivity('err','Run falhou',run.error||run.status||'');
+    }
+    renderAll();
+
+    // Sync leads do DB imediato
+    await syncLeadsFromAPI();
+    const newCount = run.stats ? (run.stats.total_leads_depois - run.stats.total_leads_antes) : 0;
+    addActivity('ok','Leads atualizados',`${newCount} novos leads sincronizados`);
+
+    // Qualificador + Enriquecedor sao rodados pelo proprio backend no mesmo run
+    // (qualifier + enricher rodam depois dos agentes em /api/run). So precisamos
+    // marcar os agentes correspondentes como active no UI.
+    const qual=S.agents.find(a=>a.id==='qual');
+    const enrich=S.agents.find(a=>a.id==='enrich');
+    if(qual){qual.status='active'; addActivity('ok','Qualificacao concluida','Leads classificados: quente/morno/frio');}
+    if(enrich){enrich.status='active'; addActivity('ok','Enriquecimento concluido','Contatos encontrados');}
+
+    // Sync final
+    await syncLeadsFromAPI();
+    S.commands[0].status='concluido';
+    const hot=S.leads.filter(l=>l.temp==='quente').length;
+    notify(`Concluido! ${S.leads.length} leads total, ${hot} quentes`);
+    renderAll();
+  });
 }
 
 // UFs do Brasil (usadas como ancora confiavel pra detectar cidade)

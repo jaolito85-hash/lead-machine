@@ -98,7 +98,7 @@ def social_query_run_plan(query_plan: list[str], env: dict | None = None) -> lis
     Choose how many short queries this process should execute.
 
     Default is one short query per run. This matches the fast TikTok/YouTube
-    workflow and avoids Paperclip adapter timeouts. Use
+    workflow and avoids subprocess timeouts. Use
     SOCIAL_QUERY_EXPANSION_MODE=batch for manual/offline batch runs.
     """
     if not query_plan:

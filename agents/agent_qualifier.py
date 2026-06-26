@@ -7,7 +7,7 @@ Uso:
   python agents/agent_qualifier.py
   python agents/agent_qualifier.py --limit 50 --filter frio
 
-Env vars (Paperclip):
+Env vars (runner/serve.py):
   LIMIT, FILTER
 """
 

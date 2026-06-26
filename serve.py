@@ -1,30 +1,39 @@
 #!/usr/bin/env python3
 """
-Lead Machine — Server local
-Serve o dashboard + leads-db.json + buscas salvas + proxy para Paperclip API.
+LEAD MACHINE — Server local
+Serve o dashboard + leads-db.json + buscas salvas + endpoint on-demand /api/run.
 
 Uso:
   python serve.py
   → Dashboard:     http://localhost:8081
   → Leads API:     http://localhost:8081/leads.json
   → Buscas API:    http://localhost:8081/api/local/searches
-  → Paperclip API: http://localhost:8081/api/* (proxy → localhost:3100)
+  → Run on-demand: http://localhost:8081/api/run  (POST) / /api/run/:id (GET)
+
+O runner.py (agents/runner.py) continua funcionando separadamente via
+supervisord — ele roda as buscas salvas em loop. O /api/run é um disparo
+on-demand que roda os mesmos agentes (subprocess) sem passar pelo Paperclip.
 """
 
 import json
 import os
 import sys
-import urllib.request
-import urllib.error
+import uuid
+import threading
+import subprocess
+import concurrent.futures
+import time
+from datetime import datetime
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
+from urllib.parse import quote, parse_qs, urlparse
 
 # Permite importar modulos de agents/
 sys.path.insert(0, str(Path(__file__).parent / "agents"))
 import searches as searches_module
 import campaigns as campaigns_module
 import exports as exports_module
-from urllib.parse import quote, parse_qs, urlparse
+
 
 def env_int(name, default):
     try:
@@ -34,14 +43,174 @@ def env_int(name, default):
 
 
 PORT = env_int("DASHBOARD_PORT", 8081)
-PAPERCLIP_PORT = env_int("PAPERCLIP_PORT", 3100)
-PAPERCLIP_URL = os.getenv("PAPERCLIP_URL", f"http://localhost:{PAPERCLIP_PORT}").rstrip("/")
 BASE_DIR = Path(__file__).parent
 LEADS_DB = BASE_DIR / "leads-export" / "leads-db.json"
+AGENTS_DIR = BASE_DIR / "agents"
+
+# Mapa plataforma -> script (mesmo usado pelo runner.py)
+AGENT_SCRIPTS = {
+    "google": "agent_google_maps.py",
+    "instagram": "agent_instagram.py",
+    "tiktok": "agent_tiktok.py",
+    "youtube": "agent_youtube.py",
+}
+
+# Store em memoria dos runs on-demand: {run_id: {...}}
+_RUNS = {}
+_RUNS_LOCK = threading.Lock()
+
+
+# ── Execução on-demand (mirror do runner.execute_search, sem searches.json) ──
+
+def _run_agent_subprocess(script_name, query, cidade, nicho, campaign_id, log_lines):
+    """Roda 1 agente como subprocess. Retorna dict com resultado."""
+    plat = script_name.replace("agent_", "").replace(".py", "").replace("google_maps", "google")
+    script_path = AGENTS_DIR / script_name
+    if not script_path.exists():
+        return {"platform": plat, "ok": False, "error": f"script nao existe: {script_name}"}
+
+    env = os.environ.copy()
+    env["SEARCH_QUERY"] = query
+    env["CITY"] = cidade or ""
+    env["NICHO"] = nicho or ""
+    if campaign_id:
+        env["CAMPAIGN_ID"] = campaign_id
+
+    log_lines.append(f"[{_now()}] → disparando {plat} (query='{query}', cidade='{cidade}')")
+    start = time.time()
+    try:
+        result = subprocess.run(
+            [sys.executable, str(script_path)],
+            env=env,
+            cwd=str(BASE_DIR),
+            capture_output=True,
+            text=True,
+            timeout=900,  # 15min por agente
+            encoding="utf-8",
+            errors="replace",
+        )
+        duration = round(time.time() - start, 1)
+        ok = result.returncode == 0
+        log_lines.append(f"[{_now()}] ← {plat} {'OK' if ok else 'FAIL'} em {duration}s (rc={result.returncode})")
+        return {
+            "platform": plat,
+            "ok": ok,
+            "returncode": result.returncode,
+            "duration_sec": duration,
+            "stdout_tail": (result.stdout or "")[-500:],
+            "stderr_tail": (result.stderr or "")[-500:],
+        }
+    except subprocess.TimeoutExpired:
+        log_lines.append(f"[{_now()}] ← {plat} TIMEOUT (>15min)")
+        return {"platform": plat, "ok": False, "error": "timeout"}
+    except Exception as e:
+        log_lines.append(f"[{_now()}] ← {plat} EXCECAO: {e}")
+        return {"platform": plat, "ok": False, "error": str(e)}
+
+
+def _run_subprocess_simple(script_name, args, log_lines, timeout=600):
+    """Roda um subprocess simples (qualifier/enricher). Retorna {ok, returncode, stdout_tail}."""
+    script_path = AGENTS_DIR / script_name
+    if not script_path.exists():
+        return {"ok": False, "error": f"script nao existe: {script_name}"}
+    try:
+        result = subprocess.run(
+            [sys.executable, str(script_path)] + args,
+            cwd=str(BASE_DIR),
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            encoding="utf-8",
+            errors="replace",
+        )
+        ok = result.returncode == 0
+        log_lines.append(f"[{_now()}] ← {script_name} {'OK' if ok else 'FAIL'} (rc={result.returncode})")
+        return {
+            "ok": ok,
+            "returncode": result.returncode,
+            "stdout_tail": (result.stdout or "")[-500:],
+        }
+    except Exception as e:
+        log_lines.append(f"[{_now()}] ← {script_name} EXCECAO: {e}")
+        return {"ok": False, "error": str(e)}
+
+
+def _execute_run(run_id, payload):
+    """Executa o run em background: agentes em paralelo → qualifier → enricher."""
+    log_lines = []
+    query = payload.get("query") or payload.get("nicho") or ""
+    cidade = payload.get("cidade") or ""
+    nicho = payload.get("nicho") or query
+    campaign_id = payload.get("campaign_id") or "C-LEGACY"
+    plataformas = payload.get("plataformas") or []
+
+    log_lines.append(f"[{_now()}] ▶ RUN {run_id} iniciado")
+    log_lines.append(f"[{_now()}]   query='{query}' cidade='{cidade}' nicho='{nicho}' plataformas={plataformas} campaign_id={campaign_id}")
+
+    # 1) Agentes em paralelo (ThreadPoolExecutor)
+    results = []
+    valid_plats = [p for p in plataformas if p in AGENT_SCRIPTS]
+    if valid_plats:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
+            futures = {}
+            for plat in valid_plats:
+                script = AGENT_SCRIPTS[plat]
+                futures[pool.submit(
+                    _run_agent_subprocess, script, query, cidade, nicho, campaign_id, log_lines
+                )] = plat
+            for fut in concurrent.futures.as_completed(futures):
+                results.append(fut.result())
+    else:
+        log_lines.append(f"[{_now()}] ⚠ nenhuma plataforma valida informada: {plataformas}")
+
+    ok_count = sum(1 for r in results if r.get("ok"))
+    fail_count = len(results) - ok_count
+
+    # 2) Qualifier
+    log_lines.append(f"[{_now()}] → qualificando leads novos...")
+    qual = _run_subprocess_simple("agent_qualifier.py", ["--requalify"], log_lines, timeout=600)
+
+    # 3) Enricher
+    log_lines.append(f"[{_now()}] → enriquecendo leads (top)...")
+    enrich = _run_subprocess_simple("agent_enricher.py", ["--limit", "20"], log_lines, timeout=900)
+
+    stats = {
+        "agentes_ok": ok_count,
+        "agentes_fail": fail_count,
+        "plataformas": [r.get("platform") for r in results],
+        "qualifier_ok": qual.get("ok", False),
+        "enricher_ok": enrich.get("ok", False),
+        "total_leads_antes": _count_leads(),
+        "total_leads_depois": _count_leads(),
+    }
+    status = "succeeded" if ok_count > 0 else "failed"
+    log_lines.append(f"[{_now()}] ◀ RUN {run_id} concluido ({status})")
+
+    with _RUNS_LOCK:
+        _RUNS[run_id].update({
+            "status": status,
+            "stats": stats,
+            "finished_at": _now(),
+            "log": log_lines,
+        })
+
+
+def _count_leads():
+    try:
+        if LEADS_DB.exists():
+            data = json.loads(LEADS_DB.read_text(encoding="utf-8"))
+            return len(data) if isinstance(data, list) else 0
+    except Exception:
+        pass
+    return 0
+
+
+def _now():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 class LeadMachineHandler(SimpleHTTPRequestHandler):
-    """Handler que serve dashboard + leads + buscas + proxy para Paperclip."""
+    """Handler que serve dashboard + leads + buscas + endpoint on-demand /api/run."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(BASE_DIR), **kwargs)
@@ -75,14 +244,17 @@ class LeadMachineHandler(SimpleHTTPRequestHandler):
             return self.serve_export()
         if path.startswith("/api/local/affiliate/"):
             return self.serve_affiliate(path)
-        if path.startswith("/api/"):
-            return self.proxy_to_paperclip("GET")
+        if path.startswith("/api/run/"):
+            rid = path.split("/api/run/")[1].rstrip("/")
+            return self.serve_run_status(rid)
         if path in ("/", "/index.html"):
             self.path = "/dashboard/index.html"
         super().do_GET()
 
     def do_POST(self):
         path = self.path.split("?")[0]
+        if path == "/api/run":
+            return self.serve_run_create()
         if path == "/api/local/searches":
             return self.serve_search_create()
         if path.endswith("/run") and path.startswith("/api/local/searches/"):
@@ -96,8 +268,6 @@ class LeadMachineHandler(SimpleHTTPRequestHandler):
             return self.serve_affiliate_search(path)
         if path.startswith("/api/local/affiliate/") and path.endswith("/draft"):
             return self.serve_affiliate_draft(path)
-        if path.startswith("/api/"):
-            return self.proxy_to_paperclip("POST")
         self.send_response(404)
         self.end_headers()
 
@@ -109,8 +279,6 @@ class LeadMachineHandler(SimpleHTTPRequestHandler):
         if path.startswith("/api/local/campaigns/"):
             cid = path.split("/api/local/campaigns/")[1].rstrip("/")
             return self.serve_campaign_update(cid)
-        if path.startswith("/api/"):
-            return self.proxy_to_paperclip("PATCH")
         self.send_response(404)
         self.end_headers()
 
@@ -125,40 +293,61 @@ class LeadMachineHandler(SimpleHTTPRequestHandler):
         self.send_response(404)
         self.end_headers()
 
-    # ── Proxy Paperclip ─────────────────────────────────────────
+    # ── Run on-demand (POST /api/run, GET /api/run/:id) ─────────
 
-    def proxy_to_paperclip(self, method):
-        target_url = f"{PAPERCLIP_URL}{self.path}"
-        try:
-            body = None
-            if method in ("POST", "PATCH"):
-                content_length = int(self.headers.get("Content-Length", 0))
-                if content_length > 0:
-                    body = self.rfile.read(content_length)
+    def serve_run_create(self):
+        payload = self._read_json()
+        if payload is None:
+            return
+        query = (payload.get("query") or payload.get("nicho") or "").strip()
+        if not query:
+            return self._send_json(400, {"error": "query (ou nicho) obrigatorio"})
+        cidade = (payload.get("cidade") or "").strip()
+        nicho = (payload.get("nicho") or query).strip()
+        campaign_id = (payload.get("campaign_id") or "C-LEGACY").strip()
+        plataformas = payload.get("plataformas") or []
+        if not isinstance(plataformas, list) or not plataformas:
+            plataformas = ["google"]
 
-            req = urllib.request.Request(
-                target_url, data=body, method=method,
-                headers={"Content-Type": "application/json"},
-            )
+        run_id = f"R-{uuid.uuid4().hex[:12]}"
+        run = {
+            "id": run_id,
+            "status": "running",
+            "query": query,
+            "cidade": cidade,
+            "nicho": nicho,
+            "campaign_id": campaign_id,
+            "plataformas": plataformas,
+            "started_at": _now(),
+            "finished_at": None,
+            "stats": None,
+            "log": [],
+        }
+        with _RUNS_LOCK:
+            _RUNS[run_id] = run
 
-            with urllib.request.urlopen(req, timeout=120) as resp:
-                data = resp.read()
-                self.send_response(resp.status)
-                self.send_header("Content-Type", resp.headers.get("Content-Type", "application/json"))
-                self.send_header("Content-Length", len(data))
-                self.end_headers()
-                self.wfile.write(data)
+        # Dispara em background (nao bloqueia a resposta)
+        full_payload = {
+            "query": query, "cidade": cidade, "nicho": nicho,
+            "campaign_id": campaign_id, "plataformas": plataformas,
+        }
+        t = threading.Thread(target=_execute_run, args=(run_id, full_payload), daemon=True)
+        t.start()
 
-        except urllib.error.HTTPError as e:
-            data = e.read()
-            self.send_response(e.code)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", len(data))
-            self.end_headers()
-            self.wfile.write(data)
+        self._send_json(202, {
+            "run_id": run_id,
+            "status": "running",
+            "started_at": run["started_at"],
+            "plataformas": plataformas,
+            "campaign_id": campaign_id,
+        })
 
-        except Exception as e:
-            self._send_json(502, {"error": f"Paperclip offline: {e}"})
+    def serve_run_status(self, rid):
+        with _RUNS_LOCK:
+            run = _RUNS.get(rid)
+        if not run:
+            return self._send_json(404, {"error": "run nao encontrado", "run_id": rid})
+        self._send_json(200, run)
 
     # ── Leads ───────────────────────────────────────────────────
 
@@ -380,7 +569,6 @@ class LeadMachineHandler(SimpleHTTPRequestHandler):
         script = BASE_DIR / "agents" / "affiliate_us" / "spike_collect.py"
         logf = BASE_DIR / "agents" / f"affiliate_{market}" / "last_search.log"
         try:
-            import subprocess
             logf.parent.mkdir(parents=True, exist_ok=True)
             fh = open(logf, "w", encoding="utf-8")
             max_items = str(int(payload.get("max_items", 12)))
@@ -495,7 +683,8 @@ def main():
     print(f"Lead Machine Dashboard: http://localhost:{PORT}")
     print(f"Leads API:              http://localhost:{PORT}/leads.json")
     print(f"Buscas API:             http://localhost:{PORT}/api/local/searches")
-    print(f"Paperclip Proxy:        http://localhost:{PORT}/api/*  ->  {PAPERCLIP_URL}")
+    print(f"Run on-demand:          POST http://localhost:{PORT}/api/run")
+    print(f"                         GET http://localhost:{PORT}/api/run/:id")
     print(f"\nPressione Ctrl+C para parar")
     try:
         server.serve_forever()
