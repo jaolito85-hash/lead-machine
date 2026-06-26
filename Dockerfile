@@ -18,6 +18,10 @@ COPY deploy/supervisord.conf /etc/supervisor/conf.d/leadmachine.conf
 
 RUN mkdir -p /app/leads-export && chmod -R 755 /app
 
+# Volume persistente: leads-db.json, searches.json, campaigns.json, exports
+# Sobrevive a restarts e deploys. No Coolify, montar via persistent storage.
+VOLUME ["/app/leads-export"]
+
 ENV DASHBOARD_PORT=8081 \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
