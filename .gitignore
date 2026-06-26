@@ -6,6 +6,7 @@ __pycache__/
 *.pyc
 *.tmp
 .venv/
+venv/
 leads-export/*.log
 start.log
 start_boot.out

@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+.venv/
+leads-export/leads-db.json
+leads-export/comments.db*
+start.log
+start_boot.out
+*.tmp
+.git/
+archive/
+leads-export/*.csv
+leads-export/*.log
