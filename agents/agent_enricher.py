@@ -19,6 +19,7 @@ import requests
 from base import (
     build_arg_parser, load_env, load_leads, make_result, output_result,
     resolve_param, save_leads, setup_logger,
+    apify_dataset_id
 )
 
 
@@ -209,7 +210,7 @@ def enrich_apify_contact(apify_token: str, url: str, logger=None) -> dict:
             "maxRequestsPerCrawl": 5,
         }
         run = client.actor("vdrmota/contact-info-scraper").call(run_input=run_input)
-        items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+        items = list(client.dataset(apify_dataset_id(run)).iterate_items())
 
         result = {}
         for item in items:

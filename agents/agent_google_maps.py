@@ -21,6 +21,7 @@ from base import (
     build_arg_parser, classify_temp, create_lead, load_env, load_leads,
     make_result, merge_leads, output_result, resolve_param, save_leads,
     setup_logger,
+    apify_dataset_id
 )
 
 
@@ -187,7 +188,7 @@ def search_apify_google_maps(apify_token: str, query: str, city: str, limit: int
         }
 
         run = client.actor("compass/crawler-google-places").call(run_input=run_input)
-        items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+        items = list(client.dataset(apify_dataset_id(run)).iterate_items())
 
         for place in items:
             biz = {

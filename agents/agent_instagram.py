@@ -26,6 +26,7 @@ from base import (
     build_arg_parser, calculate_score, classify_temp, create_lead, is_bot,
     is_brazilian_portuguese, load_env, load_leads, make_result, merge_leads,
     output_result, resolve_param, save_leads, setup_logger,
+    apify_dataset_id
 )
 from comment_collector import pipeline
 import profile_discovery
@@ -152,7 +153,7 @@ def legacy_profile_scrape(apify_token: str, profiles: list, limit: int,
     try:
         logger.info(f"Chamando apify/instagram-scraper (legacy profiles): {len(urls)} perfis")
         run = client.actor("apify/instagram-scraper").call(run_input=run_input)
-        items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+        items = list(client.dataset(apify_dataset_id(run)).iterate_items())
 
         for post in items:
             owner = post.get("ownerUsername", "")

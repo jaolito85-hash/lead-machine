@@ -18,6 +18,7 @@ O selecao eh automatica: se INSTAGRAM_SESSIONID esta setado no env, usa o
 modo autenticado. Senao, modo publico (degradacao graciosa).
 """
 
+from base import apify_dataset_id
 import logging
 import os
 import re
@@ -67,7 +68,7 @@ def list_recent_posts(
     }
 
     run = client.actor("apify/instagram-scraper").call(run_input=run_input)
-    items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+    items = list(client.dataset(apify_dataset_id(run)).iterate_items())
     log.info(f"[IG] {len(items)} posts encontrados")
 
     return [_normalize_post_item(item, fallback_owner=profile_username) for item in items]
@@ -111,7 +112,7 @@ def search_posts_by_query(
     }
 
     run = client.actor("apify/instagram-hashtag-scraper").call(run_input=run_input)
-    items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+    items = list(client.dataset(apify_dataset_id(run)).iterate_items())
     log.info(f"[IG] {len(items)} posts encontrados para {['#' + h for h in hashtags]}")
 
     return [_normalize_post_item(item) for item in items]
@@ -175,7 +176,7 @@ def _fetch_comments_public(
         "isNewestComments": False,
     }
     run = client.actor("apify/instagram-comment-scraper").call(run_input=run_input)
-    items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+    items = list(client.dataset(apify_dataset_id(run)).iterate_items())
     log.info(f"[IG] {len(items)} comentarios baixados (publico)")
 
     comments = []
@@ -220,7 +221,7 @@ def _fetch_comments_authed(
                 },
                 timeout_secs=int(os.environ.get("IG_COMMENT_ACTOR_TIMEOUT", "90")),
             )
-            items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+            items = list(client.dataset(apify_dataset_id(run)).iterate_items())
             log.info(f"[IG] [{i}/{len(urls)}] {len(items)} comments em {url}")
         except Exception as e:
             log.warning(f"[IG] [{i}/{len(urls)}] erro em {url}: {e}")

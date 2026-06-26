@@ -10,6 +10,7 @@ Uso:
   py agents/affiliate_us/spike_collect.py --market br --product "copo stanley" --platform both
   py agents/affiliate_us/spike_collect.py --market us --platform reddit --max-queries 2
 """
+from base import apify_dataset_id
 import argparse
 import json
 import logging
@@ -69,7 +70,7 @@ def collect_reddit(token, queries, max_items, log):
     }
     log.info(f"[reddit] rodando trudax/reddit-scraper-lite {queries}")
     run = client.actor("trudax/reddit-scraper-lite").call(run_input=run_input, timeout_secs=240)
-    raw = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+    raw = list(client.dataset(apify_dataset_id(run)).iterate_items())
     items = [n for n in (normalize_reddit(it) for it in raw) if len(n["text"]) > 20]
     log.info(f"[reddit] {len(raw)} crus -> {len(items)} uteis")
     return items

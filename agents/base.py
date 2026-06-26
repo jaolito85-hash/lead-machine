@@ -575,6 +575,24 @@ def short_date() -> str:
     return datetime.now().strftime("%d/%m")
 
 
+def apify_dataset_id(run) -> str:
+    """Extrai defaultDatasetId de um run do Apify.
+    Compativel com apify_client v1/v2 (dict) e v3 (objeto Run)."""
+    if run is None:
+        raise RuntimeError("Apify run retornou None")
+    # apify_client >= 3.0 retorna objeto Run com .default_dataset_id
+    if hasattr(run, "default_dataset_id"):
+        return run.default_dataset_id
+    # apify_client < 3.0 retorna dict
+    if isinstance(run, dict):
+        return run["defaultDatasetId"]
+    # Fallback: tentar subscript (algumas versoes suportam)
+    try:
+        return run["defaultDatasetId"]
+    except (TypeError, KeyError):
+        raise RuntimeError(f"Nao consegui extrair defaultDatasetId do run: {type(run)}")
+
+
 # ════════════════════════════════════════
 # SAIDA (stdout para serve.py/runner)
 # ════════════════════════════════════════

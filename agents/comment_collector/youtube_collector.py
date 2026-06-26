@@ -11,6 +11,7 @@ o YT costuma render mais que IG: vídeos longos com comentarios profundos
 o lead — o canal/dono do video e quase sempre advogado/influencer.
 """
 
+from base import apify_dataset_id
 import logging
 from typing import Iterable
 
@@ -63,7 +64,7 @@ def search_videos_by_query(
     }
 
     run = client.actor("streamers/youtube-scraper").call(run_input=run_input)
-    items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+    items = list(client.dataset(apify_dataset_id(run)).iterate_items())
     log.info(f"[YT] {len(items)} videos encontrados para '{query}'")
 
     normalized = [_normalize_video_item(it) for it in items]
@@ -95,7 +96,7 @@ def fetch_comments(
     }
 
     run = client.actor("streamers/youtube-comments-scraper").call(run_input=run_input)
-    items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+    items = list(client.dataset(apify_dataset_id(run)).iterate_items())
     log.info(f"[YT] {len(items)} comentarios baixados")
 
     comments = []

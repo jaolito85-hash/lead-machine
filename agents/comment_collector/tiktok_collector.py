@@ -9,6 +9,7 @@ DICA: comentarios de TikTok costumam ser mais diretos que Instagram
 ("onde fica?", "quanto custa?"). Volume costuma ser menor mas inten\u00e7\u00e3o maior.
 """
 
+from base import apify_dataset_id
 import logging
 from typing import Iterable
 
@@ -55,7 +56,7 @@ def list_recent_videos(
     }
 
     run = client.actor("clockworks/free-tiktok-scraper").call(run_input=run_input)
-    items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+    items = list(client.dataset(apify_dataset_id(run)).iterate_items())
     log.info(f"[TT] {len(items)} videos encontrados")
 
     return [_normalize_video_item(item, fallback_owner=handle) for item in items]
@@ -81,7 +82,7 @@ def search_videos_by_query(
     }
 
     run = client.actor("clockworks/free-tiktok-scraper").call(run_input=run_input)
-    items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+    items = list(client.dataset(apify_dataset_id(run)).iterate_items())
     log.info(f"[TT] {len(items)} videos encontrados para '{query}'")
 
     return [_normalize_video_item(item) for item in items]
@@ -111,7 +112,7 @@ def fetch_comments(
     }
 
     run = client.actor("clockworks/tiktok-comments-scraper").call(run_input=run_input)
-    items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+    items = list(client.dataset(apify_dataset_id(run)).iterate_items())
     log.info(f"[TT] {len(items)} comentarios baixados")
 
     comments = []
